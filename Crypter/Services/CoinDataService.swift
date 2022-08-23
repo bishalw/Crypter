@@ -8,46 +8,41 @@
 import Foundation
 import Combine
 
-class CoinDataService {
+class CoinDataService: ObservableObject {
     
+    // Anything subscribed to published gets notified
     @Published var allCoins: [CoinModel] = []
     var coinSubscription: AnyCancellable?
-     
     
-    init(){
-       getCoins()
+    var networkingManager: NetworkingManager
+    
+    
+    init(networkingManager: NetworkingManager){
+        self.networkingManager = networkingManager
+        getCoins()
     }
     
- 
-    
+
     private func getCoins(){
         let optionalUrl = URL(string: "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=1&sparkline=true&price_change_percentage=24h")
         guard let url = optionalUrl else { return }
         
-       coinSubscription = URLSession.shared.dataTaskPublisher(for: url)
-            .tryMap { output in
-                guard let response = output.response as? HTTPURLResponse,
-                      response.statusCode >= 200 && response.statusCode < 300 else{
-                    throw URLError(.badServerResponse)
-                }
-                return output.data
-            }
+        coinSubscription = networkingManager.download(url: url)
             .decode(type: [CoinModel].self, decoder: JSONDecoder())
-            .eraseToAnyPublisher()
-            .receive(on: DispatchQueue.main)
-            .sink { status in
-                switch status {
-                case .finished:
-                    break
-                case .failure(let error):
-                    print(error.localizedDescription)
-                }
-            } receiveValue: { [weak self] (returnedCoins) in
-                self?.allCoins = returnedCoins
+            .sink(receiveCompletion: handleCompletion, receiveValue: {[weak self](returnCoins) in
+                self?.allCoins = returnCoins
                 self?.coinSubscription?.cancel()
-            }
+                
+            })
             
-            
+    }
+    private func handleCompletion (status: Subscribers.Completion<Error>) {
+        switch status {
+        case .finished:
+            break
+        case .failure(let error):
+            print(error.localizedDescription)
+        }
     }
     
 

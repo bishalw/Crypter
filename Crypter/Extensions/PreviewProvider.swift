@@ -20,7 +20,7 @@ class DeveloperPreview {
     static let instance = DeveloperPreview()
     private init() { }
     
-    let homeVm = HomeViewModel()
+    let homeVm = HomeViewModel(coinDataService: .init(networkingManager: RealNetworkingManager()))
     
     let coin = CoinModel(
        id: "bitcoin",

@@ -6,19 +6,33 @@
 //
 
 import Foundation
+import Combine
+
 
 class HomeViewModel: ObservableObject {
     
     @Published var allCoins: [CoinModel] = []
     @Published var portfolioCoins: [CoinModel] = []
     
-    private let dataService = CoinDataService()
+    private let coinDataService: CoinDataService
+    private var cancellables = Set<AnyCancellable>()
     // get data from allCoins in coinData service to HomeviewModel allCoins
     
-    init() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0){
-            self.allCoins.append(DeveloperPreview.instance.coin)
-            self.portfolioCoins.append(DeveloperPreview.instance.coin)
+    init(coinDataService: CoinDataService) {
+        self.coinDataService = coinDataService
+        addSubscribers()
         }
+    
+    
+    func addSubscribers(){
+        // this is array is the published variable in CoinDataService
+        coinDataService.$allCoins
+            .sink { [weak self] (returnedCoins) in
+        // appends it to allCoins array at the top
+                self?.allCoins = returnedCoins
+                
+                
+            }
+            .store(in: &cancellables)
     }
 }

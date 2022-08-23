@@ -10,7 +10,7 @@ import SwiftUI
 @main
 struct CrypterApp: App {
     
-    @StateObject private var vm = HomeViewModel()
+    @StateObject private var vm = HomeViewModel(coinDataService: .init(networkingManager: RealNetworkingManager()))
     
     var body: some Scene {
         WindowGroup {

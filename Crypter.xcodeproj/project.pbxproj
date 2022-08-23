@@ -12,6 +12,7 @@
 		5830C8142890D04500A9DC2A /* Double.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5830C8132890D04500A9DC2A /* Double.swift */; };
 		587D072B28B065E1006D89DF /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 587D072A28B065E1006D89DF /* HomeViewModel.swift */; };
 		58BFB9B728B1AC0B00574410 /* CoinDataService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58BFB9B628B1AC0B00574410 /* CoinDataService.swift */; };
+		58CEA04B28B367E80049FE42 /* NetworkingManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58CEA04A28B367E80049FE42 /* NetworkingManager.swift */; };
 		58F7C4D42880E0AB003622E0 /* CrypterApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58F7C4D32880E0AB003622E0 /* CrypterApp.swift */; };
 		58F7C4D62880E0AB003622E0 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58F7C4D52880E0AB003622E0 /* ContentView.swift */; };
 		58F7C4DB2880E0AC003622E0 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 58F7C4DA2880E0AC003622E0 /* Preview Assets.xcassets */; };
@@ -49,6 +50,7 @@
 		5830C8132890D04500A9DC2A /* Double.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Double.swift; sourceTree = "<group>"; };
 		587D072A28B065E1006D89DF /* HomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewModel.swift; sourceTree = "<group>"; };
 		58BFB9B628B1AC0B00574410 /* CoinDataService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoinDataService.swift; sourceTree = "<group>"; };
+		58CEA04A28B367E80049FE42 /* NetworkingManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkingManager.swift; sourceTree = "<group>"; };
 		58F7C4D02880E0AB003622E0 /* Crypter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Crypter.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		58F7C4D32880E0AB003622E0 /* CrypterApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrypterApp.swift; sourceTree = "<group>"; };
 		58F7C4D52880E0AB003622E0 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -99,6 +101,14 @@
 			path = Services;
 			sourceTree = "<group>";
 		};
+		58CEA04928B367A90049FE42 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				58CEA04A28B367E80049FE42 /* NetworkingManager.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
 		58F7C4C72880E0AB003622E0 = {
 			isa = PBXGroup;
 			children = (
@@ -122,6 +132,7 @@
 		58F7C4D22880E0AB003622E0 /* Crypter */ = {
 			isa = PBXGroup;
 			children = (
+				58CEA04928B367A90049FE42 /* Utilities */,
 				58F7C50F28886C34003622E0 /* Models */,
 				58F7C4D32880E0AB003622E0 /* CrypterApp.swift */,
 				58BFB9B528B1ABD400574410 /* Services */,
@@ -367,6 +378,7 @@
 				58F7C4D42880E0AB003622E0 /* CrypterApp.swift in Sources */,
 				58F7C50B2880EFA7003622E0 /* CircleButtonView.swift in Sources */,
 				58F7C5012880E21E003622E0 /* Color.swift in Sources */,
+				58CEA04B28B367E80049FE42 /* NetworkingManager.swift in Sources */,
 				58F7C50D2880F435003622E0 /* CircleButtonAnimationView.swift in Sources */,
 				5830C8122890CC9300A9DC2A /* PreviewProvider.swift in Sources */,
 				5830C8142890D04500A9DC2A /* Double.swift in Sources */,
