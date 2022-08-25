@@ -7,23 +7,13 @@
 
 import SwiftUI
 
-class CoinImageViewModel: ObservableObject {
-    
-    @Published var image: UIImage? = nil
-    @Published var isLoading: Bool = false
-    
-    init(){
-        getImage()
-    }
-    
-    private func getImage(){
-        
-    }
-}
-
 struct CoinImageView: View {
     
-    @StateObject var vm: CoinImageViewModel = CoinImageViewModel()
+    @ObservedObject var vm: CoinImageViewModel
+    
+    init( coinImageViewModel: CoinImageViewModel) {
+        vm = coinImageViewModel
+    }
     
     var body: some View {
         ZStack {
@@ -43,6 +33,6 @@ struct CoinImageView: View {
 
 struct CoinImageView_Previews: PreviewProvider {
     static var previews: some View {
-        CoinImageView()
+       Text("To Do")
     }
 }

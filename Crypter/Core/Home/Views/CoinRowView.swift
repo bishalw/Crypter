@@ -30,21 +30,26 @@ struct CoinRowView_Previews: PreviewProvider {
             CoinRowView(coin: dev.coin, showHoldingsColumn: true)
                 .previewLayout(.sizeThatFits)
         }
-        CoinRowView(coin: dev.coin, showHoldingsColumn: true)
+            CoinRowView(coin: dev.coin, showHoldingsColumn: true)
             .previewLayout(.sizeThatFits)
             .preferredColorScheme(.dark)
     }
 }
 
 extension CoinRowView {
-    
+    private func createCoinImageViewModel() -> CoinImageViewModel{
+        let networkManager = RealNetworkingManager.init()
+        let coinImageService = CoinImageService.init(coin: coin, networkingManager: networkManager)
+        let coinImageViewModel = CoinImageViewModel.init(coin: coin, coinImageService: coinImageService)
+        return coinImageViewModel
+    }
     private var leftColumn: some View {
         HStack(spacing: 0){
             Text("\(coin.rank)")
                 .font(.caption)
                 .foregroundColor(Color.theme.secondaryText)
                 .frame(minWidth: 30)
-            Circle()
+            CoinImageView(coinImageViewModel: createCoinImageViewModel())
                 .frame(width: 30, height: 30)
             Text(coin.symbol.uppercased())
                 .font(.headline)
