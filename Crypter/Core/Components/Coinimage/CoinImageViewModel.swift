@@ -38,9 +38,9 @@ class CoinImageViewModel: ObservableObject {
     }
 }
 
-func main(){
-    let x = DeveloperPreview.instance.coin
-    let networkingManager = RealNetworkingManager()
-    let coinImageService = CoinImageService(coin: x, networkingManager: networkingManager)
-    let y = CoinImageViewModel(coin: x, coinImageService: coinImageService)
-}
+//func main(){
+//    let x = DeveloperPreview.instance.coin
+//    let networkingManager = RealNetworkingManager()
+//    let coinImageService = CoinImageService(coin: x, networkingManager: networkingManager)
+//    let y = CoinImageViewModel(coin: x, coinImageService: coinImageService)
+//}
