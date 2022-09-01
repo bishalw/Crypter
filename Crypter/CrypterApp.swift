@@ -22,4 +22,5 @@ struct CrypterApp: App {
             .environmentObject(vm)
         }
     }
+    
 }

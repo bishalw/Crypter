@@ -9,8 +9,10 @@ import Foundation
 import SwiftUI
 
 struct HomeView: View{
+    
     @EnvironmentObject private var vm: HomeViewModel
     @State private var showPortfolio: Bool = false
+    @FocusState private var inputIsFocused: Bool
     
     var body: some View {
         ZStack{
@@ -19,26 +21,37 @@ struct HomeView: View{
                 .ignoresSafeArea()
             
             // content layer
+            
             VStack {
                 homeHeader
+                
+                SearchBarView(searchText: $vm.searchText)
                 
                 columnTitles
                 
                 .font(.caption)
                 .foregroundColor(Color.theme.secondaryText)
                 .padding(.horizontal)
-                if showPortfolio{
-                    portfolioCoinsList
-                        .transition(.move(edge: .leading))
-                } else {
-                    allCoinsList
-                        .transition(.move(edge: .trailing))
-                }
+                
+                    if showPortfolio{
+                        portfolioCoinsList
+                            .transition(.move(edge: .leading))
+                        
+                    } else {
+                        allCoinsList
+                            .transition(.move(edge: .trailing))
+                        
+                    }
+                
               
                 Spacer(minLength: 0)
             }
+            .onTapGesture {
+                UIApplication.shared.endEditing()
+            }
         }
     }
+
 }
 
 struct HomeView_Previews: PreviewProvider{
@@ -96,6 +109,8 @@ extension HomeView{
                     .listRowInsets(.init(top: 10, leading: 0 , bottom: 10, trailing: 10))
             }
         }
+        
+        
         .listStyle(PlainListStyle())
     }
     
