@@ -2,7 +2,6 @@
 //  CoinImageService.swift
 //  Crypter
 //
-//  Created by Bishalw on 8/23/22.
 //
 
 import Foundation
@@ -16,19 +15,20 @@ class CoinImageService {
     
     private var imageSubscription: AnyCancellable?
     private let coin: CoinModel
-    private let fileManager = LocalFileManager.instance
+    private var fileManager: LocalFileManager
     private let folderName = "coin_images"
     private let imageName: String
     
     var networkingManager: NetworkingManager
     
-    init(coin: CoinModel, networkingManager: NetworkingManager) {
+    init(coin: CoinModel, networkingManager: NetworkingManager, fileManager: LocalFileManager) {
+        self.fileManager = fileManager
         self.coin = coin
         self.imageName = coin.id
         self.networkingManager = networkingManager
         getCoinImage()
     }
-    
+   
     private func getCoinImage(){
         if let savedImage = fileManager.getImage(imageName: imageName, folderName: folderName){
                 image = savedImage

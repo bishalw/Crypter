@@ -2,7 +2,6 @@
 //  CoinImageView.swift
 //  Crypter
 //
-//  Created by Bishalw on 8/23/22.
 //
 
 import SwiftUI

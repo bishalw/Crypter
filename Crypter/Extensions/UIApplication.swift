@@ -2,7 +2,7 @@
 //  UIApplication.swift
 //  Crypter
 //
-//  Created by Bishalw on 8/30/22.
+
 //
 
 import Foundation

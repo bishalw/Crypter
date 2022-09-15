@@ -2,7 +2,6 @@
 //  Color.swift
 //  Crypter
 //
-//  Created by Bishalw on 7/14/22.
 //
 
 import Foundation

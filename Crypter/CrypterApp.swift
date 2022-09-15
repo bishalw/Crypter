@@ -2,7 +2,6 @@
 //  CrypterApp.swift
 //  Crypter
 //
-//  Created by Bishalw on 7/14/22.
 //
 
 import SwiftUI
@@ -10,7 +9,7 @@ import SwiftUI
 @main
 struct CrypterApp: App {
     
-    @StateObject private var vm = HomeViewModel(coinDataService: .init(networkingManager: RealNetworkingManager()))
+    @StateObject private var vm = HomeViewModel(coinDataService: .init(networkingManager: RealNetworkingManager()), marketDataService: .init(networkingManager: RealNetworkingManager()))
     
     var body: some Scene {
         WindowGroup {

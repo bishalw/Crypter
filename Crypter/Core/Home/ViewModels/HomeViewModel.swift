@@ -11,17 +11,20 @@ import Combine
 
 class HomeViewModel: ObservableObject {
     
+    @Published var statistics: [StatisticModel] = []
     @Published var allCoins: [CoinModel] = []
     @Published var portfolioCoins: [CoinModel] = []
     
     @Published var searchText: String = ""
     
     private let coinDataService: CoinDataService
+    private let marketDataService: MarketDataService
     private var cancellables = Set<AnyCancellable>()
     // get data from allCoins in coinData service to HomeviewModel allCoins
     
-    init(coinDataService: CoinDataService) {
+    init(coinDataService: CoinDataService, marketDataService: MarketDataService) {
         self.coinDataService = coinDataService
+        self.marketDataService = marketDataService
         addSubscribers()
         }
     
@@ -40,6 +43,32 @@ class HomeViewModel: ObservableObject {
             .map(filterCoins)
             .sink { [weak self]( returnedCoins) in
                 self?.allCoins = returnedCoins
+            }
+            .store(in: &cancellables)
+        
+        marketDataService.$marketData
+            .map{(MarketDataModel) -> [StatisticModel] in
+                
+                var stats: [StatisticModel] = []
+                guard let data = MarketDataModel else {
+                    return stats
+                }
+                
+                let marketCap = StatisticModel(title: "MarketCap", value: data.marketCap, percentageChange: data.marketCapChangePercentage24HUsd)
+                let volume = StatisticModel(title: "24h Volume", value: data.volume)
+                let btcDominance = StatisticModel(title: "BTC Dominanace", value: data.btcDominance)
+                let portfolio = StatisticModel(title: "Portfolo Value", value: "$0.00", percentageChange: 0)
+                
+                
+                stats.append(contentsOf: [
+                    marketCap,
+                    volume,
+                    btcDominance
+                ])
+                return stats
+            }
+            .sink { [weak self] (returnedStats) in
+                self?.statistics = returnedStats
             }
             .store(in: &cancellables)
     }

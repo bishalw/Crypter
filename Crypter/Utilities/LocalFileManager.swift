@@ -2,7 +2,6 @@
 //  LocalFileManager.swift
 //  Crypter
 //
-//  Created by Bishalw on 8/25/22.
 //
 
 import Foundation
@@ -10,9 +9,9 @@ import SwiftUI
 
 class LocalFileManager {
     
-    static let instance = LocalFileManager()
-    
-    private init() { }
+//    static let instance = LocalFileManager()
+//    
+//    private init() { }
     
     func saveImage(image: UIImage, imageName: String, folderName: String){
         
@@ -53,6 +52,7 @@ class LocalFileManager {
             }
         }
     }
+    
     // file://cachedirectory/{folderName}
     private func getURLForFolder(folderName: String) -> URL? {
         

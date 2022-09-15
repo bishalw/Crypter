@@ -2,7 +2,6 @@
 //  HomeView.swift
 //  Crypter
 //
-//  Created by Bishalw on 7/14/22.
 //
 
 import Foundation
@@ -12,7 +11,7 @@ struct HomeView: View{
     
     @EnvironmentObject private var vm: HomeViewModel
     @State private var showPortfolio: Bool = false
-    @FocusState private var inputIsFocused: Bool
+    
     
     var body: some View {
         ZStack{
@@ -24,6 +23,8 @@ struct HomeView: View{
             
             VStack {
                 homeHeader
+        
+                HomeStatsView(showPortfolio: $showPortfolio)
                 
                 SearchBarView(searchText: $vm.searchText)
                 
@@ -60,7 +61,7 @@ struct HomeView_Previews: PreviewProvider{
             HomeView()
                 .navigationBarHidden(true)
         }
-        .environmentObject(dev.homeVm)
+        .environmentObject(dev.homeVM)
         .previewInterfaceOrientation(.portraitUpsideDown)
     }
 }
@@ -102,6 +103,7 @@ extension HomeView{
         }
         .listStyle(PlainListStyle())
     }
+    
     private var portfolioCoinsList: some View {
         List {
             ForEach(vm.portfolioCoins) { coin in
@@ -124,5 +126,11 @@ extension HomeView{
             Text("Price")
                 .frame(width: UIScreen.main.bounds.width / 3.5, alignment: .trailing)
         }
+    }
+}
+
+struct Previews_HomeView_Previews: PreviewProvider {
+    static var previews: some View {
+        /*@START_MENU_TOKEN@*/Text("Hello, World!")/*@END_MENU_TOKEN@*/
     }
 }

@@ -2,7 +2,6 @@
 //  CoinRowView.swift
 //  Crypter
 //
-//  Created by Bishalw on 7/26/22.
 //
 
 import SwiftUI
@@ -39,7 +38,7 @@ struct CoinRowView_Previews: PreviewProvider {
 extension CoinRowView {
     private func createCoinImageViewModel() -> CoinImageViewModel{
         let networkManager = RealNetworkingManager.init()
-        let coinImageService = CoinImageService.init(coin: coin, networkingManager: networkManager)
+        let coinImageService = CoinImageService.init(coin: coin, networkingManager: networkManager, fileManager: LocalFileManager())
         let coinImageViewModel = CoinImageViewModel.init(coin: coin, coinImageService: coinImageService)
         return coinImageViewModel
     }
