@@ -30,14 +30,8 @@ class HomeViewModel: ObservableObject {
     
     
     func addSubscribers(){
-        // this is array is the published variable in CoinDataService
-//        coinDataService.$allCoins
-//            .sink { [weak self] (returnedCoins) in
-//        // appends it to allCoins array at the top
-//                self?.allCoins = returnedCoins
-//            }
-//            .store(in: &cancellables)
-        $searchText
+        
+        $searchText // filters and searches all the coins from coin data service
             .combineLatest(coinDataService.$allCoins)
             .debounce(for: .seconds(0.5), scheduler: DispatchQueue.main) // waits 0.5 seconds for another published value
             .map(filterCoins)

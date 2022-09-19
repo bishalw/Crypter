@@ -10,7 +10,7 @@ struct CoinImageView: View {
     
     @ObservedObject var vm: CoinImageViewModel
     
-    init( coinImageViewModel: CoinImageViewModel) {
+    init(coinImageViewModel: CoinImageViewModel) {
         vm = coinImageViewModel
     }
     
