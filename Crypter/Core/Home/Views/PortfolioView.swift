@@ -39,11 +39,13 @@ struct PortfolioView: View {
                     trailingNavBarButtons
                 }
             })
+            .onChange(of: vm.searchText, perform: { value in
+                if value == "" {
+                    removeSelectedCoin()
+                }
+            })
         }
-       
     }
-    
-   
 }
 
 struct PortfolioView_Previews: PreviewProvider {
@@ -59,7 +61,7 @@ extension PortfolioView {
     private var coinLogoList: some View {
         ScrollView(.horizontal, showsIndicators: false, content: {
             LazyHStack(spacing: 10) {
-                ForEach(vm.allCoins) { coin in
+                ForEach(vm.searchText.isEmpty ? vm.portfolioCoins : vm.allCoins) { coin in
                     CoinLogoView(coin: coin, vm: CoinImageViewModel(coin: coin, coinImageService: CoinImageService(coin: coin, networkingManager: RealNetworkingManager(), fileManager: LocalFileManager())))
                         .frame(width: 75, height: 100)
                         .padding(4)
@@ -80,13 +82,25 @@ extension PortfolioView {
             .padding(.leading)
         })
     }
+    
+    private func updateSelectedCoin(coin: CoinModel) {
+        selectedCoin = coin
+        
+        if let portfolioCoin = vm.portfolioCoins.first(where: { $0.id == coin.id}),
+           let amount = portfolioCoin.currentHoldings {
+            quantityText = "\(amount)"
+        } else {
+            quantityText = ""
+        }
+    }
+    
     private func getCurrrentValue() -> Double {
         if let quantity = Double(quantityText){
             return quantity * (selectedCoin?.currentPrice ?? 0)
         }
         return 0
     }
-    
+   
     private var portfolioInputSection: some View {
         VStack(spacing: 20){
             HStack {
@@ -139,9 +153,14 @@ extension PortfolioView {
     
     private func saveButtonPressed(){
         
-        guard let coin = selectedCoin else { return }
+        guard
+            let coin = selectedCoin,
+            let amount = Double(quantityText)
+            else { return }
         
         // MARK: save to portfolio
+        
+        vm.updatePortfolio(coin: coin, amount: amount)
         
         //show checkmark
         

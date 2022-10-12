@@ -16,9 +16,11 @@ class HomeViewModel: ObservableObject {
     @Published var portfolioCoins: [CoinModel] = []
     
     @Published var searchText: String = ""
+    // var searchText = CurrentValueSubject<String, Never>("")
     
-    private let coinDataService: CoinDataService
-    private let marketDataService: MarketDataService
+    private let coinDataService: CoinDataService // coin data
+    private let marketDataService: MarketDataService // global market statistics
+    private let portfolioDataService = PortfolioDataService()
     private var cancellables = Set<AnyCancellable>()
     // get data from allCoins in coinData service to HomeviewModel allCoins
     
@@ -65,7 +67,48 @@ class HomeViewModel: ObservableObject {
                 self?.statistics = returnedStats
             }
             .store(in: &cancellables)
+        
+        /*
+        1. CombineLatest the two publishers
+        2. Map the two publishers to a new value (in this case, an array of updatedCoinModels)
+        3. Sink the new value to a subscriber
+         */
+        $allCoins
+            .combineLatest(portfolioDataService.$savedEntites)
+            .map { (coinModels, portfolioEntities) -> [CoinModel] in
+                
+                let updatedCoinModels = coinModels
+                                            .compactMap { (coin) -> CoinModel? in
+                                                
+                                                let foundEntity = portfolioEntities.first { portFolioEntity in
+                                                    portFolioEntity.coinID == coin.id
+                                                }
+                                                
+                                                guard let entity = foundEntity else {
+                                                    return nil
+                                                }
+                                                
+                                                return coin.updateHoldings(amount: entity.amount)
+                                            }
+                return updatedCoinModels
+            }
+            .sink { [weak self] (returnedCoins) in
+                self?.portfolioCoins = returnedCoins
+            }
+            .store(in: &cancellables)
     }
+    var myTotalHoldingDisplayString: String {
+        var total = 0.0
+        for coin in portfolioCoins {
+            total = total + coin.currentHoldingsValue
+        }
+        return String("$\(total.formattedWithAbbreviations())")
+    }
+    
+    func updatePortfolio(coin: CoinModel, amount: Double) {
+        portfolioDataService.updatePortfolio(coin: coin, amount: amount)
+    }
+    
     
     private func filterCoins(text: String, coins: [CoinModel]) -> [CoinModel] {
         guard !text.isEmpty else {

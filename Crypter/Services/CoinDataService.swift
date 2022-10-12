@@ -2,7 +2,6 @@
 //  CoinDataService.swift
 //  Crypter
 //
-//  Created by Bishalw on 8/20/22.
 //
 
 import Foundation
@@ -15,7 +14,6 @@ class CoinDataService: ObservableObject {
     var coinSubscription: AnyCancellable?
     
     var networkingManager: NetworkingManager
-    
     
     init(networkingManager: NetworkingManager){
         self.networkingManager = networkingManager

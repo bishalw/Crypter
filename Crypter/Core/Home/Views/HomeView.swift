@@ -30,8 +30,11 @@ struct HomeView: View{
             
             VStack {
                 homeHeader
-        
-                HomeStatsView(showPortfolio: $showPortfolio)
+               if showPortfolio {
+                   StatisticView(stat: StatisticModel(title: "Total Holding", value: vm.myTotalHoldingDisplayString))
+                } else {
+                    HomeStatsView(showPortfolio: $showPortfolio)
+                }
                 
                 SearchBarView(searchText: $vm.searchText)
                 

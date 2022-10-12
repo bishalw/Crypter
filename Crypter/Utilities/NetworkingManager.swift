@@ -6,11 +6,12 @@
 //
 
 import Foundation
-import Combine
+import Combine //
 
 protocol NetworkingManager {
     func download(url: URL) -> AnyPublisher<Data, Error>
 }
+
 
 class RealNetworkingManager: NetworkingManager {
     
