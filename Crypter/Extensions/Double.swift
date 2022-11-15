@@ -96,8 +96,12 @@ extension Double {
         case 1_000_000_000...:
             let formatted = num / 1_000_000_000
             let stringFormatted = formatted.asNumberString()
-            return "\(sign)\(stringFormatted)M"
+            return "\(sign)\(stringFormatted)Bn"
         case 1_000_000...:
+            let formatted = num / 1_000
+            let stringFormatted = formatted.asNumberString()
+            return "\(sign)\(stringFormatted)M"
+        case 1_000...:
             let formatted = num / 1_000
             let stringFormatted = formatted.asNumberString()
             return "\(sign)\(stringFormatted)K"
@@ -105,7 +109,7 @@ extension Double {
             return self.asNumberString()
             
         default:
-            return self.asNumberString()
+            return "\(sign)\(self)"
         }
     }
 }

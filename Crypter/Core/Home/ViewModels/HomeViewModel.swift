@@ -24,13 +24,16 @@ class HomeViewModel: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     // get data from allCoins in coinData service to HomeviewModel allCoins
     
+    
+    
+    
     init(coinDataService: CoinDataService, marketDataService: MarketDataService) {
         self.coinDataService = coinDataService
         self.marketDataService = marketDataService
         addSubscribers()
         }
     
-    
+      
     func addSubscribers(){
         
         $searchText // filters and searches all the coins from coin data service
@@ -41,33 +44,6 @@ class HomeViewModel: ObservableObject {
                 self?.allCoins = returnedCoins
             }
             .store(in: &cancellables)
-        
-        marketDataService.$marketData
-            .map{(MarketDataModel) -> [StatisticModel] in
-                
-                var stats: [StatisticModel] = []
-                guard let data = MarketDataModel else {
-                    return stats
-                }
-                
-                let marketCap = StatisticModel(title: "MarketCap", value: data.marketCap, percentageChange: data.marketCapChangePercentage24HUsd)
-                let volume = StatisticModel(title: "24h Volume", value: data.volume)
-                let btcDominance = StatisticModel(title: "BTC Dominanace", value: data.btcDominance)
-                let portfolio = StatisticModel(title: "Portfolo Value", value: "$0.00", percentageChange: 0)
-                
-                
-                stats.append(contentsOf: [
-                    marketCap,
-                    volume,
-                    btcDominance
-                ])
-                return stats
-            }
-            .sink { [weak self] (returnedStats) in
-                self?.statistics = returnedStats
-            }
-            .store(in: &cancellables)
-        
         /*
         1. CombineLatest the two publishers
         2. Map the two publishers to a new value (in this case, an array of updatedCoinModels)
@@ -96,15 +72,21 @@ class HomeViewModel: ObservableObject {
                 self?.portfolioCoins = returnedCoins
             }
             .store(in: &cancellables)
+        
+        // updates marketData
+        
+        marketDataService.$marketData
+            .map(mapGlobabalMarketData)
+            .sink { [weak self] (returnedStats) in
+                self?.statistics = returnedStats
+            }
+            .store(in: &cancellables)
+        
+      
+     
     }
-    var myTotalHoldingDisplayString: String {
-        var total = 0.0
-        for coin in portfolioCoins {
-            total = total + coin.currentHoldingsValue
-        }
-        return String("$\(total.formattedWithAbbreviations())")
-    }
-    
+
+     
     func updatePortfolio(coin: CoinModel, amount: Double) {
         portfolioDataService.updatePortfolio(coin: coin, amount: amount)
     }
@@ -123,4 +105,45 @@ class HomeViewModel: ObservableObject {
                 coin.id.lowercased().contains(lowercasedText)
         }
     }
+    
+    private func mapGlobabalMarketData(marketDataModel: MarketDataModel?) -> [StatisticModel] {
+        var stats: [StatisticModel] = []
+        guard let data = marketDataModel else {
+            return stats
+        }
+        
+        let marketCap = StatisticModel(title: "MarketCap", value: data.marketCap, percentageChange: data.marketCapChangePercentage24HUsd)
+        let volume = StatisticModel(title: "24h Volume", value: data.volume)
+        let btcDominance = StatisticModel(title: "BTC Dominanace", value: data.btcDominance)
+            
+        let portfolioValue =
+            portfolioCoins
+                .map ({ $0.currentHoldingsValue })
+                .reduce(0, +)
+        
+        let portfolio = StatisticModel(title: "Total", value: portfolioValue.asCurrencyWith2Decimals(), percentageChange: 0)
+        
+        stats.append(contentsOf: [
+            marketCap,
+            volume,
+            btcDominance
+        ])
+        return stats
+    }
+}
+extension HomeViewModel{
+    
+    var myTotalHoldingDisplayString: String {
+        var total = 0.0
+        for coin in portfolioCoins {
+            total = total + coin.currentHoldingsValue
+        }
+        return String("\(total.asCurrencyWith2Decimals())")
+    }
+    
+    func reloadData(){
+        coinDataService.getCoins()
+        marketDataService.getMarketData()
+    }
+    
 }
