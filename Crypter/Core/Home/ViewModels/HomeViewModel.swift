@@ -14,18 +14,20 @@ class HomeViewModel: ObservableObject {
     @Published var statistics: [StatisticModel] = []
     @Published var allCoins: [CoinModel] = []
     @Published var portfolioCoins: [CoinModel] = []
-    
+    @Published var sortOption: SortOption = .holdings
     @Published var searchText: String = ""
-    // var searchText = CurrentValueSubject<String, Never>("")
+    
     
     private let coinDataService: CoinDataService // coin data
     private let marketDataService: MarketDataService // global market statistics
     private let portfolioDataService = PortfolioDataService()
     private var cancellables = Set<AnyCancellable>()
-    // get data from allCoins in coinData service to HomeviewModel allCoins
     
     
     
+    enum SortOption {
+        case rank, rankReversed, holdings, holdingsReversed, price, priceReversed
+    }
     
     init(coinDataService: CoinDataService, marketDataService: MarketDataService) {
         self.coinDataService = coinDataService
@@ -36,12 +38,14 @@ class HomeViewModel: ObservableObject {
       
     func addSubscribers(){
         
-        $searchText // filters and searches all the coins from coin data service
-            .combineLatest(coinDataService.$allCoins)
-            .debounce(for: .seconds(0.5), scheduler: DispatchQueue.main) // waits 0.5 seconds for another published value
-            .map(filterCoins)
+        // filters and searches all the coins from coin data service
+        $searchText
+            .combineLatest(coinDataService.$allCoins, $sortOption)
+            .debounce(for: .seconds(0.5), scheduler: DispatchQueue.main)
+            .map(filterAndSortCoins)
             .sink { [weak self]( returnedCoins) in
-                self?.allCoins = returnedCoins
+                guard let self = self else { return }
+                self.allCoins = self.sortPortfolioCoinsIfNeeded(coins: returnedCoins)
             }
             .store(in: &cancellables)
         /*
@@ -51,39 +55,20 @@ class HomeViewModel: ObservableObject {
          */
         $allCoins
             .combineLatest(portfolioDataService.$savedEntites)
-            .map { (coinModels, portfolioEntities) -> [CoinModel] in
-                
-                let updatedCoinModels = coinModels
-                                            .compactMap { (coin) -> CoinModel? in
-                                                
-                                                let foundEntity = portfolioEntities.first { portFolioEntity in
-                                                    portFolioEntity.coinID == coin.id
-                                                }
-                                                
-                                                guard let entity = foundEntity else {
-                                                    return nil
-                                                }
-                                                
-                                                return coin.updateHoldings(amount: entity.amount)
-                                            }
-                return updatedCoinModels
-            }
+            .map(mapAllCoinsToPortfolioCoins)
             .sink { [weak self] (returnedCoins) in
                 self?.portfolioCoins = returnedCoins
             }
             .store(in: &cancellables)
         
         // updates marketData
-        
         marketDataService.$marketData
+            .combineLatest($portfolioCoins)
             .map(mapGlobabalMarketData)
             .sink { [weak self] (returnedStats) in
                 self?.statistics = returnedStats
             }
             .store(in: &cancellables)
-        
-      
-     
     }
 
      
@@ -91,8 +76,15 @@ class HomeViewModel: ObservableObject {
         portfolioDataService.updatePortfolio(coin: coin, amount: amount)
     }
     
-    
-    private func filterCoins(text: String, coins: [CoinModel]) -> [CoinModel] {
+    private func filterAndSortCoins(text: String, coins: [CoinModel], sort: SortOption ) -> [CoinModel]{
+        
+        var updatedCoins = filterCoins(text: text, coins: coins)
+        sortCoins(sort: sort, coins: &updatedCoins)
+        return updatedCoins
+       
+        
+    }
+    private func filterCoins(text: String, coins:[CoinModel]) -> [CoinModel]{
         guard !text.isEmpty else {
             return coins
         }
@@ -105,8 +97,47 @@ class HomeViewModel: ObservableObject {
                 coin.id.lowercased().contains(lowercasedText)
         }
     }
+    private func sortCoins(sort: SortOption, coins: inout [CoinModel]) {
+        switch sort {
+        case .rank, .holdings:
+            coins.sort(by:{ $0.rank < $1.rank })
+        case.rankReversed, .holdingsReversed:
+            coins.sort(by:{ $0.rank > $1.rank })
+        case .price:
+            coins.sort(by:{ $0.currentPrice > $1.currentPrice })
+        case .priceReversed:
+            coins.sort(by:{ $0.currentPrice < $1.currentPrice })
+       
+        }
+    }
     
-    private func mapGlobabalMarketData(marketDataModel: MarketDataModel?) -> [StatisticModel] {
+    private func sortPortfolioCoinsIfNeeded(coins: [CoinModel]) -> [CoinModel]{
+        
+        switch sortOption {
+        case .holdings:
+            return coins.sorted(by: {$0.currentHoldingsValue > $1.currentHoldingsValue})
+        case .holdingsReversed:
+            return coins.sorted(by: {$0.currentHoldingsValue < $1.currentHoldingsValue})
+        default:
+            return coins
+        }
+        
+    }
+    private func mapAllCoinsToPortfolioCoins(allCoins: [CoinModel], portfolioEntities: [PortfolioEntity]) -> [CoinModel] {
+       allCoins
+            .compactMap { (coin) -> CoinModel? in
+                let foundEntity = portfolioEntities.first { portFolioEntity in
+                    portFolioEntity.coinID == coin.id
+                }
+                
+                guard let entity = foundEntity else {
+                    return nil
+                }
+                
+                return coin.updateHoldings(amount: entity.amount)
+            }
+    }
+    private func mapGlobabalMarketData(marketDataModel: MarketDataModel?, portfolioCoins: [CoinModel]) -> [StatisticModel] {
         var stats: [StatisticModel] = []
         guard let data = marketDataModel else {
             return stats
