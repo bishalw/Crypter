@@ -18,7 +18,12 @@ struct CrypterApp: App {
     
     var body: some Scene {
         WindowGroup {
-            
+            NavigationView {
+                HomeView()
+                    .navigationBarHidden(true)
+            }
+            // all child of homeview has access to vm
+            .environmentObject(vm)
         }
     }
     
