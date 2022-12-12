@@ -76,6 +76,13 @@ class HomeViewModel: ObservableObject {
         portfolioDataService.updatePortfolio(coin: coin, amount: amount)
     }
     
+    func getDayOfTheWeek()-> String{
+           let dateFormatter = DateFormatter()
+           dateFormatter.dateFormat = "EEEE"
+           let weekDay = dateFormatter.string(from: Date())
+           return weekDay
+     }
+    
     private func filterAndSortCoins(text: String, coins: [CoinModel], sort: SortOption ) -> [CoinModel]{
         
         var updatedCoins = filterCoins(text: text, coins: coins)
@@ -169,7 +176,7 @@ extension HomeViewModel{
         for coin in portfolioCoins {
             total = total + coin.currentHoldingsValue
         }
-        return String("\(total.asCurrencyWith2Decimals())")
+        return String("$\(total.formattedWithAbbreviations())")
     }
     
     func reloadData(){

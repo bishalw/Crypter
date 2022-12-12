@@ -6,6 +6,15 @@
 
 import Foundation
 
+extension Date {
+    func getDayOfTheWeek()-> String{
+           let dateFormatter = DateFormatter()
+           dateFormatter.dateFormat = "EEEE"
+           let weekDay = dateFormatter.string(from: Date())
+           return weekDay
+     }
+}
+
 extension Double {
     /// Converts a Double into a Currency with 2  decimal place
     ///```

@@ -20,6 +20,7 @@ struct CoinRowView: View {
             rightColumn
         }
         .font(.subheadline)
+        .background(Color.theme.background.opacity(0.001))
     }
 }
 
@@ -47,7 +48,7 @@ extension CoinRowView {
             Text("\(coin.rank)")
                 .font(.caption)
                 .foregroundColor(Color.theme.secondaryText)
-                .frame(minWidth: 30)
+                .padding(.trailing)
             CoinImageView(coinImageViewModel: createCoinImageViewModel())
                 .frame(width: 30, height: 30)
             Text(coin.symbol.uppercased())
