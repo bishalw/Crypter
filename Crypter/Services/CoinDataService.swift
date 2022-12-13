@@ -9,7 +9,6 @@ import Combine
 
 class CoinDataService: ObservableObject {
     
-    // Anything subscribed to published gets notified
     @Published var allCoins: [CoinModel] = []
     var coinSubscription: AnyCancellable?
     

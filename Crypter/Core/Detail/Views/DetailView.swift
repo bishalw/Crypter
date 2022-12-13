@@ -10,14 +10,13 @@ import Charts
 struct DetailLoadingView: View {
     
     @Binding var coin: CoinModel?
- 
     
     var body: some View {
         ZStack {
             if let coin = coin {
-                 DetailView(vm: createDetailViewModel(coin: coin))
+                DetailView(vm: createDetailViewModel(coin: coin))
             }
-                           
+            
         }
     }
     func createDetailViewModel(coin: CoinModel) -> DetailViewModel {
@@ -68,7 +67,6 @@ struct DetailView: View {
                         }
                     })
                 
-                
                 Text("Additonal Details")
                     .font(.title)
                     .bold()
@@ -94,8 +92,7 @@ struct DetailView: View {
 }
 
 struct ChartView: View {
-    
-    
+
     let data: [Double]
     let maxY: Double
     let minY: Double
@@ -113,11 +110,6 @@ struct ChartView: View {
         
         
     }
-    func getDayOfTheWeek(date: Date)-> String{
-           dateFormatter.dateFormat = "EEE"
-           let weekDay = dateFormatter.string(from: date)
-           return weekDay
-     }
 
     var body: some View{
         
@@ -126,10 +118,8 @@ struct ChartView: View {
                 ForEach(0..<data.count, id: \.self) { index in
                     
                     LineMark(
-
                         x: .value("",index),
                         y: .value("",self.data[index])
-
                     )
                     .foregroundStyle(lineColor
                         .gradient
@@ -137,15 +127,11 @@ struct ChartView: View {
                     .interpolationMethod(.cardinal)
                     
                     AreaMark(
-                        
                         x: .value("",index),
                         yStart: .value("",minY),
                         yEnd:.value("", data[index])
-                        
                     )
                     .foregroundStyle(LinearGradient(gradient: Gradient(colors: [lineColor,.clear]), startPoint: .top, endPoint: .bottom)).opacity(0.8)
-                    
-                   
                 }
             }
             
@@ -174,14 +160,9 @@ struct ChartView: View {
                         default:
                             AxisValueLabel.init()
                         }
-               
                 })
-                
-                
             })
-            
-            
-           
+        
             
         } else {
             Text("Charts are supported in iOS 16.0. Please update :)")
@@ -190,14 +171,12 @@ struct ChartView: View {
     
 }
 
-extension Bool {
-    var isIOS16: Bool {
-        if #available(iOS 16, *) {
-            return true
-        } else {
-            return false
-        }
-    }
+extension ChartView {
+    func getDayOfTheWeek(date: Date)-> String{
+           dateFormatter.dateFormat = "EEE"
+           let weekDay = dateFormatter.string(from: date)
+           return weekDay
+     }
 }
 
 

@@ -6,6 +6,7 @@
 
 import Foundation
 
+// Coin Gecko API response : MarketDataModel
 /*
  
  https://api.coingecko.com/api/v3/global
