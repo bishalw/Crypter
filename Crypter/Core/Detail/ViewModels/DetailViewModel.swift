@@ -8,13 +8,15 @@
 import Foundation
 import Combine
 class DetailViewModel: ObservableObject{
-    
-    private let coinDetailDataService: CoinDetailDataService
-    @Published var coin: CoinModel
-    
+  
     @Published var overViewStatistics: [StatisticModel] = []
     @Published var additionalStatistics: [StatisticModel] = []
+    @Published var coinDescription: String? = nil
+    @Published var websiteURL: String? = nil
+    @Published var redditURL: String? = nil
     
+    @Published var coin: CoinModel
+    private let coinDetailDataService: CoinDetailDataService
     private var cancellables = Set<AnyCancellable>()
     
     init(coin: CoinModel, coinDetailDataService: CoinDetailDataService) {
@@ -31,6 +33,14 @@ class DetailViewModel: ObservableObject{
             .sink { [weak self](returnedArrays) in
                 self?.overViewStatistics = returnedArrays.overview
                 self?.additionalStatistics = returnedArrays.additional
+            }
+            .store(in: &cancellables)
+        
+        coinDetailDataService.$coinDetails
+            .sink { [weak self] (returnedCoinDetails) in
+                self?.coinDescription = returnedCoinDetails?.readableDescription
+                self?.websiteURL = returnedCoinDetails?.links?.homepage?.first
+                self?.redditURL = returnedCoinDetails?.links?.subredditURL
             }
             .store(in: &cancellables)
         
