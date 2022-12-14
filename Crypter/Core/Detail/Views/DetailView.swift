@@ -33,11 +33,9 @@ struct DetailLoadingView: View {
 
 struct DetailView: View {
     @StateObject var vm: DetailViewModel
-    @State var currentTab: String = "7 Days"
-    @State var outlineColor: Color
     @State private var showFullDescription: Bool = false
     
-    let data: [Double]
+
     private let spacing: CGFloat = 20
     
     let columns: [GridItem] = [
@@ -47,27 +45,46 @@ struct DetailView: View {
     
     init( vm: DetailViewModel, coin: CoinModel) {
         _vm = StateObject(wrappedValue: vm)
-        data = coin.sparklineIn7D?.price ?? []
-        let priceChange = (data.last ?? 0) - (data.first ?? 0)
-        outlineColor = priceChange > 0 ? Color.theme.green : Color.theme.red
+        
     }
 
     var body: some View {
         ScrollView{
           
             VStack(spacing: 10) {
-               
-                chartView
-                overViewTitle
+                CoinChartView
+                OverwiewTitle
                 Divider()
-                overwiewDescription
-                overviewGrid
+                
+                OverviewGrid
+                AdditionalTitle
+                Divider()
                 AdditionalGrid
+                OverwiewDescription
+                WebsiteSection
+                
+                .accentColor(.blue)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .font(.headline)
+                
             }
             .padding()
         }
         .navigationTitle(vm.coin.name)
         .navigationBarTitleDisplayMode(.large)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing){
+                HStack{
+                    Spacer()
+                    Text(vm.coin.symbol.uppercased())
+                        .font(.headline)
+                        .foregroundColor(Color.theme.secondaryText)
+                    CoinImageView(coinImageViewModel: .createProdInstance(coin: vm.coin ))
+                        .frame(width: 25, height: 25)
+                }
+            }
+        }
+     
     }
 }
 
@@ -158,41 +175,28 @@ extension ChartView {
      }
 }
 extension DetailView {
-    private var chartView: some View {
+    private var CoinChartView: some View {
         VStack(alignment: .trailing, spacing: 0){
-            Picker("", selection: $currentTab){
-                Text("1D")
-                    .tag("Day")
-                Text("1W")
-                    .tag("Week")
-                Text("1M")
-                    .tag("Month")
-            }.pickerStyle(.segmented)
-            
-            switch currentTab {
-                case "Day":
-                    ChartView(coin: vm.coin)
-                    
-                case "Week":
-                    ChartView(coin: vm.coin)
-                    
-                case "Month":
-                    ChartView(coin: vm.coin)
-                    
-                default:
-                    ChartView(coin: vm.coin)
-                }
+            ChartView(coin: vm.coin)
         }.frame(minWidth: 0, maxWidth: .infinity, alignment: .trailing)
     }
-    private var overViewTitle: some View {
+    private var OverwiewTitle: some View {
         Text("Overview")
+            .font(.title)
+            .bold()
+            .foregroundColor(Color.theme.accent)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        
+    }
+    private var AdditionalTitle: some View {
+        Text("Additional Details")
             .font(.title)
             .bold()
             .foregroundColor(Color.theme.accent)
             .frame(maxWidth: .infinity, alignment: .leading)
     }
     
-    private var overwiewDescription: some View {
+    private var OverwiewDescription: some View {
         ZStack {
             if let coinDescription = vm.coinDescription,
                !coinDescription.isEmpty {
@@ -201,12 +205,17 @@ extension DetailView {
                         .lineLimit(showFullDescription ? nil : 3)
                         .font(.callout)
                         .foregroundColor(Color.theme.secondaryText)
+                        .onTapGesture {
+                            withAnimation(.linear){
+                                showFullDescription.toggle()
+                            }
+                        }
                     Button {
-                        withAnimation(.easeInOut){
+                        withAnimation(.linear){
                             showFullDescription.toggle()
                         }
                     } label: {
-                        Text(showFullDescription ? "Less" : "Read more")
+                        Text(showFullDescription ? "Less" : "Read more...")
                             .font(.caption)
                             .fontWeight(.bold)
                             .padding(.vertical, 4)
@@ -216,7 +225,7 @@ extension DetailView {
         }
     }
     
-    private var overviewGrid: some View {
+    private var OverviewGrid: some View {
         LazyVGrid(
             columns: columns,
             alignment: .leading,
@@ -235,10 +244,25 @@ extension DetailView {
             spacing: spacing,
             pinnedViews: [],
             content: {
-                ForEach(vm.overViewStatistics) { stat in
+                ForEach(vm.additionalStatistics) { stat in
                     StatisticView(stat: stat)
                 }
             })
+    }
+    private var WebsiteSection: some View {
+        VStack(alignment: .leading){
+            if let websiteString = vm.websiteURL,
+               let url = URL(string: websiteString){
+                Link("Official Website", destination: url).padding([.top,.bottom], 4)
+            }
+            Spacer()
+            if let redditString = vm.redditURL,
+                let url = URL(string: redditString) {
+                Link("Reddit", destination: url).padding([.top,.bottom], 4)
+            }
+            Spacer()
+            
+        }
     }
 }
 

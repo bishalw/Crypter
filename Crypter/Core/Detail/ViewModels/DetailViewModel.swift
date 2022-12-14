@@ -74,7 +74,7 @@ class DetailViewModel: ObservableObject{
         let overViewArray: [StatisticModel] = [priceStat, marketCapstat, rankStat, volumeStat]
         
         return overViewArray
-        
+    
     }
     
     func createAdditionalArray(coinModel: CoinModel, coinDetailModel: CoinDetailModel?) -> [StatisticModel] {

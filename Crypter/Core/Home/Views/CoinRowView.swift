@@ -37,19 +37,13 @@ struct CoinRowView_Previews: PreviewProvider {
 }
 
 extension CoinRowView {
-    private func createCoinImageViewModel() -> CoinImageViewModel{
-        let networkManager = RealNetworkingManager.init()
-        let coinImageService = CoinImageService.init(coin: coin, networkingManager: networkManager, fileManager: LocalFileManager())
-        let coinImageViewModel = CoinImageViewModel.init(coin: coin, coinImageService: coinImageService)
-        return coinImageViewModel
-    }
     private var leftColumn: some View {
         HStack(spacing: 0){
             Text("\(coin.rank)")
                 .font(.caption)
                 .foregroundColor(Color.theme.secondaryText)
                 .padding(.trailing)
-            CoinImageView(coinImageViewModel: createCoinImageViewModel())
+            CoinImageView(coinImageViewModel: CoinImageViewModel.createProdInstance(coin: coin))
                 .frame(width: 30, height: 30)
             Text(coin.symbol.uppercased())
                 .font(.headline)
