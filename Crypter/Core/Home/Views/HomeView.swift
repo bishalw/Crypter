@@ -15,9 +15,7 @@ struct HomeView: View{
     
     @State private var selectedCoin: CoinModel? = nil
     @State private var showDetailView: Bool = false
-    
-    
-    
+    @State private var showSettingsView: Bool = false
     
     var body: some View {
         ZStack{
@@ -25,10 +23,9 @@ struct HomeView: View{
             Color.theme.background
                 .ignoresSafeArea()
                 .sheet(isPresented: $showPortfolioViewSheet, content: {
-                    PortfolioView(dismiss: {
-                        showPortfolioViewSheet.toggle()
-                    })
-                        .environmentObject(vm)
+                    PortfolioView()
+                    .environmentObject(vm)
+                        
                 })
 
             // content layer
@@ -50,8 +47,21 @@ struct HomeView: View{
                 .padding(.horizontal)
                 
                     if isPortfolioShown{
-                        portfolioCoinsList
-                            .transition(.move(edge: .leading))
+                        ZStack(alignment: .top) {
+                            if vm.portfolioCoins.isEmpty && vm.searchText.isEmpty {
+                                Text("You havne't added any coins to your portfolio yet. Click on the + button to get started! 🧐 ")
+                                    .font(.callout)
+                                    .foregroundColor(Color.theme.accent)
+                                    .fontWeight(.medium)
+                                    .multilineTextAlignment(.center)
+                                    .padding(50)
+                                
+                            } else {
+                                portfolioCoinsList
+                                    
+                            }
+                        }.transition(.move(edge: .leading))
+                    
                         
                     } else {
                         allCoinsList
@@ -59,12 +69,15 @@ struct HomeView: View{
                         
                     }
                 
-              
                 Spacer(minLength: 0)
             }
             .onTapGesture {
                 UIApplication.shared.endEditing()
             }
+            .sheet(isPresented: $showSettingsView, content: {
+                SettingsView()
+                               
+            })
         }
         .background(
             NavigationLink(
@@ -97,6 +110,8 @@ extension HomeView{
                 .onTapGesture {
                     if isPortfolioShown {
                         showPortfolioViewSheet.toggle()
+                    } else {
+                        showSettingsView.toggle()
                     }
                 }
                 .background(
@@ -209,6 +224,6 @@ extension HomeView{
 
 struct Previews_HomeView_Previews: PreviewProvider {
     static var previews: some View {
-        /*@START_MENU_TOKEN@*/Text("Hello, World!")/*@END_MENU_TOKEN@*/
+        HomeView()
     }
 }

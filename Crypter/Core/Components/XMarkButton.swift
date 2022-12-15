@@ -9,11 +9,11 @@ import SwiftUI
 
 struct XMarkButton: View {
     
-    var buttonPressed: () -> Void
+    @Environment(\.dismiss) var dismiss
     
     var body: some View {
         Button(action: {
-            buttonPressed()
+           dismiss()
     }, label: {
         Image(systemName: "xmark")
             .font(.headline)
@@ -24,8 +24,6 @@ struct XMarkButton: View {
 
 struct XMarkButton_Previews: PreviewProvider {
     static var previews: some View {
-        XMarkButton {
-            
-        }
+        XMarkButton()
     }
 }

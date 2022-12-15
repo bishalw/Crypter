@@ -23,6 +23,7 @@ struct CrypterApp: App {
                     .navigationBarHidden(true)
             }
             // all child of homeview has access to vm
+            .navigationViewStyle(StackNavigationViewStyle())
             .environmentObject(vm)
         }
     }

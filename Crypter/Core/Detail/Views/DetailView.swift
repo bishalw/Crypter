@@ -88,7 +88,6 @@ struct DetailView: View {
     }
 }
 
-
 struct ChartView: View {
 
     let data: [Double]

@@ -13,8 +13,8 @@ struct PortfolioView: View {
     @State private var selectedCoin: CoinModel? = nil
     @State private var quantityText: String = ""
     @State private var showCheckmark: Bool = false
+    @Environment(\.presentationMode) var presentationMode
     
-    var dismiss: () -> Void
     
     var body: some View {
         NavigationView{
@@ -31,9 +31,12 @@ struct PortfolioView: View {
             .navigationTitle("Edit porfolio")
             .toolbar(content: {
                 ToolbarItem(placement: .navigationBarLeading){
-                    XMarkButton(buttonPressed:  {
-                        dismiss()
-                    })
+                    Button(action: {
+                                 presentationMode.wrappedValue.dismiss()
+                             }, label: {
+                                 Image(systemName: "xmark")
+                                     .font(.headline)
+                             })
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     trailingNavBarButtons
@@ -50,9 +53,7 @@ struct PortfolioView: View {
 
 struct PortfolioView_Previews: PreviewProvider {
     static var previews: some View {
-        PortfolioView {
-            
-        }
+       Text("HI")
     }
 }
 
