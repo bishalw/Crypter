@@ -8,35 +8,53 @@
 import Foundation
 import Combine
 
+enum HomeViewModelSortOptions {
+    case rank, rankReversed, holdings, holdingsReversed, price, priceReversed
+}
 
-class HomeViewModel: ObservableObject {
+protocol HomeViewModel: ObservableObject {
+    var statistics: [StatisticModel] { get set }
+    var allCoins: [CoinModel] { get set }
+    var portfolioCoins: [CoinModel] { get set }
+    var searchText: String { get set }
+    var sortOption: HomeViewModelSortOptions { get set }
+    func updatePortfolio(coin: CoinModel, amount: Double)
+    func reloadData()
+}
+
+extension HomeViewModel {
+    var myTotalHoldingDisplayString: String {
+        var total = 0.0
+        for coin in portfolioCoins {
+            total = total + coin.currentHoldingsValue
+        }
+        return String("$\(total.formattedWithAbbreviations())")
+    }
+}
+
+class HomeViewModelImpl: HomeViewModel {
     
     @Published var statistics: [StatisticModel] = []
     @Published var allCoins: [CoinModel] = []
     @Published var portfolioCoins: [CoinModel] = []
-    @Published var sortOption: SortOption = .holdings
+    @Published var sortOption: HomeViewModelSortOptions = .holdings
     @Published var searchText: String = ""
     
     
-    private let coinDataService: CoinDataService // coin data
-    private let marketDataService: MarketDataService // global market statistics
+    private let coinDataService: CoinDataServiceImpl // coin data
+    private let marketDataService: MarketDataServiceImpl // global market statistics
     private let portfolioDataService = PortfolioDataService()
     private var cancellables = Set<AnyCancellable>()
+
     
-    
-    
-    enum SortOption {
-        case rank, rankReversed, holdings, holdingsReversed, price, priceReversed
-    }
-    
-    init(coinDataService: CoinDataService, marketDataService: MarketDataService) {
+    init(coinDataService: CoinDataServiceImpl, marketDataService: MarketDataServiceImpl) {
         self.coinDataService = coinDataService
         self.marketDataService = marketDataService
         addSubscribers()
         }
     
       
-    func addSubscribers(){
+    private func addSubscribers(){
         
         // filters and searches all the coins from coin data service
         $searchText
@@ -76,14 +94,7 @@ class HomeViewModel: ObservableObject {
         portfolioDataService.updatePortfolio(coin: coin, amount: amount)
     }
     
-    func getDayOfTheWeek()-> String{
-           let dateFormatter = DateFormatter()
-           dateFormatter.dateFormat = "EEEE"
-           let weekDay = dateFormatter.string(from: Date())
-           return weekDay
-     }
-    
-    private func filterAndSortCoins(text: String, coins: [CoinModel], sort: SortOption ) -> [CoinModel]{
+    private func filterAndSortCoins(text: String, coins: [CoinModel], sort: HomeViewModelSortOptions ) -> [CoinModel]{
         
         var updatedCoins = filterCoins(text: text, coins: coins)
         sortCoins(sort: sort, coins: &updatedCoins)
@@ -104,7 +115,7 @@ class HomeViewModel: ObservableObject {
                 coin.id.lowercased().contains(lowercasedText)
         }
     }
-    private func sortCoins(sort: SortOption, coins: inout [CoinModel]) {
+    private func sortCoins(sort: HomeViewModelSortOptions, coins: inout [CoinModel]) {
         switch sort {
         case .rank, .holdings:
             coins.sort(by:{ $0.rank < $1.rank })
@@ -168,20 +179,9 @@ class HomeViewModel: ObservableObject {
         ])
         return stats
     }
-}
-extension HomeViewModel{
-    
-    var myTotalHoldingDisplayString: String {
-        var total = 0.0
-        for coin in portfolioCoins {
-            total = total + coin.currentHoldingsValue
-        }
-        return String("$\(total.formattedWithAbbreviations())")
-    }
     
     func reloadData(){
         coinDataService.getCoins()
         marketDataService.getMarketData()
     }
-    
 }

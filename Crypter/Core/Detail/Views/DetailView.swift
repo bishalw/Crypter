@@ -24,9 +24,9 @@ struct DetailLoadingView: View {
         return vm
         
     }
-    func createCoinDetailDataService(coin: CoinModel) -> CoinDetailDataService {
-        let networkingManager = RealNetworkingManager.init()
-        let coinDetailService = CoinDetailDataService.init(networkingManager: networkingManager, coin: coin)
+    func createCoinDetailDataService(coin: CoinModel) -> CoinDetailDataServiceImpl {
+        let networkingManager = NetworkingManagerImpl.init()
+        let coinDetailService = CoinDetailDataServiceImpl.init(networkingManager: networkingManager, coin: coin)
         return coinDetailService
     }
 }
@@ -131,7 +131,7 @@ struct ChartView: View {
                     .foregroundStyle(LinearGradient(gradient: Gradient(colors: [lineColor,.clear]), startPoint: .top, endPoint: .bottom)).opacity(0.5)
                 }
             }
-            .chartYScale(domain: .automatic(includesZero: false))
+            .chartYScale(domain: (minY)...(maxY))
             .chartXAxis(content: {
                 let value = AxisMarkValues.automatic(minimumStride: 7, desiredCount: 7)
                 let date = Date()
@@ -159,6 +159,7 @@ struct ChartView: View {
                 })
             })
             .frame(height:250)
+            
         } else {
             Text("Charts are supported in iOS 16.0. Please update :)")
         }

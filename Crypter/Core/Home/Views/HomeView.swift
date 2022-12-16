@@ -7,9 +7,14 @@
 import Foundation
 import SwiftUI
 
-struct HomeView: View{
-    
-    @EnvironmentObject private var vm: HomeViewModel
+class ServiceA: ObservableObject {
+    func someFunc() {
+        
+    }
+}
+
+struct HomeView<ViewModel: HomeViewModel>: View{
+    @StateObject var vm: ViewModel
     @State private var isPortfolioShown: Bool = false // animate right
     @State private var showPortfolioViewSheet: Bool = false // new sheet
     
@@ -23,7 +28,7 @@ struct HomeView: View{
             Color.theme.background
                 .ignoresSafeArea()
                 .sheet(isPresented: $showPortfolioViewSheet, content: {
-                    PortfolioView()
+                    PortfolioView(vm: vm)
                     .environmentObject(vm)
                         
                 })
@@ -35,7 +40,7 @@ struct HomeView: View{
                if isPortfolioShown {
                    StatisticView(stat: StatisticModel(title: "Total Holding", value: vm.myTotalHoldingDisplayString))
                 } else {
-                    HomeStatsView(showPortfolio: $isPortfolioShown)
+                    HomeStatsView(vm: vm, showPortfolio: $isPortfolioShown)
                 }
                 
                 SearchBarView(searchText: $vm.searchText)
@@ -92,11 +97,10 @@ struct HomeView: View{
 struct HomeView_Previews: PreviewProvider{
     static var previews: some View{
         NavigationView {
-            HomeView()
+            HomeView(vm: MockHomeViewModel())
                 .navigationBarHidden(true)
         }
         .environmentObject(dev.homeVM)
-        .previewInterfaceOrientation(.portraitUpsideDown)
     }
 }
 
@@ -222,8 +226,3 @@ extension HomeView{
     }
 }
 
-struct Previews_HomeView_Previews: PreviewProvider {
-    static var previews: some View {
-        HomeView()
-    }
-}

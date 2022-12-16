@@ -9,7 +9,7 @@ import SwiftUI
 @main
 struct CrypterApp: App {
     
-    @StateObject private var vm = HomeViewModel(coinDataService: .init(networkingManager: RealNetworkingManager()), marketDataService: .init(networkingManager: RealNetworkingManager()))
+    let prodVm = HomeViewModelImpl(coinDataService: .init(networkingManager: NetworkingManagerImpl()), marketDataService: .init(networkingManager: NetworkingManagerImpl()))
     
     init(){
         UINavigationBar.appearance().largeTitleTextAttributes = [.foregroundColor: UIColor(Color.theme.accent)]
@@ -19,13 +19,45 @@ struct CrypterApp: App {
     var body: some Scene {
         WindowGroup {
             NavigationView {
-                HomeView()
+                HomeView(vm: prodVm)
                     .navigationBarHidden(true)
+//                    .environmentObject(ServiceA())
             }
             // all child of homeview has access to vm
             .navigationViewStyle(StackNavigationViewStyle())
-            .environmentObject(vm)
         }
     }
     
+}
+
+
+
+struct ParentView: View {
+    @ObservedObject var vm: ViewModel = .init()
+    @StateObject var childVm = ChildView.ViewModel()
+    var body: some View {
+        if vm.boolShouldDiplsay {
+            ChildView(vm: childVm)
+        } else {
+            EmptyView()
+        }
+    }
+
+    class ViewModel: ObservableObject {
+        @Published var boolShouldDiplsay = true
+    }
+}
+
+
+struct ChildView: View {
+    @ObservedObject var vm: ViewModel
+    var body: some View {
+        TextField(text: $vm.x) {
+            Text("Write something here")
+        }
+    }
+    
+    class ViewModel: ObservableObject {
+        @Published var x = ""
+    }
 }

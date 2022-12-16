@@ -7,7 +7,14 @@
 import Foundation
 import Combine
 
-class CoinDataService: ObservableObject {
+protocol CoinDataService: ObservableObject{
+    
+    var allCoins: [CoinModel] {get set}
+    func getCoins()
+    
+}
+
+class CoinDataServiceImpl: CoinDataService {
     
     @Published var allCoins: [CoinModel] = []
     var coinSubscription: AnyCancellable?

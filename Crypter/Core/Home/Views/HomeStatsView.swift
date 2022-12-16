@@ -6,9 +6,9 @@
 
 import SwiftUI
 
-struct HomeStatsView: View {
+struct HomeStatsView<ViewModel: HomeViewModel>: View {
     
-    @EnvironmentObject private var vm: HomeViewModel
+    @ObservedObject var vm: ViewModel
     @Binding var showPortfolio: Bool
     
     var body: some View {
@@ -25,7 +25,9 @@ struct HomeStatsView: View {
 
 struct HomeStatsView_Previews: PreviewProvider {
     static var previews: some View {
-        HomeStatsView(showPortfolio: .constant(false))
+        HomeStatsView(
+            vm: MockHomeViewModel(),
+            showPortfolio: .constant(false))
             .environmentObject(dev.homeVM)
     }
 }

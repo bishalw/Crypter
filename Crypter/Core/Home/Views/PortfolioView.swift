@@ -7,9 +7,8 @@
 
 import SwiftUI
 
-struct PortfolioView: View {
-    
-    @EnvironmentObject private var vm: HomeViewModel
+struct PortfolioView<ViewModel: HomeViewModel>: View {
+    @ObservedObject var vm: ViewModel
     @State private var selectedCoin: CoinModel? = nil
     @State private var quantityText: String = ""
     @State private var showCheckmark: Bool = false
@@ -53,7 +52,7 @@ struct PortfolioView: View {
 
 struct PortfolioView_Previews: PreviewProvider {
     static var previews: some View {
-       Text("HI")
+        PortfolioView(vm: MockHomeViewModel())
     }
 }
 
@@ -63,7 +62,7 @@ extension PortfolioView {
         ScrollView(.horizontal, showsIndicators: false, content: {
             LazyHStack(spacing: 10) {
                 ForEach(vm.searchText.isEmpty ? vm.portfolioCoins : vm.allCoins) { coin in
-                    CoinLogoView(coin: coin, vm: CoinImageViewModel(coin: coin, coinImageService: CoinImageService(coin: coin, networkingManager: RealNetworkingManager(), fileManager: LocalFileManager())))
+                    CoinLogoView(coin: coin, vm: CoinImageViewModel(coin: coin, coinImageService: CoinImageService(coin: coin, networkingManager: NetworkingManagerImpl(), fileManager: LocalFileManager())))
                         .frame(width: 75, height: 100)
                         .padding(4)
                         .onTapGesture {

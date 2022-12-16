@@ -7,7 +7,21 @@
 import Foundation
 import Combine
 
-class MarketDataService: ObservableObject {
+protocol MarketDataService: ObservableObject {
+    var marketData: MarketDataModel? {get set}
+}
+
+class MockMarketDataService: MarketDataService {
+    var marketData: MarketDataModel?
+    
+    var networkingManager: MockNetworkingManager
+    
+    init(marketData: MarketDataModel? = nil, networkingManager: MockNetworkingManager) {
+        self.marketData = marketData
+        self.networkingManager = networkingManager
+    }
+}
+class MarketDataServiceImpl: MarketDataService {
     
     // Anything subscribed to published gets notified
     @Published var marketData: MarketDataModel? = nil

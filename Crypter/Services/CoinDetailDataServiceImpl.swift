@@ -8,7 +8,13 @@
 import Foundation
 import Combine
 
-class CoinDetailDataService: ObservableObject {
+protocol CoinDetailDataService: ObservableObject {
+    
+    var coinDetails: CoinDetailModel? {get set}
+    
+    
+}
+class CoinDetailDataServiceImpl: CoinDetailDataService {
     
     // Anything subscribed to published gets notified
     @Published var coinDetails: CoinDetailModel? = nil

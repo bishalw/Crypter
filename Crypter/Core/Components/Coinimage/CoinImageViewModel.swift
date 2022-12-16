@@ -39,7 +39,7 @@ class CoinImageViewModel: ObservableObject {
 
 extension CoinImageViewModel {
     static func createProdInstance(coin: CoinModel) -> CoinImageViewModel {
-        let networkManager = RealNetworkingManager.init()
+        let networkManager = NetworkingManagerImpl.init()
         let coinImageService = CoinImageService.init(coin: coin, networkingManager: networkManager, fileManager: LocalFileManager())
         let coinImageViewModel = CoinImageViewModel.init(coin: coin, coinImageService: coinImageService)
         return coinImageViewModel

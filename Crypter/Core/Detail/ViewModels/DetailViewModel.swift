@@ -16,10 +16,10 @@ class DetailViewModel: ObservableObject{
     @Published var redditURL: String? = nil
     
     @Published var coin: CoinModel
-    private let coinDetailDataService: CoinDetailDataService
+    private let coinDetailDataService: CoinDetailDataServiceImpl
     private var cancellables = Set<AnyCancellable>()
     
-    init(coin: CoinModel, coinDetailDataService: CoinDetailDataService) {
+    init(coin: CoinModel, coinDetailDataService: CoinDetailDataServiceImpl) {
         self.coin = coin
         self.coinDetailDataService = coinDetailDataService
         self.addSubscribers()
