@@ -6,14 +6,14 @@
 
 import SwiftUI
 
-struct HomeStatsView<ViewModel: HomeViewModel>: View {
+struct HomeStatsView: View {
     
-    @ObservedObject var vm: ViewModel
+    var statistics: [StatisticModel]
     @Binding var showPortfolio: Bool
     
     var body: some View {
         HStack {
-            ForEach(vm.statistics) { stat in
+            ForEach(statistics) { stat in
                 StatisticView(stat: stat)
                     .frame(width: UIScreen.main.bounds.width/3)
             }
@@ -26,8 +26,7 @@ struct HomeStatsView<ViewModel: HomeViewModel>: View {
 struct HomeStatsView_Previews: PreviewProvider {
     static var previews: some View {
         HomeStatsView(
-            vm: MockHomeViewModel(),
+            statistics: [],
             showPortfolio: .constant(false))
-            .environmentObject(dev.homeVM)
     }
 }

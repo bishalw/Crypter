@@ -31,7 +31,6 @@ struct CrypterApp: App {
 }
 
 
-
 struct ParentView: View {
     @ObservedObject var vm: ViewModel = .init()
     @StateObject var childVm = ChildView.ViewModel()

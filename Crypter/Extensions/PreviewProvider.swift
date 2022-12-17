@@ -24,7 +24,7 @@ class DeveloperPreview {
     
 //    let homeVM = HomeViewModelImpl(coinDataService: .init(networkingManager: NetworkingManagerImpl()), marketDataService: MarketDataServiceImpl(networkingManager: NetworkingManagerImpl() ))
     
-    let homeVM = HomeViewModelImpl(coinDataService: .init(networkingManager: MockNetworkingManager()), marketDataService: MarketDataServiceImpl(networkingManager: MockNetworkingManager()))
+//    let homeVM = HomeViewModelImpl(coinDataService: .init(networkingManager: MockNetworkingManager()), marketDataService: MarketDataServiceImpl(networkingManager: MockNetworkingManager()))
     
     let stat1 = StatisticModel(title: "Market Cap", value: "$12.5Bn", percentageChange: 25.34)
     let stat2 = StatisticModel(title: "Total Volume", value: "$1.23Tr")

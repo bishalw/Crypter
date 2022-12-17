@@ -40,6 +40,7 @@ class CoinDataServiceImpl: CoinDataService {
             })
             
     }
+    
     private func handleCompletion (status: Subscribers.Completion<Error>) {
         switch status {
         case .finished:

@@ -18,6 +18,7 @@
 		5830C8102890CC2300A9DC2A /* CoinRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5830C80F2890CC2300A9DC2A /* CoinRowView.swift */; };
 		5830C8122890CC9300A9DC2A /* PreviewProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5830C8112890CC9300A9DC2A /* PreviewProvider.swift */; };
 		5830C8142890D04500A9DC2A /* Double.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5830C8132890D04500A9DC2A /* Double.swift */; };
+		58380E5A294D4B1D00DDEABF /* CoinDataServiceImplTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58380E59294D4B1D00DDEABF /* CoinDataServiceImplTests.swift */; };
 		583FE39F2949BF8F00B6599B /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 583FE39E2949BF8F00B6599B /* SettingsView.swift */; };
 		5863C83C28CAA3E700D65675 /* MarketDataServiceImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5863C83B28CAA3E700D65675 /* MarketDataServiceImpl.swift */; };
 		586B8695292562560035513B /* CoinDetailModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 586B8694292562560035513B /* CoinDetailModel.swift */; };
@@ -80,6 +81,7 @@
 		5830C80F2890CC2300A9DC2A /* CoinRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoinRowView.swift; sourceTree = "<group>"; };
 		5830C8112890CC9300A9DC2A /* PreviewProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewProvider.swift; sourceTree = "<group>"; };
 		5830C8132890D04500A9DC2A /* Double.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Double.swift; sourceTree = "<group>"; };
+		58380E59294D4B1D00DDEABF /* CoinDataServiceImplTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoinDataServiceImplTests.swift; sourceTree = "<group>"; };
 		583FE39E2949BF8F00B6599B /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		5863C83B28CAA3E700D65675 /* MarketDataServiceImpl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarketDataServiceImpl.swift; sourceTree = "<group>"; };
 		586B8694292562560035513B /* CoinDetailModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoinDetailModel.swift; sourceTree = "<group>"; };
@@ -164,6 +166,13 @@
 				5806A28429234C5F000D5786 /* DetailView.swift */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		582CB2C6294C007B00288AD0 /* Store */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Store;
 			sourceTree = "<group>";
 		};
 		583FE39C2949BEB200B6599B /* Settings */ = {
@@ -262,6 +271,7 @@
 		58F7C4D22880E0AB003622E0 /* Crypter */ = {
 			isa = PBXGroup;
 			children = (
+				582CB2C6294C007B00288AD0 /* Store */,
 				58CEA04928B367A90049FE42 /* Utilities */,
 				58F7C50F28886C34003622E0 /* Models */,
 				58F7C4D32880E0AB003622E0 /* CrypterApp.swift */,
@@ -287,6 +297,7 @@
 			isa = PBXGroup;
 			children = (
 				58F7C4E42880E0AD003622E0 /* CrypterTests.swift */,
+				58380E59294D4B1D00DDEABF /* CoinDataServiceImplTests.swift */,
 			);
 			path = CrypterTests;
 			sourceTree = "<group>";
@@ -558,6 +569,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				58380E5A294D4B1D00DDEABF /* CoinDataServiceImplTests.swift in Sources */,
 				58F7C4E52880E0AD003622E0 /* CrypterTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -774,7 +786,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = EGCAKP6VK4;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.bishalw.CrypterTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -794,7 +806,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = EGCAKP6VK4;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.bishalw.CrypterTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";

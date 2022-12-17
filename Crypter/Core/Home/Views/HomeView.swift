@@ -40,7 +40,8 @@ struct HomeView<ViewModel: HomeViewModel>: View{
                if isPortfolioShown {
                    StatisticView(stat: StatisticModel(title: "Total Holding", value: vm.myTotalHoldingDisplayString))
                 } else {
-                    HomeStatsView(vm: vm, showPortfolio: $isPortfolioShown)
+                    HomeStatsView(statistics: vm.statistics,
+                                  showPortfolio: $isPortfolioShown)
                 }
                 
                 SearchBarView(searchText: $vm.searchText)
@@ -100,7 +101,7 @@ struct HomeView_Previews: PreviewProvider{
             HomeView(vm: MockHomeViewModel())
                 .navigationBarHidden(true)
         }
-        .environmentObject(dev.homeVM)
+        
     }
 }
 
