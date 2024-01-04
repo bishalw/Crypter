@@ -32,6 +32,7 @@ struct CoinImageView: View {
 
 struct CoinImageView_Previews: PreviewProvider {
     static var previews: some View {
-       Text("To Do")
+      Text("To DO")
     }
 }
+

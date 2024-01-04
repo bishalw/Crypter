@@ -16,31 +16,32 @@ class DetailViewModel: ObservableObject{
     @Published var redditURL: String? = nil
     
     @Published var coin: CoinModel
-    private let coinDetailDataService: CoinDetailDataServiceImpl
+    private let cryptoDataService: CryptoDataService
     private var cancellables = Set<AnyCancellable>()
     
-    init(coin: CoinModel, coinDetailDataService: CoinDetailDataServiceImpl) {
+    init(coin: CoinModel, cryptoDataService: CryptoDataService) {
         self.coin = coin
-        self.coinDetailDataService = coinDetailDataService
+        self.cryptoDataService = cryptoDataService
         self.addSubscribers()
     }
     
-    
     private func addSubscribers(){
-        coinDetailDataService.$coinDetails
+        cryptoDataService.coinDetailsPublisher
             .combineLatest($coin)
             .map(mapDataToStatistics)
-            .sink { [weak self](returnedArrays) in
-                self?.overViewStatistics = returnedArrays.overview
-                self?.additionalStatistics = returnedArrays.additional
+            .sink { [weak self] (returnedArrays) in
+                guard let strongSelf = self else { return }
+                strongSelf.overViewStatistics = returnedArrays.overview
+                strongSelf.additionalStatistics = returnedArrays.additional
             }
             .store(in: &cancellables)
         
-        coinDetailDataService.$coinDetails
+        cryptoDataService.coinDetailsPublisher
             .sink { [weak self] (returnedCoinDetails) in
-                self?.coinDescription = returnedCoinDetails?.readableDescription
-                self?.websiteURL = returnedCoinDetails?.links?.homepage?.first
-                self?.redditURL = returnedCoinDetails?.links?.subredditURL
+                guard let strongSelf = self else { return }
+                strongSelf.coinDescription = returnedCoinDetails?.readableDescription
+                strongSelf.websiteURL = returnedCoinDetails?.links?.homepage?.first
+                strongSelf.redditURL = returnedCoinDetails?.links?.subredditURL
             }
             .store(in: &cancellables)
         

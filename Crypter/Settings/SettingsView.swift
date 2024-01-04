@@ -9,6 +9,7 @@ import SwiftUI
 
 struct SettingsView: View {
 
+
     let defaultURL = URL(string: "https://www.google.com")!
     let linkedInURL = URL(string: "https://www.linkedin.com/in/bishalw/")!
     let coingeckoURL = URL (string: "https://www.coingecko.com")!
@@ -49,7 +50,7 @@ extension SettingsView {
                     .resizable()
                     .frame(width: 100, height: 100)
                     .clipShape(RoundedRectangle(cornerRadius: 20))
-                Text("This app was made to practice effiecient coding and using MVVM, Combine and CoreData")
+                Text("This app was made to practice effiecient coding using MVVM, Combine and CoreData")
                     .font(.callout)
                     .fontWeight(.medium)
                     

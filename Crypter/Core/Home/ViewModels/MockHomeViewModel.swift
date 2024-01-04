@@ -8,7 +8,7 @@
 import Foundation
 
 class MockHomeViewModel: HomeViewModel {
-    var sortOption: HomeViewModelSortOptions = .holdings
+    var sortOption: SortOption = .holdings
     
     func reloadData() {
     }

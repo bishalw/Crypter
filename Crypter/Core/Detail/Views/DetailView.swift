@@ -14,20 +14,9 @@ struct DetailLoadingView: View {
     var body: some View {
         ZStack {
             if let coin = coin {
-                DetailView(vm: createDetailViewModel(coin: coin), coin: coin)
+                DetailView(vm: DetailViewModel(coin: coin, cryptoDataService: CryptoDataServiceImpl(networkingManager: NetworkingManagerImpl())))
             }
-            
         }
-    }
-    func createDetailViewModel(coin: CoinModel) -> DetailViewModel {
-        let vm = DetailViewModel(coin: coin, coinDetailDataService: createCoinDetailDataService(coin: coin))
-        return vm
-        
-    }
-    func createCoinDetailDataService(coin: CoinModel) -> CoinDetailDataServiceImpl {
-        let networkingManager = NetworkingManagerImpl.init()
-        let coinDetailService = CoinDetailDataServiceImpl.init(networkingManager: networkingManager, coin: coin)
-        return coinDetailService
     }
 }
 
@@ -43,10 +32,7 @@ struct DetailView: View {
         GridItem(.flexible()),
     ]
     
-    init( vm: DetailViewModel, coin: CoinModel) {
-        _vm = StateObject(wrappedValue: vm)
-        
-    }
+   
 
     var body: some View {
         ScrollView{
@@ -60,7 +46,7 @@ struct DetailView: View {
                 AdditionalTitle
                 Divider()
                 AdditionalGrid
-                OverwiewDescription
+                OverViewDescription
                 WebsiteSection
                 
                 .accentColor(.blue)
@@ -196,7 +182,7 @@ extension DetailView {
             .frame(maxWidth: .infinity, alignment: .leading)
     }
     
-    private var OverwiewDescription: some View {
+    private var OverViewDescription: some View {
         ZStack {
             if let coinDescription = vm.coinDescription,
                !coinDescription.isEmpty {

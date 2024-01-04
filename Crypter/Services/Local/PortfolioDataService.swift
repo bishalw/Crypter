@@ -45,7 +45,6 @@ class PortfolioDataService {
         }
     }
     
-    
     //MARK: PRIVATE
     
     private func getPortfolio() {

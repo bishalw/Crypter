@@ -16,7 +16,7 @@ struct CircleButtonAnimationView: View {
             .scale(animate ? 1.0 : 0.5)
             .opacity(animate ? 0.0 : 0.5)
         //MARK: fix depricated animation
-            .animation(animate ? Animation.easeOut(duration: 1.0) :                 .none)
+            .animation(animate ? Animation.easeOut(duration: 1.0) :.none, value: animate)
     }
 }
 
