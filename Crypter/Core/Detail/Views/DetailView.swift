@@ -22,6 +22,7 @@ struct DetailLoadingView: View {
 
 struct DetailView: View {
     @StateObject var vm: DetailViewModel
+   
     @State private var showFullDescription: Bool = false
     
 

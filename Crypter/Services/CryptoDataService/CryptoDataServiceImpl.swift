@@ -23,7 +23,6 @@ class CryptoDataServiceImpl: ObservableObject {
     @Published var allCoins: [CoinModel] = []
     @Published var coinDetails: CoinDetailModel? = nil
     
-    
     // Subscriptions
     var marketDataSubscription: AnyCancellable?
     var coinSubscription: AnyCancellable?

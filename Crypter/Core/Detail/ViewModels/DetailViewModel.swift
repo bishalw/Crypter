@@ -23,29 +23,28 @@ class DetailViewModel: ObservableObject{
         self.coin = coin
         self.cryptoDataService = cryptoDataService
         self.addSubscribers()
+        cryptoDataService.getCoinDetails(coin: coin)
     }
     
-    private func addSubscribers(){
-        cryptoDataService.coinDetailsPublisher
-            .combineLatest($coin)
-            .map(mapDataToStatistics)
-            .sink { [weak self] (returnedArrays) in
-                guard let strongSelf = self else { return }
-                strongSelf.overViewStatistics = returnedArrays.overview
-                strongSelf.additionalStatistics = returnedArrays.additional
-            }
-            .store(in: &cancellables)
-        
+    private func addSubscribers() {
         cryptoDataService.coinDetailsPublisher
             .sink { [weak self] (returnedCoinDetails) in
-                guard let strongSelf = self else { return }
-                strongSelf.coinDescription = returnedCoinDetails?.readableDescription
-                strongSelf.websiteURL = returnedCoinDetails?.links?.homepage?.first
-                strongSelf.redditURL = returnedCoinDetails?.links?.subredditURL
+                self?.updateDetails(returnedCoinDetails: returnedCoinDetails)
             }
             .store(in: &cancellables)
-        
     }
+    
+    private func updateDetails(returnedCoinDetails: CoinDetailModel?) {
+        coinDescription = returnedCoinDetails?.readableDescription
+        websiteURL = returnedCoinDetails?.links?.homepage?.first
+        redditURL = returnedCoinDetails?.links?.subredditURL
+        
+        let statisticsData = mapDataToStatistics(coinDetailModel: returnedCoinDetails, coinModel: coin)
+        overViewStatistics = statisticsData.overview
+        additionalStatistics = statisticsData.additional
+    }
+    
+
     private func mapDataToStatistics(coinDetailModel: CoinDetailModel?, coinModel: CoinModel) -> (overview: [StatisticModel], additional:[StatisticModel]) {
         //OverViewArray
         let overviewArray = createOverViewArray(coinModel: coinModel)

@@ -38,9 +38,8 @@ class HomeViewModelImpl: HomeViewModel {
     
     init(cryptoDataService: CryptoDataServiceImpl) {
         self.cryptoDataService = cryptoDataService
-
         addSubscribers()
-        }
+    }
     
       
     private func addSubscribers(){
