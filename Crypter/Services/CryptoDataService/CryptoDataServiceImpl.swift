@@ -2,19 +2,18 @@
 //  CryptoDataService.swift
 //  Crypter
 //
-//  Created by Bishalw on 12/31/23.
 //
 
 import Foundation
 import Combine
 
 protocol CryptoDataService {
-    func getMarketData()
-    func getCoins()
-    func getCoinDetails(coin: CoinModel)
     var marketDataPublisher: Published<MarketDataModel?>.Publisher { get }
     var allCoinsPublisher: Published<[CoinModel]>.Publisher { get }
     var coinDetailsPublisher: Published<CoinDetailModel?>.Publisher { get }
+    func getMarketData()
+    func getCoins()
+    func getCoinDetails(coin: CoinModel)
 }
 
 class CryptoDataServiceImpl: ObservableObject {

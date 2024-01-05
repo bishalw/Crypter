@@ -18,4 +18,10 @@ struct StatisticModel: Identifiable {
         self.percentageChange = percentageChange
     }
 }
+extension StatisticModel {
+    static func mockStatisticModel() -> StatisticModel {
+        let stat = StatisticModel(title: "Market Cap", value: "$12.5Bn", percentageChange: 25.34)
+        return stat
+    }
+}
 

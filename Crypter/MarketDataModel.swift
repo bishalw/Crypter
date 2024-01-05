@@ -82,3 +82,32 @@ struct MarketDataModel: Codable {
         return ""
     }
 }
+
+extension MarketDataModel {
+    static func mockMarketDataModel() -> MarketDataModel  {
+        return MarketDataModel(
+            totalMarketCap:[
+                "active_cryptocurrencies": 12916,
+                "upcoming_icos": 0,
+                "ongoing_icos": 49,
+                "ended_icos": 3376,
+                "markets": 568,
+            ],
+            totalVolume: [
+                "btc": 4284633.494789662,
+                "xau": 48204642.314971656,
+                "bits": 4284633494789.6616,
+                "sats": 428463349478966.2
+            ],
+            marketCapPercentage:[
+                "btc": 35.99775935166138,
+                "eth": 19.24582082522093,
+                "usdt": 6.6160097306404,
+                "usdc": 5.05967530187105,
+                "bnb": 4.470148867351053,
+                "busd": 1.951897673032006
+            ],
+            marketCapChangePercentage24HUsd: 2.556299656001906)
+    }
+}
+

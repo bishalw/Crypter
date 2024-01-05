@@ -73,7 +73,17 @@ struct HomeView<ViewModel: HomeViewModel>: View{
                                         .padding(50)
                                     
                                 } else {
-                                    portfolioCoinsList
+                                    List {
+                                        ForEach(vm.portfolioCoins) { coin in
+                                            CoinRowView(coin: coin, showHoldingsColumn: true)
+                                                .listRowInsets(.init(top: 10, leading: 0 , bottom: 10, trailing: 10))
+                                                .onTapGesture {
+                                                    segue(coin: coin)
+                                                }
+                                        }
+                                    }
+                                    .listRowBackground(Color.theme.background)
+                                    .listStyle(PlainListStyle())
                                         
                                 }
                             }.transition(.move(edge: .leading))
@@ -128,10 +138,13 @@ extension HomeView{
                 }
             }
             
-        }.refreshable {
-            vm.reloadData()
         }
         .listStyle(PlainListStyle())
+        .refreshable {
+            vm.reloadData()
+        }
+        
+        
     }
     
     private func segue(coin: CoinModel) {
@@ -139,22 +152,7 @@ extension HomeView{
         showDetailView.toggle()
     }
     
-    private var portfolioCoinsList: some View {
-        List {
-            ForEach(vm.portfolioCoins) { coin in
-                CoinRowView(coin: coin, showHoldingsColumn: true)
-                    .listRowInsets(.init(top: 10, leading: 0 , bottom: 10, trailing: 10))
-                    .onTapGesture {
-                        segue(coin: coin)
-                    }
-            }
-        }
-        
-        
-        .listStyle(PlainListStyle())
-    }
-    
-    
+  
 }
 
 

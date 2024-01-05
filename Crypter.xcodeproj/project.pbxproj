@@ -26,6 +26,7 @@
 		58834B972B4252910054BF1C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 58834B962B4252910054BF1C /* Assets.xcassets */; };
 		588654C328C095D70077E7A4 /* HomeStatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 588654C228C095D70077E7A4 /* HomeStatsView.swift */; };
 		5886CCA928C0A1DA00FC0357 /* MarketDataModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5886CCA828C0A1DA00FC0357 /* MarketDataModel.swift */; };
+		589077872B47B928009C9AEB /* MockCryptoDataService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 589077862B47B928009C9AEB /* MockCryptoDataService.swift */; };
 		58ABF2272B46D3EE00D41EF8 /* HomeHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58ABF2262B46D3EE00D41EF8 /* HomeHeaderView.swift */; };
 		58ABF2292B46D62000D41EF8 /* ColumnTitleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58ABF2282B46D62000D41EF8 /* ColumnTitleView.swift */; };
 		58BC88E9294B55F300D95022 /* MockHomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58BC88E8294B55F300D95022 /* MockHomeViewModel.swift */; };
@@ -88,6 +89,7 @@
 		58834B962B4252910054BF1C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		588654C228C095D70077E7A4 /* HomeStatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeStatsView.swift; sourceTree = "<group>"; };
 		5886CCA828C0A1DA00FC0357 /* MarketDataModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarketDataModel.swift; sourceTree = "<group>"; };
+		589077862B47B928009C9AEB /* MockCryptoDataService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockCryptoDataService.swift; sourceTree = "<group>"; };
 		58ABF2262B46D3EE00D41EF8 /* HomeHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeHeaderView.swift; sourceTree = "<group>"; };
 		58ABF2282B46D62000D41EF8 /* ColumnTitleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColumnTitleView.swift; sourceTree = "<group>"; };
 		58BC88E8294B55F300D95022 /* MockHomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockHomeViewModel.swift; sourceTree = "<group>"; };
@@ -244,6 +246,7 @@
 			isa = PBXGroup;
 			children = (
 				58F2595D2B424DC400EDCABB /* CryptoDataServiceImpl.swift */,
+				589077862B47B928009C9AEB /* MockCryptoDataService.swift */,
 			);
 			path = CryptoDataService;
 			sourceTree = "<group>";
@@ -523,6 +526,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				583FE39F2949BF8F00B6599B /* SettingsView.swift in Sources */,
+				589077872B47B928009C9AEB /* MockCryptoDataService.swift in Sources */,
 				58219F6928DB9F8700D218F8 /* PortfolioContainer.xcdatamodeld in Sources */,
 				58EBEFB628C030690079D982 /* StatisticModel.swift in Sources */,
 				58BC88F0294B655200D95022 /* MockNetworkingManager.swift in Sources */,
