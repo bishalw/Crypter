@@ -27,7 +27,7 @@ class DetailViewModel: ObservableObject{
     }
     
     private func addSubscribers() {
-        cryptoDataService.coinDetailsPublisher
+        cryptoDataService.coinDetails
             .sink { [weak self] (returnedCoinDetails) in
                 self?.updateDetails(returnedCoinDetails: returnedCoinDetails)
             }

@@ -46,7 +46,7 @@ class HomeViewModelImpl: HomeViewModel {
         
         // filters and searches all the coins from coin data service
         $searchText
-            .combineLatest(cryptoDataService.$allCoins, $sortOption)
+            .combineLatest(cryptoDataService.allCoins, $sortOption)
             .debounce(for: .seconds(0.5), scheduler: DispatchQueue.main)
             .map(filterAndSortCoins)
             .sink { [weak self]( returnedCoins) in
@@ -68,7 +68,7 @@ class HomeViewModelImpl: HomeViewModel {
             .store(in: &cancellables)
         
         // updates marketData
-        cryptoDataService.$marketData
+        cryptoDataService.marketData
             .combineLatest($portfolioCoins)
             .map(mapGlobabalMarketData)
             .sink { [weak self] (returnedStats) in

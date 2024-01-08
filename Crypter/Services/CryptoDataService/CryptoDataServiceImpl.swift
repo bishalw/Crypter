@@ -8,21 +8,21 @@ import Foundation
 import Combine
 
 protocol CryptoDataService {
-    var marketDataPublisher: Published<MarketDataModel?>.Publisher { get }
-    var allCoinsPublisher: Published<[CoinModel]>.Publisher { get }
-    var coinDetailsPublisher: Published<CoinDetailModel?>.Publisher { get }
     func getMarketData()
     func getCoins()
     func getCoinDetails(coin: CoinModel)
+    var marketData: CurrentValueSubject<MarketDataModel?,Never> { get }
+    var allCoins: CurrentValueSubject<[CoinModel], Never> { get }
+    var coinDetails: CurrentValueSubject<CoinDetailModel?,Never> { get }
+  
 }
 
-class CryptoDataServiceImpl: ObservableObject {
+class CryptoDataServiceImpl: ObservableObject, CryptoDataService {
     
-    // Published properties for subscribers
-    @Published var marketData: MarketDataModel? = nil
-    @Published var allCoins: [CoinModel] = []
-    @Published var coinDetails: CoinDetailModel? = nil
-    
+    // Publishers
+    var marketData: CurrentValueSubject<MarketDataModel?,Never> = CurrentValueSubject<MarketDataModel?,Never>(nil)
+    var allCoins: CurrentValueSubject<[CoinModel], Never> = CurrentValueSubject<[CoinModel], Never>([])
+    var coinDetails: CurrentValueSubject<CoinDetailModel?,Never> = CurrentValueSubject<CoinDetailModel?,Never>(nil)
     // Subscriptions
     var marketDataSubscription: AnyCancellable?
     var coinSubscription: AnyCancellable?
@@ -44,7 +44,7 @@ class CryptoDataServiceImpl: ObservableObject {
         marketDataSubscription = networkingManager.download(url: url)
             .decode(type: GlobalData.self, decoder: JSONDecoder())
             .sink(receiveCompletion: handleCompletion, receiveValue: {[weak self](returnedGlobalData) in
-                self?.marketData = returnedGlobalData.data
+                self?.marketData.send(returnedGlobalData.data)
                 self?.marketDataSubscription?.cancel()
             })
     }
@@ -56,22 +56,23 @@ class CryptoDataServiceImpl: ObservableObject {
         coinSubscription = networkingManager.download(url: url)
             .decode(type: [CoinModel].self, decoder: JSONDecoder())
             .sink(receiveCompletion: handleCompletion, receiveValue: {[weak self](returnedCoins) in
-                self?.allCoins = returnedCoins
+                self?.allCoins.send(returnedCoins)
                 self?.coinSubscription?.cancel()
             })
     }
     
     func getCoinDetails(coin: CoinModel) {
-            let optionalUrl = URL(string: "https://api.coingecko.com/api/v3/coins/\(coin.id)?localization=false&tickers=false&market_data=false&community_data=false&developer_data=false&sparkline=false")
-            guard let url = optionalUrl else { return }
-
-            coinDetailSubscription = networkingManager.download(url: url)
-                .decode(type: CoinDetailModel.self, decoder: JSONDecoder())
-                .sink(receiveCompletion: handleCompletion, receiveValue: {[weak self](returnedCoinDetails) in
-                    self?.coinDetails = returnedCoinDetails
-                    self?.coinDetailSubscription?.cancel()
-                })
-        }
+        let optionalUrl = URL(string: "https://api.coingecko.com/api/v3/coins/\(coin.id)?localization=false&tickers=false&market_data=false&community_data=false&developer_data=false&sparkline=false")
+        guard let url = optionalUrl else { return }
+        
+        coinDetailSubscription = networkingManager.download(url: url)
+            .decode(type: CoinDetailModel.self, decoder: JSONDecoder())
+            .sink(receiveCompletion: handleCompletion, receiveValue: {[weak self](returnedCoinDetails) in
+                self?.coinDetails.send(returnedCoinDetails)
+                self?.coinDetailSubscription?.cancel()
+            })
+    }
+    
     private func handleCompletion(status: Subscribers.Completion<Error>) {
         switch status {
         case .finished:
@@ -81,10 +82,4 @@ class CryptoDataServiceImpl: ObservableObject {
         }
     }
 }
-extension CryptoDataServiceImpl: CryptoDataService {
-    
-    var marketDataPublisher: Published<MarketDataModel?>.Publisher { $marketData }
-    var allCoinsPublisher: Published<[CoinModel]>.Publisher { $allCoins }
-    var coinDetailsPublisher: Published<CoinDetailModel?>.Publisher { $coinDetails }
 
-}
