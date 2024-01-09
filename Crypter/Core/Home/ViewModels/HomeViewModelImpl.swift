@@ -40,10 +40,8 @@ class HomeViewModelImpl: HomeViewModel {
         self.cryptoDataService = cryptoDataService
         addSubscribers()
     }
-    
-      
+
     private func addSubscribers(){
-        
         // filters and searches all the coins from coin data service
         $searchText
             .combineLatest(cryptoDataService.allCoins, $sortOption)

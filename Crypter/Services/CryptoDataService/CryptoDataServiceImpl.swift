@@ -17,7 +17,7 @@ protocol CryptoDataService {
   
 }
 
-class CryptoDataServiceImpl: ObservableObject, CryptoDataService {
+class CryptoDataServiceImpl: CryptoDataService {
     
     // Publishers
     var marketData: CurrentValueSubject<MarketDataModel?,Never> = CurrentValueSubject<MarketDataModel?,Never>(nil)
