@@ -8,20 +8,23 @@
 import Foundation
 import Combine
 
-//class MockCryptoDataService: CryptoDataService {
-//    
-//    
-//    
-//    func getMarketData() {
-//        self.marketData = MarketDataModel.mockMarketDataModel()
-//    }
-//    
-//    func getCoins() {
-//        self.allCoins = CoinModel.mockCoins()
-//    }
-//    
-//    func getCoinDetails(coin: CoinModel) {
-//        self.coinDetails = CoinDetailModel.mockCoinDetails(for: coin)
-//    }
-//    
-//}
+class MockCryptoDataService: CryptoDataService {
+    var marketData: CurrentValueSubject<MarketDataModel?, Never> = CurrentValueSubject(nil)
+    var allCoins: CurrentValueSubject<[CoinModel], Never> = CurrentValueSubject([])
+    var coinDetails: CurrentValueSubject<CoinDetailModel?, Never> = CurrentValueSubject(nil)
+
+    func getMarketData() {
+        // Sending new value to marketData
+        self.marketData.send(MarketDataModel.mockMarketDataModel())
+    }
+    
+    func getCoins() {
+        // Sending new value to allCoins
+        self.allCoins.send(CoinModel.mockCoins())
+    }
+    
+    func getCoinDetails(coin: CoinModel) {
+        // Sending new value to coinDetails
+        self.coinDetails.send(CoinDetailModel.mockCoinDetails(for: coin))
+    }
+}

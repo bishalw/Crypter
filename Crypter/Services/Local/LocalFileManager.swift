@@ -7,10 +7,14 @@
 import Foundation
 import SwiftUI
 
-class LocalFileManager {
+protocol LocalFileManager {
+    func saveImage(image: UIImage, imageName: String, folderName: String)
+    func getImage(imageName: String, folderName: String) -> UIImage?
     
-   
-//    private init() { }
+}
+
+class LocalFileManagerImpl: LocalFileManager{
+
     
     func saveImage(image: UIImage, imageName: String, folderName: String){
         
@@ -39,7 +43,7 @@ class LocalFileManager {
         return UIImage(contentsOfFile: url.path)
     }
     
-    private func createFolderIfNeeded(folderName: String){
+    internal func createFolderIfNeeded(folderName: String){
         
         guard let url = getURLForFolder(folderName: folderName) else { return }
        
@@ -53,7 +57,7 @@ class LocalFileManager {
     }
     
     // file://cachedirectory/{folderName}
-    private func getURLForFolder(folderName: String) -> URL? {
+    internal func getURLForFolder(folderName: String) -> URL? {
         
         guard let url = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else {
             return nil
@@ -61,7 +65,7 @@ class LocalFileManager {
         return url.appendingPathComponent(folderName)
     }
     // file://cachedirectory/{folderName}/{imageName}.png
-    private func getURLForImage(imageName: String, folderName: String) -> URL? {
+    internal func getURLForImage(imageName: String, folderName: String) -> URL? {
         guard let folderURL = getURLForFolder(folderName: folderName) else {
             return nil
         }

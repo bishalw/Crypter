@@ -62,7 +62,7 @@ extension PortfolioView {
         ScrollView(.horizontal, showsIndicators: false, content: {
             LazyHStack(spacing: 10) {
                 ForEach(vm.searchText.isEmpty ? vm.portfolioCoins : vm.allCoins) { coin in
-                    CoinLogoView(coin: coin, vm: CoinImageViewModel(coin: coin, coinImageService: CoinImageService(coin: coin, networkingManager: NetworkingManagerImpl(), fileManager: LocalFileManager())))
+                    CoinLogoView(coin: coin, vm: CoinImageViewModel(coin: coin, coinImageService: CoinImageService(coin: coin, networkingManager: NetworkingManagerImpl(), fileManager: LocalFileManagerImpl())))
                         .frame(width: 75, height: 100)
                         .padding(4)
                         .onTapGesture {
