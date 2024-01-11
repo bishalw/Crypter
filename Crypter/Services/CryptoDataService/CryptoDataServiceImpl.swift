@@ -8,13 +8,12 @@ import Foundation
 import Combine
 
 protocol CryptoDataService {
-    func getMarketData()
-    func getCoins()
     func getCoinDetails(coin: CoinModel)
     var marketData: CurrentValueSubject<MarketDataModel?,Never> { get }
     var allCoins: CurrentValueSubject<[CoinModel], Never> { get }
     var coinDetails: CurrentValueSubject<CoinDetailModel?,Never> { get }
-  
+    func getMarketData()
+    func getCoins()
 }
 
 class CryptoDataServiceImpl: CryptoDataService {
