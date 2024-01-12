@@ -147,10 +147,7 @@ extension PortfolioView {
     
     // Functions
 
-
-    
     private func saveButtonPressed(){
-        
         guard
             let coin = selectedCoin,
             let amount = Double(quantityText)

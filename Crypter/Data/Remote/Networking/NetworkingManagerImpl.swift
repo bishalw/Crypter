@@ -8,43 +8,34 @@ import Foundation
 import Combine 
 
 protocol NetworkingManager {
-    func download(url: URL) -> AnyPublisher<Data, Error>
+    func download<T: Decodable>(url: URL, decodingType: T.Type) -> AnyPublisher<T, Error>
 }
 
 class NetworkingManagerImpl: NetworkingManager {
-    
-    enum NetworkingError: LocalizedError {
-        case badURLResponse(url: URL)
-        case unknown
-        
-        var errorDescription: String? {
-            switch self {
-            case .badURLResponse(url: let url): return "[🔥] Bad response from URL: \(url)"
-            case .unknown: return "[⚠️} Unknown error occured"
-            }
-        }
-    }
 
-    func download(url: URL) -> AnyPublisher<Data, Error>{
-        return URLSession.shared.dataTaskPublisher(for: url)
-            .subscribe(on: DispatchQueue.global(qos: .default))
-            .tryMap { [weak self] output -> Data in
-                guard let strongSelf = self else {
-                    throw NetworkingError.unknown
+    func download<T: Decodable>(url: URL, decodingType: T.Type) -> AnyPublisher<T, Error> {
+            return URLSession.shared.dataTaskPublisher(for: url)
+                .subscribe(on: DispatchQueue.global(qos: .default))
+                .tryMap { output in
+                    guard let httpResponse = output.response as? HTTPURLResponse else {
+                        throw NetworkingError.invalidResponse
+                    }
+                    guard 200...299 ~= httpResponse.statusCode else {
+                        throw NetworkingError.httpError(code: httpResponse.statusCode)
+                    }
+                    return output.data
                 }
-                return try strongSelf.handleURLResponse(output: output, url: url)
-            }
-            .receive(on: DispatchQueue.main)
-            .eraseToAnyPublisher()
-    }
-    private func handleURLResponse(output: URLSession.DataTaskPublisher.Output, url: URL) throws -> Data {
-        guard let response = output.response as? HTTPURLResponse,
-              response.statusCode >= 200 && response.statusCode < 300 else{
-            throw NetworkingError.badURLResponse(url: url)
+                .decode(type: decodingType, decoder: JSONDecoder())
+                .mapError { error in
+                    if let decodingError = error as? DecodingError {
+                        return NetworkingError.decodingError(decodingError)
+                    } else {
+                        return error
+                    }
+                }
+                .receive(on: DispatchQueue.main)
+                .eraseToAnyPublisher()
         }
-        return output.data
-    }
-    
 }
 
 

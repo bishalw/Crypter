@@ -16,6 +16,7 @@ import Foundation
  Response:
  
  */
+
 struct CoinDetailModel: Codable {
     let id, symbol, name: String?
     let blockTimeInMinutes: Int?
