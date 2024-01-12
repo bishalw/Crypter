@@ -4,8 +4,9 @@
 xcuserdata/
 
 ## Xcode 8 and earlier
-*.xcscmblueprint
 *.xccheckout
+*.xcscmblueprint
+
 
 ### Xcode Patch ###
 *.xcodeproj/*
