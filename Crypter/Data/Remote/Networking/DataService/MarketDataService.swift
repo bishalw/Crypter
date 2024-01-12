@@ -17,7 +17,6 @@ class MarketDataServiceImpl: MarketDataService {
     var marketData: CurrentValueSubject<MarketDataModel?,Never> = CurrentValueSubject<MarketDataModel?,Never>(nil)
     
     var networkingManager: NetworkingManager
-    var marketDataSubscription: AnyCancellable?
     
     init(networkingManager: NetworkingManager) {
         self.networkingManager = networkingManager
