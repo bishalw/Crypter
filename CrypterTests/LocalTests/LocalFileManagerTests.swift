@@ -2,7 +2,6 @@
 //  LocalFileManagerTests.swift
 //  CrypterTests
 //
-//  Created by Bishalw on 1/10/24.
 //
 
 import XCTest

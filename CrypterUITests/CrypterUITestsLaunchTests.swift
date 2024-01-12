@@ -2,7 +2,6 @@
 //  CrypterUITestsLaunchTests.swift
 //  CrypterUITests
 //
-//  Created by Bishalw on 7/14/22.
 //
 
 import XCTest

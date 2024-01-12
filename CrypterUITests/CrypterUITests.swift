@@ -2,7 +2,6 @@
 //  CrypterUITests.swift
 //  CrypterUITests
 //
-//  Created by Bishalw on 7/14/22.
 //
 
 import XCTest
@@ -19,7 +18,6 @@ class CrypterUITests: XCTestCase {
     }
 
     override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
     }
 
     func testExample() throws {

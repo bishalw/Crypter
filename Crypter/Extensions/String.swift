@@ -2,7 +2,6 @@
 //  String.swift
 //  Crypter
 //
-//  Created by Bishalw on 12/13/22.
 //
 
 import Foundation

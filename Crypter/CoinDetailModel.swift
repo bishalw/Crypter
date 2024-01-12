@@ -2,7 +2,6 @@
 //  CoinDetailModel.swift
 //  Crypter
 //
-//  Created by Bishalw on 11/16/22.
 //
 
 import Foundation
