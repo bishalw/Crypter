@@ -7,8 +7,9 @@
 
 import SwiftUI
 
-struct PortfolioView<ViewModel: HomeViewModel>: View {
-    @ObservedObject var vm: ViewModel
+struct PortfolioView: View {
+    @EnvironmentObject var core: Core
+    @StateObject var vm: HomeViewModel
     @State private var selectedCoin: CoinModel? = nil
     @State private var quantityText: String = ""
     @State private var showCheckmark: Bool = false
@@ -50,11 +51,12 @@ struct PortfolioView<ViewModel: HomeViewModel>: View {
     }
 }
 
-struct PortfolioView_Previews: PreviewProvider {
-    static var previews: some View {
-        PortfolioView(vm: MockHomeViewModel())
-    }
-}
+
+//struct PortfolioView_Previews: PreviewProvider {
+//    static var previews: some View {
+//        PortfolioView(vm: MockHomeViewModel())
+//    }
+//}
 
 extension PortfolioView {
     // Views

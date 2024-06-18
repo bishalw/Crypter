@@ -14,6 +14,7 @@ struct SettingsView: View {
     let coingeckoURL = URL (string: "https://www.coingecko.com")!
     let personalURL = URL(string: "https://www.bishalwagle.com")!
     let githubURL = URL (string: "https://github.com/bishalw")!
+    
     @Environment(\.presentationMode) var presentationMode
     var body: some View {
 

@@ -8,7 +8,7 @@ import Foundation
 import CoreData
 
 protocol PortfolioDataService {
-
+    func updatePortfolio(coin: CoinModel, amount: Double)
 }
 
 class PortfolioDataServiceImpl {

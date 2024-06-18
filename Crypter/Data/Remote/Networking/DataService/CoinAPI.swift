@@ -10,7 +10,7 @@ enum CoinAPI {
     case coins
     case coinDetails(coin: CoinModel)
     case coinImageURL(coin: CoinModel)
-    case marketData
+    case globalData
 
     var url: URL? {
         switch self {
@@ -20,7 +20,7 @@ enum CoinAPI {
             return URL(string: "https://api.coingecko.com/api/v3/coins/\(coin.id)?localization=false&tickers=false&market_data=false&community_data=false&developer_data=false&sparkline=false")
         case .coinImageURL(let coin):
             return URL(string: coin.image)
-        case .marketData:
+        case .globalData:
             return URL(string: "https://api.coingecko.com/api/v3/global")
         }
     }

@@ -8,9 +8,6 @@
 import Foundation
 import Combine
 
-enum SortOption {
-    case rank, rankReversed, holdings, holdingsReversed, price, priceReversed
-}
 
 protocol HomeViewModel: ObservableObject {
     var statistics: [StatisticModel] { get set }
@@ -22,7 +19,6 @@ protocol HomeViewModel: ObservableObject {
     func reloadData()
 }
 
-
 class HomeViewModelImpl: HomeViewModel {
     
     @Published var statistics: [StatisticModel] = []
@@ -32,19 +28,20 @@ class HomeViewModelImpl: HomeViewModel {
     @Published var searchText: String = ""
     
     private let portfolioDataService = PortfolioDataServiceImpl()
-    private let cryptoDataService: CryptoDataServiceImpl
+    private let cryptoStore: CryptoStore
     private var cancellables = Set<AnyCancellable>()
 
     
-    init(cryptoDataService: CryptoDataServiceImpl) {
-        self.cryptoDataService = cryptoDataService
+    init(cryptoStore: CryptoStore) {
+        self.cryptoStore = cryptoStore
+        cryptoStore.fetchAllCoins()
         addSubscribers()
     }
 
     private func addSubscribers(){
         // filters and searches all the coins from coin data service
         $searchText
-            .combineLatest(cryptoDataService.allCoins, $sortOption)
+            .combineLatest(cryptoStore.coins, $sortOption)
             .debounce(for: .seconds(0.5), scheduler: DispatchQueue.main)
             .map(filterAndSortCoins)
             .sink { [weak self]( returnedCoins) in
@@ -52,6 +49,7 @@ class HomeViewModelImpl: HomeViewModel {
                 self.allCoins = self.sortPortfolioCoinsIfNeeded(coins: returnedCoins)
             }
             .store(in: &cancellables)
+    
         /*
         1. CombineLatest the two publishers
         2. Map the two publishers to a new value (in this case, an array of updatedCoinModels)
@@ -66,7 +64,7 @@ class HomeViewModelImpl: HomeViewModel {
             .store(in: &cancellables)
         
         // updates marketData
-        cryptoDataService.marketData
+        cryptoStore.globalDetails
             .combineLatest($portfolioCoins)
             .map(mapGlobabalMarketData)
             .sink { [weak self] (returnedStats) in
@@ -78,17 +76,16 @@ class HomeViewModelImpl: HomeViewModel {
      
     func updatePortfolio(coin: CoinModel, amount: Double) {
         portfolioDataService.updatePortfolio(coin: coin, amount: amount)
-    }
-    
-    private func filterAndSortCoins(text: String, coins: [CoinModel], sort: SortOption ) -> [CoinModel]{
         
+    }
+    func filterAndSortCoins(text: String, coins: [CoinModel]?, sort: SortOption) -> [CoinModel] {
+        guard let coins = coins else { return [] }
         var updatedCoins = filterCoins(text: text, coins: coins)
         sortCoins(sort: sort, coins: &updatedCoins)
         return updatedCoins
-       
-        
     }
-    private func filterCoins(text: String, coins:[CoinModel]) -> [CoinModel]{
+    
+     func filterCoins(text: String, coins:[CoinModel]) -> [CoinModel]{
         guard !text.isEmpty else {
             return coins
         }
@@ -101,7 +98,7 @@ class HomeViewModelImpl: HomeViewModel {
                 coin.id.lowercased().contains(lowercasedText)
         }
     }
-    private func sortCoins(sort: SortOption, coins: inout [CoinModel]) {
+     func sortCoins(sort: SortOption, coins: inout [CoinModel]) {
         switch sort {
         case .rank, .holdings:
             coins.sort(by:{ $0.rank < $1.rank })
@@ -115,7 +112,7 @@ class HomeViewModelImpl: HomeViewModel {
         }
     }
     
-    private func sortPortfolioCoinsIfNeeded(coins: [CoinModel]) -> [CoinModel]{
+     func sortPortfolioCoinsIfNeeded(coins: [CoinModel]) -> [CoinModel]{
         
         switch sortOption {
         case .holdings:
@@ -128,7 +125,7 @@ class HomeViewModelImpl: HomeViewModel {
         
     }
     
-    private func mapAllCoinsToPortfolioCoins(allCoins: [CoinModel], portfolioEntities: [PortfolioEntity]) -> [CoinModel] {
+     func mapAllCoinsToPortfolioCoins(allCoins: [CoinModel], portfolioEntities: [PortfolioEntity]) -> [CoinModel] {
        allCoins
             .compactMap { (coin) -> CoinModel? in
                 let foundEntity = portfolioEntities.first { portFolioEntity in
@@ -142,7 +139,7 @@ class HomeViewModelImpl: HomeViewModel {
                 return coin.updateHoldings(amount: entity.amount)
             }
     }
-    private func mapGlobabalMarketData(marketDataModel: MarketDataModel?, portfolioCoins: [CoinModel]) -> [StatisticModel] {
+     func mapGlobabalMarketData(marketDataModel: MarketDataModel?, portfolioCoins: [CoinModel]) -> [StatisticModel] {
         var stats: [StatisticModel] = []
         guard let data = marketDataModel else {
             return stats
@@ -168,11 +165,12 @@ class HomeViewModelImpl: HomeViewModel {
     }
     
     func reloadData(){
-        cryptoDataService.getCoins()
-        cryptoDataService.getMarketData()
+        cryptoStore.fetchAllCoins()
+        cryptoStore.fetchGlobalData()
     }
 }
-extension HomeViewModel {
+
+extension HomeViewModelImpl {
     var myTotalHoldingDisplayString: String {
         var total = 0.0
         for coin in portfolioCoins {
@@ -180,4 +178,7 @@ extension HomeViewModel {
         }
         return String("$\(total.formattedWithAbbreviations())")
     }
+}
+enum SortOption {
+    case rank, rankReversed, holdings, holdingsReversed, price, priceReversed
 }

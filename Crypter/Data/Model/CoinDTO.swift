@@ -2,7 +2,6 @@
 //  CoinDTO.swift
 //  Crypter
 //
-//  Created by Bishalw on 1/12/24.
 //
 
 import Foundation
@@ -12,6 +11,7 @@ import Foundation
 https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=1&sparkline=true&price_change_percentage=24h
   
 */
+
 struct CoinDTO: Identifiable, Codable{
     let id, symbol, name: String
     let image: String
@@ -29,7 +29,6 @@ struct CoinDTO: Identifiable, Codable{
     let lastUpdated: String?
     let sparklineIn7D: SparklineIn7D?
     let priceChangePercentage24HInCurrency: Double?
-    let currentHoldings: Double?
     
     
     enum CodingKeys: String, CodingKey {
@@ -57,10 +56,11 @@ struct CoinDTO: Identifiable, Codable{
         case lastUpdated = "last_updated"
         case sparklineIn7D = "sparkline_in_7d"
         case priceChangePercentage24HInCurrency = "price_change_percentage_24h_in_currency"
-        case currentHoldings
     }
 }
 // MARK: - SparklineIn7D
-struct SparklineIn7D: Codable {
-    let price: [Double]?
+extension CoinDTO {
+    struct SparklineIn7D: Codable {
+        let price: [Double]?
+    }
 }

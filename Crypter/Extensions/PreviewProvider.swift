@@ -45,7 +45,7 @@ class DeveloperPreview {
        atlChangePercentage: 90020.24075,
        atlDate: "2013-07-06T00:00:00.000Z",
        lastUpdated: "2021-03-13T23:18:10.268Z",
-       sparklineIn7D: SparklineIn7D(price: [
+       price: [
            54019.26878317463,
            53718.060935791524,
            53677.12968669343,
@@ -65,7 +65,7 @@ class DeveloperPreview {
            55473.0657777974,
            54696.044114623706,
 
-       ]),
+       ],
        priceChangePercentage24HInCurrency: 3952.64,
        currentHoldings: 1.5)
     let stat1 = StatisticModel(title: "Market Cap", value: "$12.5Bn", percentageChange: 25.34)

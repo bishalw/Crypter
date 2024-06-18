@@ -6,6 +6,7 @@
 
 import Foundation
 import Combine
+
 class DetailViewModel: ObservableObject{
   
     @Published var overViewStatistics: [StatisticModel] = []
@@ -15,18 +16,18 @@ class DetailViewModel: ObservableObject{
     @Published var redditURL: String? = nil
     
     @Published var coin: CoinModel
-    private let cryptoDataService: CryptoDataService
+    private let cryptoStore: CryptoStore
     private var cancellables = Set<AnyCancellable>()
     
-    init(coin: CoinModel, cryptoDataService: CryptoDataService) {
+    init(coin: CoinModel, cryptoStore: CryptoStore) {
         self.coin = coin
-        self.cryptoDataService = cryptoDataService
+        self.cryptoStore = cryptoStore
         self.addSubscribers()
-        cryptoDataService.getCoinDetails(coin: coin)
+//        cryptoStore.coinDetails(coin: coin)
     }
     
     private func addSubscribers() {
-        cryptoDataService.coinDetails
+        cryptoStore.coinDetails
             .sink { [weak self] (returnedCoinDetails) in
                 self?.updateDetails(returnedCoinDetails: returnedCoinDetails)
             }
@@ -42,7 +43,7 @@ class DetailViewModel: ObservableObject{
         overViewStatistics = statisticsData.overview
         additionalStatistics = statisticsData.additional
     }
-    
+        
 
     private func mapDataToStatistics(coinDetailModel: CoinDetailModel?, coinModel: CoinModel) -> (overview: [StatisticModel], additional:[StatisticModel]) {
         //OverViewArray
@@ -66,6 +67,7 @@ class DetailViewModel: ObservableObject{
         //row 2, col1
         let rank = "\(coinModel.rank)"
         let rankStat = StatisticModel(title: "Rank", value: rank)
+        
         //row 2, col2
         let volume = "$" + (coinModel.totalVolume?.formattedWithAbbreviations() ?? "")
         let volumeStat = StatisticModel(title: "Volume", value: volume)

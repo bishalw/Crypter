@@ -8,7 +8,8 @@ import Foundation
 import Combine
 import UIKit
 
-class CoinImageRepositoryImpl: CoinImageRepository{
+class CoinImageRepositoryImpl: CoinImageRepository {
+
     let networkingManager: NetworkingManager
     let localFileManager: LocalFileManager
     var image: CurrentValueSubject<UIImage?,Never> = CurrentValueSubject(nil)
@@ -28,28 +29,30 @@ class CoinImageRepositoryImpl: CoinImageRepository{
         }
     }
 
-    private func fetchLocalImage(for imageName: String) -> UIImage? {
+    func fetchLocalImage(for imageName: String) -> UIImage? {
         return localFileManager.getImage(imageName: imageName, folderName: folderName)
     }
 
-    internal func downloadAndSaveImage(for coin: CoinModel) {
+    func downloadAndSaveImage(for coin: CoinModel) {
         guard let coinImageURL = CoinAPI.coinImageURL(coin: coin).url else { return }
-        imageSubscription = networkingManager.download(url: coinImageURL)
-            .tryMap { UIImage(data: $0) }
-            .sink(receiveCompletion: handleCompletion, receiveValue: { [weak self] returnedImage in
-                guard let self = self, let downloadedImage = returnedImage else { return }
-                self.image.send(downloadedImage)
-                self.localFileManager.saveImage(image: downloadedImage, imageName: coin.id, folderName: self.folderName)
+        let folderName = self.folderName
+        let imageName = coin.id
+        imageSubscription = networkingManager.downloadImage(url: coinImageURL)
+            .sink(receiveCompletion: { completion in
+                switch completion {
+                case .finished:
+                    break
+                case .failure(let error):
+                    if let decodingError = error as? DecodingError {
+                        print("Error decoding image: \(decodingError.localizedDescription)")
+                    } else {
+                        print("Error downloading image: \(error.localizedDescription)")
+                    }
+                }
+            }, receiveValue: { downloadedImage in
+                guard let image = downloadedImage else { return }
+                self.image.send(image)
+                self.localFileManager.saveImage(image: image, imageName: imageName, folderName: folderName)
             })
     }
-    internal func handleCompletion(status: Subscribers.Completion<Error>) {
-        switch status {
-        case .finished:
-            break
-        case .failure(let error):
-            print(error.localizedDescription)
-        }
-    }
-    
-                  
 }

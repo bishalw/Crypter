@@ -8,10 +8,10 @@ import SwiftUI
 
 @main
 struct CrypterApp: App {
-
-    let prodVm = HomeViewModelImpl(cryptoDataService: CryptoDataServiceImpl(networkingManager: NetworkingManagerImpl()))
     
-    init(){
+    @StateObject var core = Core()
+    
+    init() {
         UINavigationBar.appearance().largeTitleTextAttributes = [.foregroundColor: UIColor(Color.theme.accent)]                               
         UINavigationBar.appearance().titleTextAttributes = [.foregroundColor: UIColor(Color.theme.accent)]
     }
@@ -19,8 +19,9 @@ struct CrypterApp: App {
     var body: some Scene {
         WindowGroup {
             NavigationView {
-                HomeView(vm: prodVm)
+                HomeView(vm: HomeViewModelImpl(cryptoStore: core.cryptoStore))
                     .navigationBarHidden(true)
+                    .environmentObject(core)
             }
             .navigationViewStyle(StackNavigationViewStyle())
         }

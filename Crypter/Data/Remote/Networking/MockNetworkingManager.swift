@@ -6,18 +6,22 @@
 
 import Foundation
 import Combine
+import UIKit
 
 class MockNetworkingManager: NetworkingManager {
-    var downloadDataToReturn: Data = Data()
-    var downloadDataNetworkTime: Int = 2
-    var lastestDownloadCall: URL? = nil
+    var downloadCallCount = 0
+    var downloadURLs = [URL]()
+    var downloadStub: AnyPublisher<Decodable, Error>?
     
     func download<T>(url: URL, decodingType: T.Type) -> AnyPublisher<T, Error> where T : Decodable {
-        self.lastestDownloadCall = url
-        let subject = CurrentValueSubject<Data, Error>(downloadDataToReturn)
-        return subject
-            .delay(for: .seconds(downloadDataNetworkTime), scheduler: RunLoop.main)
-            .decode(type: T.self, decoder: JSONDecoder())
+        downloadCallCount += 1
+        downloadURLs.append(url)
+        return downloadStub as! AnyPublisher<T, Error>
+    }
+    
+    func downloadImage(url: URL) -> AnyPublisher<UIImage?, Error> {
+        return Just(UIImage(named: "placeholder"))
+            .setFailureType(to: Error.self)
             .eraseToAnyPublisher()
     }
 }

@@ -6,14 +6,15 @@
 
 import SwiftUI
 import Charts
+
 struct DetailLoadingView: View {
-    
+    @EnvironmentObject var core: Core
      @Binding var coin: CoinModel?
     
     var body: some View {
         ZStack {
             if let coin = coin {
-                DetailView(vm: DetailViewModel(coin: coin, cryptoDataService: CryptoDataServiceImpl(networkingManager: NetworkingManagerImpl())))
+                DetailView(vm: DetailViewModel(coin: coin, cryptoStore: core.cryptoStore))
             }
         }
     }
@@ -31,8 +32,6 @@ struct DetailView: View {
         GridItem(.flexible()),
         GridItem(.flexible()),
     ]
-    
-   
 
     var body: some View {
         ScrollView{
@@ -84,7 +83,7 @@ struct ChartView: View {
     
     init(coin: CoinModel) {
         
-        data = coin.sparklineIn7D?.price ?? []
+        data = coin.price  ?? []
         maxY = data.max() ?? 0
         minY = data.min() ?? 0
         

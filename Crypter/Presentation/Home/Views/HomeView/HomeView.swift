@@ -2,13 +2,13 @@
 //  HomeView.swift
 //  Crypter
 //
-//
 
 import Foundation
 import SwiftUI
 
-struct HomeView<ViewModel: HomeViewModel>: View{
-    @StateObject var vm: ViewModel
+struct HomeView: View{
+    @EnvironmentObject var core: Core
+    @StateObject var vm: HomeViewModelImpl
     @State private var isPortfolioShown: Bool = false // animate right
     @State private var showPortfolioViewSheet: Bool = false // new sheet
     
@@ -25,7 +25,6 @@ struct HomeView<ViewModel: HomeViewModel>: View{
                     .ignoresSafeArea()
                     .sheet(isPresented: $showPortfolioViewSheet, content: {
                         PortfolioView(vm: vm)
-                            .environmentObject(vm)
                         
                     })
                 
@@ -110,15 +109,15 @@ struct HomeView<ViewModel: HomeViewModel>: View{
     
 }
 
-struct HomeView_Previews: PreviewProvider{
-    static var previews: some View{
-        NavigationView {
-            HomeView(vm: MockHomeViewModel())
-                .navigationBarHidden(true)
-        }
-        
-    }
-}
+//struct HomeView_Previews: PreviewProvider{
+//    static var previews: some View{
+//        NavigationView {
+//            HomeView(vm: MockHomeViewModel())
+//                .navigationBarHidden(true)
+//        }
+//        
+//    }
+//}
 
 extension HomeView{
     
