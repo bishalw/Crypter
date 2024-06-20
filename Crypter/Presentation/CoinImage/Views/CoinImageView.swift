@@ -6,14 +6,9 @@
 
 import SwiftUI
 
-struct CoinImageView: View {
-    
-    @ObservedObject var vm: CoinImageViewModel
-    
-    init(coinImageViewModel: CoinImageViewModel) {
-        vm = coinImageViewModel
-    }
-    
+struct CoinImageView<ViewModel>: View where ViewModel: CoinImageViewModel {
+    @StateObject var vm: ViewModel
+
     var body: some View {
         ZStack {
             if let image = vm.image {

@@ -7,7 +7,7 @@
 import SwiftUI
 
 struct CoinRowView: View {
-    
+    @EnvironmentObject var core: Core
     let coin: CoinModel
     let showHoldingsColumn: Bool // showing holdings column
     var body: some View {
@@ -42,7 +42,7 @@ extension CoinRowView {
                 .font(.caption)
                 .foregroundColor(Color.theme.secondaryText)
                 .padding(.trailing)
-            CoinImageView(coinImageViewModel: CoinImageViewModel.createProdInstance(coin: coin))
+            CoinImageView(vm: CoinImageViewModelImpl(coinImageRepository: CoinImageRepositoryImpl(networkingManager: core.getNetworkingManager, localFileManager: core.getLocalFileManager), coin: coin))
                 .frame(width: 30, height: 30)
             Text(coin.symbol.uppercased())
                 .font(.headline)

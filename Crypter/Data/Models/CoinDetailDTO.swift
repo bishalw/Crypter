@@ -36,9 +36,9 @@ struct CoinDetailDTO: Codable {
 
 extension CoinDetailDTO.Links {
     func toDomain() -> Links {
-              return Links(
-                  homepage: homepage,
-                  subredditURL: subredditURL
-              )
-          }
+        return Links(
+            homepage: homepage,
+            subredditURL: subredditURL
+        )
+    }
 }

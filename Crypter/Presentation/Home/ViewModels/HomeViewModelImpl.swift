@@ -9,17 +9,19 @@ import Foundation
 import Combine
 
 
-protocol HomeViewModel: ObservableObject {
+protocol HomeViewModel: ObservableObject{
     var statistics: [StatisticModel] { get set }
     var allCoins: [CoinModel] { get set }
     var portfolioCoins: [CoinModel] { get set }
     var searchText: String { get set }
     var sortOption: SortOption { get set }
+    var myTotalHoldingDisplayString: String { get }
     func updatePortfolio(coin: CoinModel, amount: Double)
     func reloadData()
 }
 
-class HomeViewModelImpl: HomeViewModel {
+class HomeViewModelImpl: ObservableObject, HomeViewModel {
+
     
     @Published var statistics: [StatisticModel] = []
     @Published var allCoins: [CoinModel] = []
@@ -35,6 +37,7 @@ class HomeViewModelImpl: HomeViewModel {
     init(cryptoStore: CryptoStore) {
         self.cryptoStore = cryptoStore
         cryptoStore.fetchAllCoins()
+        cryptoStore.fetchGlobalData()
         addSubscribers()
     }
 
@@ -73,19 +76,23 @@ class HomeViewModelImpl: HomeViewModel {
             .store(in: &cancellables)
     }
 
-     
+    func reloadData(){
+        cryptoStore.fetchAllCoins()
+        cryptoStore.fetchGlobalData()
+    }
     func updatePortfolio(coin: CoinModel, amount: Double) {
         portfolioDataService.updatePortfolio(coin: coin, amount: amount)
         
     }
-    func filterAndSortCoins(text: String, coins: [CoinModel]?, sort: SortOption) -> [CoinModel] {
+    
+    private func filterAndSortCoins(text: String, coins: [CoinModel]?, sort: SortOption) -> [CoinModel] {
         guard let coins = coins else { return [] }
         var updatedCoins = filterCoins(text: text, coins: coins)
         sortCoins(sort: sort, coins: &updatedCoins)
         return updatedCoins
     }
     
-     func filterCoins(text: String, coins:[CoinModel]) -> [CoinModel]{
+    private func filterCoins(text: String, coins:[CoinModel]) -> [CoinModel]{
         guard !text.isEmpty else {
             return coins
         }
@@ -98,7 +105,7 @@ class HomeViewModelImpl: HomeViewModel {
                 coin.id.lowercased().contains(lowercasedText)
         }
     }
-     func sortCoins(sort: SortOption, coins: inout [CoinModel]) {
+    private func sortCoins(sort: SortOption, coins: inout [CoinModel]) {
         switch sort {
         case .rank, .holdings:
             coins.sort(by:{ $0.rank < $1.rank })
@@ -112,7 +119,7 @@ class HomeViewModelImpl: HomeViewModel {
         }
     }
     
-     func sortPortfolioCoinsIfNeeded(coins: [CoinModel]) -> [CoinModel]{
+    private func sortPortfolioCoinsIfNeeded(coins: [CoinModel]) -> [CoinModel]{
         
         switch sortOption {
         case .holdings:
@@ -125,7 +132,7 @@ class HomeViewModelImpl: HomeViewModel {
         
     }
     
-     func mapAllCoinsToPortfolioCoins(allCoins: [CoinModel], portfolioEntities: [PortfolioEntity]) -> [CoinModel] {
+    private func mapAllCoinsToPortfolioCoins(allCoins: [CoinModel], portfolioEntities: [PortfolioEntity]) -> [CoinModel] {
        allCoins
             .compactMap { (coin) -> CoinModel? in
                 let foundEntity = portfolioEntities.first { portFolioEntity in
@@ -139,7 +146,7 @@ class HomeViewModelImpl: HomeViewModel {
                 return coin.updateHoldings(amount: entity.amount)
             }
     }
-     func mapGlobabalMarketData(marketDataModel: MarketDataModel?, portfolioCoins: [CoinModel]) -> [StatisticModel] {
+    private func mapGlobabalMarketData(marketDataModel: MarketDataModel?, portfolioCoins: [CoinModel]) -> [StatisticModel] {
         var stats: [StatisticModel] = []
         guard let data = marketDataModel else {
             return stats
@@ -148,11 +155,11 @@ class HomeViewModelImpl: HomeViewModel {
         let marketCap = StatisticModel(title: "MarketCap", value: data.marketCap, percentageChange: data.marketCapChangePercentage24HUsd)
         let volume = StatisticModel(title: "24h Volume", value: data.volume)
         let btcDominance = StatisticModel(title: "BTC Dominanace", value: data.btcDominance)
-            
+        
         let portfolioValue =
-            portfolioCoins
-                .map ({ $0.currentHoldingsValue })
-                .reduce(0, +)
+        portfolioCoins
+            .map ({ $0.currentHoldingsValue })
+            .reduce(0, +)
         
         _ = StatisticModel(title: "Total", value: portfolioValue.asCurrencyWith2Decimals(), percentageChange: 0)
         
@@ -164,12 +171,7 @@ class HomeViewModelImpl: HomeViewModel {
         return stats
     }
     
-    func reloadData(){
-        cryptoStore.fetchAllCoins()
-        cryptoStore.fetchGlobalData()
-    }
 }
-
 extension HomeViewModelImpl {
     var myTotalHoldingDisplayString: String {
         var total = 0.0
@@ -179,6 +181,9 @@ extension HomeViewModelImpl {
         return String("$\(total.formattedWithAbbreviations())")
     }
 }
+
+
+
 enum SortOption {
     case rank, rankReversed, holdings, holdingsReversed, price, priceReversed
 }

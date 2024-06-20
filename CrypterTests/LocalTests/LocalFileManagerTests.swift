@@ -15,6 +15,7 @@ final class LocalFileManagerTests: XCTestCase {
         super.setUp()
         sut = MockLocalFileManager()
     }
+    
     func test_saveImage() {
         let testImage = UIImage() 
         let imageName = "testImage"

@@ -9,6 +9,7 @@ import SwiftUI
 @main
 struct CrypterApp: App {
     
+    ///Depdency Container
     @StateObject var core = Core()
     
     init() {
@@ -19,7 +20,7 @@ struct CrypterApp: App {
     var body: some Scene {
         WindowGroup {
             NavigationView {
-                HomeView(vm: HomeViewModelImpl(cryptoStore: core.cryptoStore))
+                HomeView(vm: HomeViewModelImpl(cryptoStore: core.getCryptoStore))
                     .navigationBarHidden(true)
                     .environmentObject(core)
             }

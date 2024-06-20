@@ -8,7 +8,12 @@ import Foundation
 import SwiftUI
 import Combine
 
-class CoinImageViewModelImpl: ObservableObject {
+protocol CoinImageViewModel: ObservableObject{
+    var image: UIImage? { get set }
+    var isLoading: Bool { get set }
+}
+
+class CoinImageViewModelImpl: ObservableObject, CoinImageViewModel {
     @Published var image: UIImage? = nil
     @Published var isLoading: Bool = false
 
@@ -36,14 +41,5 @@ class CoinImageViewModelImpl: ObservableObject {
     private func fetchImage() {
         isLoading = true
         coinImageRepository.getImage(coin: coin)
-    }
-}
-extension CoinImageViewModelImpl {
-    static func createProdInstance(coin: CoinModel) -> CoinImageViewModelImpl {
-        let networkingManager = NetworkingManagerImpl()
-        let fileManager = LocalFileManagerImpl()
-        let coinImageRepository = CoinImageRepositoryImpl(networkingManager: networkingManager, localFileManager: fileManager)
-        let coinImageViewModel = CoinImageViewModelImpl(coinImageRepository: coinImageRepository, coin: coin)
-        return coinImageViewModel
     }
 }

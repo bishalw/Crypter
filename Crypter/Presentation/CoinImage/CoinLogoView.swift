@@ -9,11 +9,11 @@ import SwiftUI
 struct CoinLogoView: View {
     
     let coin: CoinModel
-    var vm: CoinImageViewModel
+    var vm: CoinImageViewModelImpl
     
     var body: some View {
         VStack{
-            CoinImageView(coinImageViewModel: vm)
+            CoinImageView(vm: vm)
                 .frame(width: 50, height: 50)
             Text(coin.symbol.uppercased())
                 .font(.headline)

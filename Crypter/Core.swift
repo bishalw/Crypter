@@ -9,43 +9,60 @@ import Foundation
 
 class Core: ObservableObject {
     
-    private lazy var _networkingManager: NetworkingManagerImpl = {
-           return NetworkingManagerImpl()
-       }()
-       
-       var networkingManager: NetworkingManagerImpl {
-           return _networkingManager
-       }
-       
-       private lazy var _coinAPIService: CoinAPIServiceImpl = {
-           return CoinAPIServiceImpl(networkingManager: self.networkingManager)
-       }()
-       
-       var coinAPIService: CoinAPIServiceImpl {
-           return _coinAPIService
-       }
-       
-       private lazy var _globalAPIService: GlobalAPIServiceImpl = {
-           return GlobalAPIServiceImpl(networkingManager: self.networkingManager)
-       }()
-       
-       var globalAPIService: GlobalAPIServiceImpl {
-           return _globalAPIService
-       }
-    private lazy var _cryptoRepository: CryptoRepositoryImpl = {
+    private lazy var networkingManager: NetworkingManagerImpl = {
+        return NetworkingManagerImpl()
+    }()
+    
+    private lazy var coinAPIService: CoinAPIServiceImpl = {
+        return CoinAPIServiceImpl(networkingManager: self.networkingManager)
+    }()
+    
+    private lazy var localFileManager: LocalFileManagerImpl = {
+        return LocalFileManagerImpl()
+    }()
+    
+    private lazy var coinImageRepository: CoinImageRepositoryImpl = {
+        return CoinImageRepositoryImpl(networkingManager: self.networkingManager, localFileManager: self.localFileManager)
+    }()
+    
+    private lazy var globalAPIService: GlobalAPIServiceImpl = {
+        return GlobalAPIServiceImpl(networkingManager: self.networkingManager)
+    }()
+    
+    private lazy var cryptoRepository: CryptoRepositoryImpl = {
         return CryptoRepositoryImpl(coinAPIService: self.coinAPIService, globalAPIService: self.globalAPIService)
     }()
     
-    var cryptoRepository: CryptoRepositoryImpl {
-        return _cryptoRepository
-    }
-    
-    private lazy var _cryptoStore: CryptoStore = {
+    private lazy var cryptoStore: CryptoStore = {
         return CryptoStore(repository: self.cryptoRepository)
     }()
     
-    var cryptoStore: CryptoStore {
-        return _cryptoStore
+    // Public accessors for the dependencies
+    var getNetworkingManager: NetworkingManagerImpl {
+        return networkingManager
     }
     
+    var getCoinAPIService: CoinAPIServiceImpl {
+        return coinAPIService
+    }
+    
+    var getLocalFileManager: LocalFileManagerImpl {
+        return localFileManager
+    }
+    
+    var getCoinImageRepository: CoinImageRepositoryImpl {
+        return coinImageRepository
+    }
+    
+    var getGlobalAPIService: GlobalAPIServiceImpl {
+        return globalAPIService
+    }
+    
+    var getCryptoRepository: CryptoRepositoryImpl {
+        return cryptoRepository
+    }
+    
+    var getCryptoStore: CryptoStore {
+        return cryptoStore
+    }
 }

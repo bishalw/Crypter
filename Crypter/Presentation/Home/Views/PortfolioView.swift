@@ -3,13 +3,13 @@
 //  Crypter
 //
 
-//
 
 import SwiftUI
 
-struct PortfolioView: View {
+
+struct PortfolioView<ViewModel>: View where ViewModel: HomeViewModel {
     @EnvironmentObject var core: Core
-    @StateObject var vm: HomeViewModel
+    @StateObject var vm: ViewModel
     @State private var selectedCoin: CoinModel? = nil
     @State private var quantityText: String = ""
     @State private var showCheckmark: Bool = false
@@ -64,7 +64,7 @@ extension PortfolioView {
         ScrollView(.horizontal, showsIndicators: false, content: {
             LazyHStack(spacing: 10) {
                 ForEach(vm.searchText.isEmpty ? vm.portfolioCoins : vm.allCoins) { coin in
-                    CoinLogoView(coin: coin, vm: CoinImageViewModel.createProdInstance(coin: coin))
+                    CoinLogoView(coin: coin, vm: CoinImageViewModelImpl(coinImageRepository: core.getCoinImageRepository, coin: coin))
                         .frame(width: 75, height: 100)
                         .padding(4)
                         .onTapGesture {

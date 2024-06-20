@@ -6,13 +6,14 @@
 import Foundation
 import SwiftUI
 
-struct HomeView: View{
+struct HomeView<ViewModel>: View where ViewModel: HomeViewModel {
+    
     @EnvironmentObject var core: Core
-    @StateObject var vm: HomeViewModelImpl
-    @State private var isPortfolioShown: Bool = false // animate right
-    @State private var showPortfolioViewSheet: Bool = false // new sheet
+    @StateObject var vm: ViewModel
     
     @State private var selectedCoin: CoinModel? = nil
+    @State private var isPortfolioShown: Bool = false
+    @State private var showPortfolioViewSheet: Bool = false
     @State private var showDetailView: Bool = false
     @State private var showSettingsView: Bool = false
     
@@ -25,10 +26,7 @@ struct HomeView: View{
                     .ignoresSafeArea()
                     .sheet(isPresented: $showPortfolioViewSheet, content: {
                         PortfolioView(vm: vm)
-                        
                     })
-                
-                // content layer
                 
                 VStack {
                     HomeHeaderView(
@@ -60,31 +58,7 @@ struct HomeView: View{
                         .padding(.horizontal)
                     
                     if isPortfolioShown{
-                        ZStack(alignment: .top) {
-                            if vm.portfolioCoins.isEmpty && vm.searchText.isEmpty {
-                                Text("You havne't added any coins to your portfolio yet. Click on the + button to get started! 🧐 ")
-                                    .font(.callout)
-                                    .foregroundColor(Color.theme.accent)
-                                    .fontWeight(.medium)
-                                    .multilineTextAlignment(.center)
-                                    .padding(50)
-                                
-                            } else {
-                                List {
-                                    ForEach(vm.portfolioCoins) { coin in
-                                        CoinRowView(coin: coin, showHoldingsColumn: true)
-                                            .listRowInsets(.init(top: 10, leading: 0 , bottom: 10, trailing: 10))
-                                            .onTapGesture {
-                                                segue(coin: coin)
-                                            }
-                                    }
-                                }
-                                .listRowBackground(Color.theme.background)
-                                .listStyle(PlainListStyle())
-                                
-                            }
-                        }.transition(.move(edge: .leading))
-                        
+                        portfolioCoinList
                         
                     } else {
                         allCoinsList
@@ -109,18 +83,9 @@ struct HomeView: View{
     
 }
 
-//struct HomeView_Previews: PreviewProvider{
-//    static var previews: some View{
-//        NavigationView {
-//            HomeView(vm: MockHomeViewModel())
-//                .navigationBarHidden(true)
-//        }
-//        
-//    }
-//}
 
-extension HomeView{
-    
+
+extension HomeView {
     
     private var allCoinsList: some View {
         List{
@@ -139,6 +104,33 @@ extension HomeView{
             vm.reloadData()
         }
     }
+    private var portfolioCoinList: some View {
+        ZStack(alignment: .top) {
+            if vm.portfolioCoins.isEmpty && vm.searchText.isEmpty {
+                Text("You havne't added any coins to your portfolio yet. Click on the + button to get started! 🧐 ")
+                    .font(.callout)
+                    .foregroundColor(Color.theme.accent)
+                    .fontWeight(.medium)
+                    .multilineTextAlignment(.center)
+                    .padding(50)
+                
+            } else {
+                List {
+                    ForEach(vm.portfolioCoins) { coin in
+                        CoinRowView(coin: coin, showHoldingsColumn: true)
+                            .listRowInsets(.init(top: 10, leading: 0 , bottom: 10, trailing: 10))
+                            .onTapGesture {
+                                segue(coin: coin)
+                            }
+                    }
+                }
+                .listRowBackground(Color.theme.background)
+                .listStyle(PlainListStyle())
+                
+            }
+        }.transition(.move(edge: .leading))
+        
+    }
     
     private func segue(coin: CoinModel) {
         selectedCoin = coin
@@ -147,3 +139,12 @@ extension HomeView{
 }
 
 
+struct HomeView_Previews: PreviewProvider{
+    static var previews: some View{
+        NavigationView {
+            EmptyView()
+                .navigationBarHidden(true)
+        }
+
+    }
+}

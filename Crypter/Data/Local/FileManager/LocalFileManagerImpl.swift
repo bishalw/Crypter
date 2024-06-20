@@ -43,7 +43,7 @@ class LocalFileManagerImpl: LocalFileManager{
         return UIImage(contentsOfFile: url.path)
     }
     
-    internal func createFolderIfNeeded(folderName: String){
+    private func createFolderIfNeeded(folderName: String){
         
         guard let url = getURLForFolder(folderName: folderName) else { return }
        
@@ -57,7 +57,7 @@ class LocalFileManagerImpl: LocalFileManager{
     }
     
     // file://cachedirectory/{folderName}
-    internal func getURLForFolder(folderName: String) -> URL? {
+    private func getURLForFolder(folderName: String) -> URL? {
         
         guard let url = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else {
             return nil
@@ -65,7 +65,7 @@ class LocalFileManagerImpl: LocalFileManager{
         return url.appendingPathComponent(folderName)
     }
     // file://cachedirectory/{folderName}/{imageName}.png
-    internal func getURLForImage(imageName: String, folderName: String) -> URL? {
+    private func getURLForImage(imageName: String, folderName: String) -> URL? {
         guard let folderURL = getURLForFolder(folderName: folderName) else {
             return nil
         }
