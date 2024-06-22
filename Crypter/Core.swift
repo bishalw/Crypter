@@ -33,8 +33,8 @@ class Core: ObservableObject {
         return CryptoRepositoryImpl(coinAPIService: self.coinAPIService, globalAPIService: self.globalAPIService)
     }()
     
-    private lazy var cryptoStore: CryptoStore = {
-        return CryptoStore(repository: self.cryptoRepository)
+    private lazy var cryptoStore: CryptoStoreImpl = {
+        return CryptoStoreImpl(repository: self.cryptoRepository)
     }()
     
     // Public accessors for the dependencies
@@ -62,7 +62,7 @@ class Core: ObservableObject {
         return cryptoRepository
     }
     
-    var getCryptoStore: CryptoStore {
+    var getCryptoStore: CryptoStoreImpl {
         return cryptoStore
     }
 }

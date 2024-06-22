@@ -45,7 +45,7 @@
 		58ABF2272B46D3EE00D41EF8 /* HomeHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58ABF2262B46D3EE00D41EF8 /* HomeHeaderView.swift */; };
 		58ABF2292B46D62000D41EF8 /* ColumnTitleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58ABF2282B46D62000D41EF8 /* ColumnTitleView.swift */; };
 		58B2F7232C1A8E9E008D435A /* GlobalDataDTO+DomainMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B2F7222C1A8E9E008D435A /* GlobalDataDTO+DomainMapper.swift */; };
-		58B2F7262C1A93CD008D435A /* CryptoStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B2F7252C1A93CD008D435A /* CryptoStore.swift */; };
+		58B2F7262C1A93CD008D435A /* CryptoStoreImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B2F7252C1A93CD008D435A /* CryptoStoreImpl.swift */; };
 		58BC88E9294B55F300D95022 /* MockHomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58BC88E8294B55F300D95022 /* MockHomeViewModel.swift */; };
 		58BC88F0294B655200D95022 /* MockNetworkingManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58BC88EF294B655200D95022 /* MockNetworkingManager.swift */; };
 		58CEA04B28B367E80049FE42 /* NetworkingManagerImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58CEA04A28B367E80049FE42 /* NetworkingManagerImpl.swift */; };
@@ -122,7 +122,7 @@
 		58ABF2262B46D3EE00D41EF8 /* HomeHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeHeaderView.swift; sourceTree = "<group>"; };
 		58ABF2282B46D62000D41EF8 /* ColumnTitleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColumnTitleView.swift; sourceTree = "<group>"; };
 		58B2F7222C1A8E9E008D435A /* GlobalDataDTO+DomainMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GlobalDataDTO+DomainMapper.swift"; sourceTree = "<group>"; };
-		58B2F7252C1A93CD008D435A /* CryptoStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CryptoStore.swift; sourceTree = "<group>"; };
+		58B2F7252C1A93CD008D435A /* CryptoStoreImpl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CryptoStoreImpl.swift; sourceTree = "<group>"; };
 		58BC88E8294B55F300D95022 /* MockHomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockHomeViewModel.swift; sourceTree = "<group>"; };
 		58BC88EF294B655200D95022 /* MockNetworkingManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockNetworkingManager.swift; sourceTree = "<group>"; };
 		58CEA04A28B367E80049FE42 /* NetworkingManagerImpl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkingManagerImpl.swift; sourceTree = "<group>"; };
@@ -348,7 +348,7 @@
 		58B2F7242C1A93C0008D435A /* Store */ = {
 			isa = PBXGroup;
 			children = (
-				58B2F7252C1A93CD008D435A /* CryptoStore.swift */,
+				58B2F7252C1A93CD008D435A /* CryptoStoreImpl.swift */,
 			);
 			path = Store;
 			sourceTree = "<group>";
@@ -706,7 +706,7 @@
 				58CEA04B28B367E80049FE42 /* NetworkingManagerImpl.swift in Sources */,
 				588654C328C095D70077E7A4 /* HomeStatsView.swift in Sources */,
 				58F7C50D2880F435003622E0 /* CircleButtonAnimationView.swift in Sources */,
-				58B2F7262C1A93CD008D435A /* CryptoStore.swift in Sources */,
+				58B2F7262C1A93CD008D435A /* CryptoStoreImpl.swift in Sources */,
 				58756D5D2C23E15D00FA4491 /* ChartView.swift in Sources */,
 				586CB3EB2B513B940023AF7C /* CoinImageRepository.swift in Sources */,
 				5814D3C328B59B04008CD5DC /* CoinImageViewModelImpl.swift in Sources */,

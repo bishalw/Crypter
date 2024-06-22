@@ -7,7 +7,15 @@
 import Foundation
 import Combine
 
-class CryptoStoreImpl {
+protocol CryptoStore {
+    var coins: CurrentValueSubject<[CoinModel]?, Never> { get set }
+    var coinDetails: CurrentValueSubject<CoinDetailModel?,Never> { get set }
+    var globalDetails: CurrentValueSubject<MarketDataModel?, Never> { get set }
+    func fetchAllCoins() -> Void
+    func fetchCoinDetails(coin: CoinModel) -> Void
+    func fetchGlobalData() -> Void
+}
+class CryptoStoreImpl: CryptoStore {
     
     var coins: CurrentValueSubject<[CoinModel]?, Never> = CurrentValueSubject(nil)
     var coinDetails: CurrentValueSubject<CoinDetailModel?,Never> = CurrentValueSubject(nil)
@@ -22,50 +30,50 @@ class CryptoStoreImpl {
     }
     
     func fetchAllCoins() {
-            repository.fetchAllCoins()
-                .receive(on: DispatchQueue.main)
-                .sink(receiveCompletion: { completion in
-                    switch completion {
-                    case .failure(let error):
-                        print("Error fetching coins: \(error)")
-                    case .finished:
-                        break
-                    }
-                }, receiveValue: { [weak self] coins in
-                    self?.coins.send(coins)
-                })
-                .store(in: &cancellables)
-        }
-
-        func fetchCoinDetails(coin: CoinModel) {
-            repository.fetchCoinDetail(coin: coin)
-                .receive(on: DispatchQueue.main)
-                .sink(receiveCompletion: { completion in
-                    switch completion {
-                    case .failure(let error):
-                        print("Error fetching coin details: \(error)")
-                    case .finished:
-                        break
-                    }
-                }, receiveValue: { [weak self] coinDetails in
-                    self?.coinDetails.send(coinDetails)
-                })
-                .store(in: &cancellables)
-        }
-
-        func fetchGlobalData() {
-            repository.fetchGlobalData()
-                .receive(on: DispatchQueue.main)
-                .sink(receiveCompletion: { completion in
-                    switch completion {
-                    case .failure(let error):
-                        print("Error fetching global data: \(error)")
-                    case .finished:
-                        break
-                    }
-                }, receiveValue: { [weak self] globalDetails in
-                    self?.globalDetails.send(globalDetails)
-                })
-                .store(in: &cancellables)
-        }
+        repository.fetchAllCoins()
+            .receive(on: DispatchQueue.main)
+            .sink(receiveCompletion: { completion in
+                switch completion {
+                case .failure(let error):
+                    print("Error fetching coins: \(error)")
+                case .finished:
+                    break
+                }
+            }, receiveValue: { [weak self] coins in
+                self?.coins.send(coins)
+            })
+            .store(in: &cancellables)
+    }
+    
+    func fetchCoinDetails(coin: CoinModel) {
+        repository.fetchCoinDetail(coin: coin)
+            .receive(on: DispatchQueue.main)
+            .sink(receiveCompletion: { completion in
+                switch completion {
+                case .failure(let error):
+                    print("Error fetching coin details: \(error)")
+                case .finished:
+                    break
+                }
+            }, receiveValue: { [weak self] coinDetails in
+                self?.coinDetails.send(coinDetails)
+            })
+            .store(in: &cancellables)
+    }
+    
+    func fetchGlobalData() {
+        repository.fetchGlobalData()
+            .receive(on: DispatchQueue.main)
+            .sink(receiveCompletion: { completion in
+                switch completion {
+                case .failure(let error):
+                    print("Error fetching global data: \(error)")
+                case .finished:
+                    break
+                }
+            }, receiveValue: { [weak self] globalDetails in
+                self?.globalDetails.send(globalDetails)
+            })
+            .store(in: &cancellables)
+    }
 }

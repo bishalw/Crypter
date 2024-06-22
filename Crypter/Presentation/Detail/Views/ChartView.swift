@@ -10,6 +10,7 @@ import SwiftUI
 import Charts
 
 struct ChartView: View {
+    
     let data: [Double]
     let maxY: Double
     let minY: Double
