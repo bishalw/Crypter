@@ -7,7 +7,7 @@
 import Foundation
 import Combine
 
-class CryptoStore {
+class CryptoStoreImpl {
     
     var coins: CurrentValueSubject<[CoinModel]?, Never> = CurrentValueSubject(nil)
     var coinDetails: CurrentValueSubject<CoinDetailModel?,Never> = CurrentValueSubject(nil)
