@@ -10,7 +10,6 @@ struct CoinImageView<ViewModel>: View where ViewModel: CoinImageViewModel {
     @StateObject var vm: ViewModel
 
     var body: some View {
-        ZStack {
             if let image = vm.image {
                 Image(uiImage: image)
                     .resizable()
@@ -22,7 +21,6 @@ struct CoinImageView<ViewModel>: View where ViewModel: CoinImageViewModel {
                     .foregroundColor(Color.theme.secondaryText)
             }
         }
-    }
 }
 
 struct CoinImageView_Previews: PreviewProvider {

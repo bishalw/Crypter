@@ -9,60 +9,60 @@ import Foundation
 
 class Core: ObservableObject {
     
-    private lazy var networkingManager: NetworkingManagerImpl = {
+    private lazy var networkingManager: NetworkingManager = {
         return NetworkingManagerImpl()
     }()
     
-    private lazy var coinAPIService: CoinAPIServiceImpl = {
+    private lazy var coinAPIService: CoinAPIService = {
         return CoinAPIServiceImpl(networkingManager: self.networkingManager)
     }()
     
-    private lazy var localFileManager: LocalFileManagerImpl = {
+    private lazy var localFileManager: LocalFileManager = {
         return LocalFileManagerImpl()
     }()
     
-    private lazy var coinImageRepository: CoinImageRepositoryImpl = {
+    private lazy var coinImageRepository: CoinImageRepository = {
         return CoinImageRepositoryImpl(networkingManager: self.networkingManager, localFileManager: self.localFileManager)
     }()
     
-    private lazy var globalAPIService: GlobalAPIServiceImpl = {
+    private lazy var globalAPIService: GlobalAPIService = {
         return GlobalAPIServiceImpl(networkingManager: self.networkingManager)
     }()
     
-    private lazy var cryptoRepository: CryptoRepositoryImpl = {
+    private lazy var cryptoRepository: CryptoRepository = {
         return CryptoRepositoryImpl(coinAPIService: self.coinAPIService, globalAPIService: self.globalAPIService)
     }()
     
-    private lazy var cryptoStore: CryptoStoreImpl = {
+    private lazy var cryptoStore: CryptoStore = {
         return CryptoStoreImpl(repository: self.cryptoRepository)
     }()
     
     // Public accessors for the dependencies
-    var getNetworkingManager: NetworkingManagerImpl {
+    var getNetworkingManager: NetworkingManager {
         return networkingManager
     }
     
-    var getCoinAPIService: CoinAPIServiceImpl {
+    var getCoinAPIService: CoinAPIService {
         return coinAPIService
     }
     
-    var getLocalFileManager: LocalFileManagerImpl {
+    var getLocalFileManager: LocalFileManager {
         return localFileManager
     }
     
-    var getCoinImageRepository: CoinImageRepositoryImpl {
+    var getCoinImageRepository: CoinImageRepository {
         return coinImageRepository
     }
     
-    var getGlobalAPIService: GlobalAPIServiceImpl {
+    var getGlobalAPIService: GlobalAPIService {
         return globalAPIService
     }
     
-    var getCryptoRepository: CryptoRepositoryImpl {
+    var getCryptoRepository: CryptoRepository {
         return cryptoRepository
     }
     
-    var getCryptoStore: CryptoStoreImpl {
+    var getCryptoStore: CryptoStore {
         return cryptoStore
     }
 }

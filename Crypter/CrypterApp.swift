@@ -19,12 +19,8 @@ struct CrypterApp: App {
     
     var body: some Scene {
         WindowGroup {
-            NavigationView {
-                HomeView(vm: HomeViewModelImpl(cryptoStore: core.getCryptoStore))
-                    .navigationBarHidden(true)
+                MainTabView()
                     .environmentObject(core)
-            }
-            .navigationViewStyle(StackNavigationViewStyle())
         }
     }
     

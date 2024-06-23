@@ -18,7 +18,6 @@ struct SettingsView: View {
     @Environment(\.presentationMode) var presentationMode
     var body: some View {
 
-        ZStack {
             NavigationView {
                 List {
                     InfoSection
@@ -40,7 +39,7 @@ struct SettingsView: View {
                 }
             }
         }
-    }
+    
 }
 extension SettingsView {
     private var InfoSection: some View {

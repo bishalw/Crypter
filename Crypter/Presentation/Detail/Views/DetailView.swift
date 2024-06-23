@@ -7,20 +7,8 @@
 import SwiftUI
 import Charts
 
-struct DetailLoadingView: View {
-    @EnvironmentObject var core: Core
-     @Binding var coin: CoinModel?
-    
-    var body: some View {
-        ZStack {
-            if let coin = coin {
-                DetailView(vm: DetailViewModelImpl(coin: coin, cryptoStore: core.getCryptoStore))
-            }
-        }
-    }
-}
 
-struct DetailView<ViewModel>: View where ViewModel: DetailViewModel{
+struct DetailView<ViewModel>: View where ViewModel: DetailViewModel {
     @StateObject var vm: ViewModel
     @EnvironmentObject var core: Core
     @State private var showFullDescription: Bool = false
@@ -36,15 +24,18 @@ struct DetailView<ViewModel>: View where ViewModel: DetailViewModel{
     var body: some View {
         ScrollView{
             VStack(spacing: 10) {
-                CoinChartView
-                OverwiewTitle
+                ChartView(coin: vm.coin)
+                Title(withTitle: "Overview")
                 Divider()
                 OverviewGrid
-                AdditionalTitle
+                Title(withTitle: "Additional Details")
                 Divider()
                 AdditionalGrid
                 OverViewDescription
-                WebsiteSection
+                LinkView(for: vm.websiteURL, withTitle: "Official Website")
+                Spacer()
+                LinkView(for: vm.redditURL, withTitle: "Reddit")
+                Spacer()
                 .accentColor(.blue)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .font(.headline)
@@ -57,36 +48,19 @@ struct DetailView<ViewModel>: View where ViewModel: DetailViewModel{
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing){
                 HStack{
-                    Spacer()
-                    Text(vm.coin.symbol.uppercased())
-                        .font(.headline)
-                        .foregroundColor(Color.theme.secondaryText)
-                    CoinImageView(vm: CoinImageViewModelImpl(coinImageRepository: core.getCoinImageRepository, coin: vm.coin))
-                        .frame(width: 25, height: 25)
+                    toolbarContent()
                 }
             }
         }
-     
     }
 }
 
 
 extension DetailView {
-    private var CoinChartView: some View {
-        VStack(alignment: .trailing, spacing: 0){
-            ChartView(coin: vm.coin)
-        }.frame(minWidth: 0, maxWidth: .infinity, alignment: .trailing)
-    }
-    private var OverwiewTitle: some View {
-        Text("Overview")
-            .font(.title)
-            .bold()
-            .foregroundColor(Color.theme.accent)
-            .frame(maxWidth: .infinity, alignment: .leading)
-        
-    }
-    private var AdditionalTitle: some View {
-        Text("Additional Details")
+    
+    @ViewBuilder
+    private func Title(withTitle title: String) -> some View {
+        Text(title)
             .font(.title)
             .bold()
             .foregroundColor(Color.theme.accent)
@@ -134,6 +108,7 @@ extension DetailView {
                 }
             })
     }
+    
     private var AdditionalGrid: some View {
         LazyVGrid(
             columns: columns,
@@ -146,19 +121,35 @@ extension DetailView {
                 }
             })
     }
-    private var WebsiteSection: some View {
-        VStack(alignment: .leading){
-            if let websiteString = vm.websiteURL,
-               let url = URL(string: websiteString){
-                Link("Official Website", destination: url).padding([.top,.bottom], 4)
+    
+    @ViewBuilder
+    private func LinkView(for urlString: String?, withTitle title: String) -> some View {
+        if let urlString = urlString, let url = URL(string: urlString) {
+            Link(title, destination: url)
+                .padding([.top, .bottom], 4)
+        }
+    }
+    
+    @ViewBuilder
+    private func toolbarContent() -> some View {
+        Text(vm.coin.symbol.uppercased())
+            .font(.headline)
+            .foregroundColor(Color.theme.secondaryText)
+        CoinImageView(vm: CoinImageViewModelImpl(coinImageRepository: core.getCoinImageRepository, coin: vm.coin))
+            .frame(width: 25, height: 25)
+    }
+}
+struct StatisticsGrid<T: Identifiable>: View {
+    var items: [T]
+    var columns: [GridItem]
+    var spacing: CGFloat
+    var content: (T) -> AnyView
+
+    var body: some View {
+        LazyVGrid(columns: columns, alignment: .leading, spacing: spacing) {
+            ForEach(items) { item in
+                content(item)
             }
-            Spacer()
-            if let redditString = vm.redditURL,
-                let url = URL(string: redditString) {
-                Link("Reddit", destination: url).padding([.top,.bottom], 4)
-            }
-            Spacer()
-            
         }
     }
 }

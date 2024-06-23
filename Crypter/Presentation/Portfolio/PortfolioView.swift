@@ -17,7 +17,7 @@ struct PortfolioView<ViewModel>: View where ViewModel: HomeViewModel {
     
     
     var body: some View {
-        NavigationView{
+        NavigationView {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0){
                     SearchBarView(searchText: $vm.searchText)
@@ -28,7 +28,7 @@ struct PortfolioView<ViewModel>: View where ViewModel: HomeViewModel {
                     }
                 }
             }
-            .navigationTitle("Edit porfolio")
+//            .navigationTitle("Edit porfolio")
             .toolbar(content: {
                 ToolbarItem(placement: .navigationBarLeading){
                     Button(action: {
@@ -58,13 +58,16 @@ struct PortfolioView<ViewModel>: View where ViewModel: HomeViewModel {
 //    }
 //}
 
+
+
+
 extension PortfolioView {
     // Views
     private var coinLogoList: some View {
         ScrollView(.horizontal, showsIndicators: false, content: {
             LazyHStack(spacing: 10) {
                 ForEach(vm.searchText.isEmpty ? vm.portfolioCoins : vm.allCoins) { coin in
-                    CoinLogoView(coin: coin, vm: CoinImageViewModelImpl(coinImageRepository: core.getCoinImageRepository, coin: coin))
+                    CoinLogoView(coin: coin, vm: CoinImageViewModelImpl(coinImageRepository: CoinImageRepositoryImpl(networkingManager: core.getNetworkingManager, localFileManager: core.getLocalFileManager), coin: coin))
                         .frame(width: 75, height: 100)
                         .padding(4)
                         .onTapGesture {
