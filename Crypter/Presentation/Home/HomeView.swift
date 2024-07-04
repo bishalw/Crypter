@@ -17,17 +17,8 @@ struct HomeView<ViewModel>: View where ViewModel: HomeViewModel {
     
     var body: some View {
         NavigationStack {
+            NavigationView {
                 VStack {
-//                    HomeHeaderView(
-//                        isPortfolioShown: false,
-//                        onAddButtonTapped: {
-//                            showPortfolioViewSheet.toggle()
-//                        },
-//                        onInfoButtonTapped: {
-//                            showSettingsView.toggle()
-//                        },
-//                        onTogglePortfolio: { _ in }
-//                    )
                     
                     HomeStatsView(statistics: vm.statistics, showPortfolio: .constant(false))
                     
@@ -48,13 +39,14 @@ struct HomeView<ViewModel>: View where ViewModel: HomeViewModel {
                 .sheet(isPresented: $showSettingsView) {
                     SettingsView()
                 }
-            }
-            .navigationTitle("Prices")
-            .navigationBarTitleDisplayMode(.automatic)
-            .navigationDestination(isPresented: $showDetailView) {
-                if let coin = selectedCoin {
-                    DetailView(vm: DetailViewModelImpl(coin: coin, cryptoStore: core.getCryptoStore))
+                .navigationTitle("Prices")
+                .navigationBarTitleDisplayMode(.inline)
+                .navigationDestination(isPresented: $showDetailView) {
+                    if let coin = selectedCoin {
+                        DetailView(vm: DetailViewModelImpl(coin: coin, cryptoStore: core.cryptoStore))
+                    }
                 }
+            }
             }
         
     }
@@ -86,3 +78,14 @@ struct HomeView_Previews: PreviewProvider{
 
     }
 }
+
+//                    HomeHeaderView(
+//                        isPortfolioShown: false,
+//                        onAddButtonTapped: {
+//                            showPortfolioViewSheet.toggle()
+//                        },
+//                        onInfoButtonTapped: {
+//                            showSettingsView.toggle()
+//                        },
+//                        onTogglePortfolio: { _ in }
+//                    )

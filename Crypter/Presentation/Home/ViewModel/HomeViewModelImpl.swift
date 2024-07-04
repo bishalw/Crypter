@@ -9,7 +9,7 @@ import Foundation
 import Combine
 
 
-protocol HomeViewModel: ObservableObject{
+protocol HomeViewModel: ObservableObject {
     var statistics: [StatisticModel] { get }
     var allCoins: [CoinModel] { get  }
     var portfolioCoins: [CoinModel] { get }
@@ -21,7 +21,6 @@ protocol HomeViewModel: ObservableObject{
 }
 
 class HomeViewModelImpl: HomeViewModel {
-
     
     @Published var statistics: [StatisticModel] = []
     @Published var allCoins: [CoinModel] = []

@@ -42,7 +42,7 @@ extension CoinRowView {
                 .font(.caption)
                 .foregroundColor(Color.theme.secondaryText)
                 .padding(.trailing)
-            CoinImageView(vm: CoinImageViewModelImpl(coinImageRepository: CoinImageRepositoryImpl(networkingManager: core.getNetworkingManager, localFileManager: core.getLocalFileManager), coin: coin))
+            CoinImageView(vm: CoinImageViewModelImpl(coinImageRepository: CoinImageRepositoryImpl(networkingManager: core.networkingManager, localFileManager: core.localFileManager), coin: coin))
                 .frame(width: 30, height: 30)
             Text(coin.symbol.uppercased())
                 .font(.headline)

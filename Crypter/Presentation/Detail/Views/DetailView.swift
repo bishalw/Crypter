@@ -135,7 +135,7 @@ extension DetailView {
         Text(vm.coin.symbol.uppercased())
             .font(.headline)
             .foregroundColor(Color.theme.secondaryText)
-        CoinImageView(vm: CoinImageViewModelImpl(coinImageRepository: core.getCoinImageRepository, coin: vm.coin))
+        CoinImageView(vm: CoinImageViewModelImpl(coinImageRepository: core.coinImageRepository, coin: vm.coin))
             .frame(width: 25, height: 25)
     }
 }

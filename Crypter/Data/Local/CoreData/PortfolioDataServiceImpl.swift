@@ -6,20 +6,27 @@
 
 import Foundation
 import CoreData
+import Combine
 
 protocol PortfolioDataService {
-    var savedEntites: Published<[PortfolioEntity]>.Publisher { get }
+    var savedEntitiesPublisher: AnyPublisher<[PortfolioEntity], Never> { get }
     func updatePortfolio(coin: CoinModel, amount: Double)
 }
 
 class PortfolioDataServiceImpl: PortfolioDataService {
-    
     private let container: NSPersistentContainer
     private let containerName: String = "PortfolioContainer"
     private let entityName: String = "PortfolioEntity"
     
-    @Published private(set) var savedEntitesValue: [PortfolioEntity] = []
-    var savedEntites: Published<[PortfolioEntity]>.Publisher { $savedEntitesValue }
+    private let savedEntitiesSubject = CurrentValueSubject<[PortfolioEntity], Never>([])
+    
+    var savedEntitiesPublisher: AnyPublisher<[PortfolioEntity], Never> {
+        savedEntitiesSubject.eraseToAnyPublisher()
+    }
+    
+    var savedEntities: [PortfolioEntity] {
+        savedEntitiesSubject.value
+    }
     
     init() {
         container = NSPersistentContainer(name: containerName)
@@ -34,7 +41,7 @@ class PortfolioDataServiceImpl: PortfolioDataService {
     // MARK: PUBLIC
     
     func updatePortfolio(coin: CoinModel, amount: Double) {
-        if let entity = savedEntitesValue.first(where: { $0.coinID == coin.id }) {
+        if let entity = savedEntities.first(where: { $0.coinID == coin.id }) {
             if amount > 0 {
                 update(entity: entity, amount: amount)
             } else {
@@ -50,7 +57,8 @@ class PortfolioDataServiceImpl: PortfolioDataService {
     private func getPortfolio() {
         let request = NSFetchRequest<PortfolioEntity>(entityName: entityName)
         do {
-            savedEntitesValue = try container.viewContext.fetch(request)
+            let entities = try container.viewContext.fetch(request)
+            savedEntitiesSubject.send(entities)
         } catch let error {
             print("Error fetching Portfolio Entities. \(error)")
         }

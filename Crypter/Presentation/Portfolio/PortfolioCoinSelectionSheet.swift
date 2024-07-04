@@ -52,22 +52,13 @@ struct PortfolioCoinSelectionSheet<ViewModel>: View where ViewModel: HomeViewMod
 }
 
 
-//struct PortfolioView_Previews: PreviewProvider {
-//    static var previews: some View {
-//        PortfolioView(vm: MockHomeViewModel())
-//    }
-//}
-
-
-
-
 extension PortfolioCoinSelectionSheet {
     // Views
     private var coinLogoList: some View {
         ScrollView(.horizontal, showsIndicators: false, content: {
             LazyHStack(spacing: 10) {
                 ForEach(vm.searchText.isEmpty ? vm.portfolioCoins : vm.allCoins) { coin in
-                    CoinLogoView(coin: coin, vm: CoinImageViewModelImpl(coinImageRepository: CoinImageRepositoryImpl(networkingManager: core.getNetworkingManager, localFileManager: core.getLocalFileManager), coin: coin))
+                    CoinLogoView(coin: coin, vm: CoinImageViewModelImpl(coinImageRepository: CoinImageRepositoryImpl(networkingManager: core.networkingManager, localFileManager: core.localFileManager), coin: coin))
                         .frame(width: 75, height: 100)
                         .padding(4)
                         .onTapGesture {

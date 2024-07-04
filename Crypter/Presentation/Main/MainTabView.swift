@@ -13,12 +13,12 @@ struct MainTabView: View {
     var body: some View {
         NavigationStack {
             TabView {
-                HomeView(vm: HomeViewModelImpl(cryptoStore: core.getCryptoStore))
+                HomeView(vm: HomeViewModelImpl(cryptoStore: core.cryptoStore))
                     .tabItem {
                         Label("Home", systemImage: "house")
                     }
                 
-                PortfolioTabView(vm: HomeViewModelImpl(cryptoStore: core.getCryptoStore))
+                PortfolioView(vm: PortfolioViewModelImpl(cryptoStore: core.cryptoStore, portfolioDataService: PortfolioDataServiceImpl()))
                     .tabItem {
                         Label("Portfolio", systemImage: "creditcard")
                     }

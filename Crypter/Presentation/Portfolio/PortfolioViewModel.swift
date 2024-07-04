@@ -9,13 +9,14 @@ import Foundation
 import Combine
 
 protocol PortfolioViewModel: ObservableObject {
-    var statistics: [StatisticModel] { get }
-    var allCoins: [CoinModel] { get }
+
     var portfolioCoins: [CoinModel] {get}
+    var totalPortfolioValue: Double { get }
+    var myTotalHoldingDisplayString: String { get }
     
 }
-class PortfolioViewModelImpl: ObservableObject {
-    
+class PortfolioViewModelImpl: PortfolioViewModel {
+
     @Published var portfolioCoins: [CoinModel] = []
     @Published var searchText: String = ""
     @Published var sortOption: SortOption = .holdings
@@ -33,7 +34,7 @@ class PortfolioViewModelImpl: ObservableObject {
     private func addSubscribers() {
         // Combine the latest coins from cryptoStore with saved portfolio entities
         $searchText
-            .combineLatest(cryptoStore.coins, portfolioDataService.savedEntites, $sortOption)
+            .combineLatest(cryptoStore.coins, portfolioDataService.savedEntitiesPublisher, $sortOption)
             .debounce(for: .seconds(0.5), scheduler: DispatchQueue.main)
             .map { [weak self] (searchText, allCoins, portfolioEntities, sortOption) in
                 let portfolioCoins = self?.mapAllCoinsToPortfolioCoins(allCoins: allCoins ?? [], portfolioEntities: portfolioEntities) ?? []
