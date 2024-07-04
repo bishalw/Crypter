@@ -43,7 +43,7 @@ struct HomeView<ViewModel>: View where ViewModel: HomeViewModel {
                     Spacer(minLength: 0)
                 }
                 .sheet(isPresented: $showPortfolioViewSheet) {
-                    PortfolioView(vm: vm)
+                    PortfolioCoinSelectionSheet(vm: vm)
                 }
                 .sheet(isPresented: $showSettingsView) {
                     SettingsView()

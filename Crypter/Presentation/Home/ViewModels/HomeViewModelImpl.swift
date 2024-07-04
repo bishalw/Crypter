@@ -10,17 +10,17 @@ import Combine
 
 
 protocol HomeViewModel: ObservableObject{
-    var statistics: [StatisticModel] { get set }
-    var allCoins: [CoinModel] { get set }
-    var portfolioCoins: [CoinModel] { get set }
-    var searchText: String { get set }
-    var sortOption: SortOption { get set }
+    var statistics: [StatisticModel] { get }
+    var allCoins: [CoinModel] { get  }
+    var portfolioCoins: [CoinModel] { get }
+    var searchText: String { get set  }
+    var sortOption: SortOption { get set  }
     var myTotalHoldingDisplayString: String { get }
     func updatePortfolio(coin: CoinModel, amount: Double)
     func reloadData()
 }
 
-class HomeViewModelImpl: ObservableObject, HomeViewModel {
+class HomeViewModelImpl: HomeViewModel {
 
     
     @Published var statistics: [StatisticModel] = []
@@ -44,36 +44,26 @@ class HomeViewModelImpl: ObservableObject, HomeViewModel {
     private func addSubscribers(){
         // filters and searches all the coins from coin data service
         $searchText
-            .combineLatest(cryptoStore.coins, $sortOption)
-            .debounce(for: .seconds(0.5), scheduler: DispatchQueue.main)
-            .map(filterAndSortCoins)
-            .sink { [weak self]( returnedCoins) in
-                guard let self = self else { return }
-                self.allCoins = self.sortPortfolioCoinsIfNeeded(coins: returnedCoins)
-            }
-            .store(in: &cancellables)
+                  .combineLatest(cryptoStore.coins, $sortOption)
+                  .debounce(for: .seconds(0.5), scheduler: DispatchQueue.main)
+                  .map(filterAndSortCoins)
+                  .sink { [weak self] returnedCoins in
+                      self?.allCoins = returnedCoins
+                  }
+                  .store(in: &cancellables)
     
         /*
         1. CombineLatest the two publishers
         2. Map the two publishers to a new value (in this case, an array of updatedCoinModels)
         3. Sink the new value to a subscriber
          */
-        $allCoins
-            .combineLatest(portfolioDataService.$savedEntites)
-            .map(mapAllCoinsToPortfolioCoins)
-            .sink { [weak self] (returnedCoins) in
-                self?.portfolioCoins = returnedCoins
+        cryptoStore.globalDetails
+            .sink { [weak self] marketDataModel in
+                guard let self = self else { return }
+                self.statistics = self.mapGlobalMarketData(marketDataModel: marketDataModel)
             }
             .store(in: &cancellables)
         
-        // updates marketData
-        cryptoStore.globalDetails
-            .combineLatest($portfolioCoins)
-            .map(mapGlobabalMarketData)
-            .sink { [weak self] (returnedStats) in
-                self?.statistics = returnedStats
-            }
-            .store(in: &cancellables)
     }
 
     func reloadData(){
@@ -132,43 +122,16 @@ class HomeViewModelImpl: ObservableObject, HomeViewModel {
         
     }
     
-    private func mapAllCoinsToPortfolioCoins(allCoins: [CoinModel], portfolioEntities: [PortfolioEntity]) -> [CoinModel] {
-       allCoins
-            .compactMap { (coin) -> CoinModel? in
-                let foundEntity = portfolioEntities.first { portFolioEntity in
-                    portFolioEntity.coinID == coin.id
-                }
-                
-                guard let entity = foundEntity else {
-                    return nil
-                }
-                
-                return coin.updateHoldings(amount: entity.amount)
-            }
-    }
-    private func mapGlobabalMarketData(marketDataModel: MarketDataModel?, portfolioCoins: [CoinModel]) -> [StatisticModel] {
-        var stats: [StatisticModel] = []
+    private func mapGlobalMarketData(marketDataModel: MarketDataModel?) -> [StatisticModel] {
         guard let data = marketDataModel else {
-            return stats
+            return []
         }
         
-        let marketCap = StatisticModel(title: "MarketCap", value: data.marketCap, percentageChange: data.marketCapChangePercentage24HUsd)
-        let volume = StatisticModel(title: "24h Volume", value: data.volume)
-        let btcDominance = StatisticModel(title: "BTC Dominanace", value: data.btcDominance)
-        
-        let portfolioValue =
-        portfolioCoins
-            .map ({ $0.currentHoldingsValue })
-            .reduce(0, +)
-        
-        _ = StatisticModel(title: "Total", value: portfolioValue.asCurrencyWith2Decimals(), percentageChange: 0)
-        
-        stats.append(contentsOf: [
-            marketCap,
-            volume,
-            btcDominance
-        ])
-        return stats
+        return [
+            StatisticModel(title: "Market Cap", value: data.marketCap, percentageChange: data.marketCapChangePercentage24HUsd),
+            StatisticModel(title: "24h Volume", value: data.volume),
+            StatisticModel(title: "BTC Dominance", value: data.btcDominance)
+        ]
     }
     
 }

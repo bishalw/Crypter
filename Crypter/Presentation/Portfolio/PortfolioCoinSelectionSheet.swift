@@ -7,7 +7,7 @@
 import SwiftUI
 
 
-struct PortfolioView<ViewModel>: View where ViewModel: HomeViewModel {
+struct PortfolioCoinSelectionSheet<ViewModel>: View where ViewModel: HomeViewModel {
     @EnvironmentObject var core: Core
     @StateObject var vm: ViewModel
     @State private var selectedCoin: CoinModel? = nil
@@ -61,7 +61,7 @@ struct PortfolioView<ViewModel>: View where ViewModel: HomeViewModel {
 
 
 
-extension PortfolioView {
+extension PortfolioCoinSelectionSheet {
     // Views
     private var coinLogoList: some View {
         ScrollView(.horizontal, showsIndicators: false, content: {
@@ -128,7 +128,7 @@ extension PortfolioView {
                 Text(getCurrrentValue().asCurrencyWith2Decimals())
             }
         }
-        .animation(.none)
+        .animation(.none, value: 0)
         .padding()
         .font(.headline)
     }

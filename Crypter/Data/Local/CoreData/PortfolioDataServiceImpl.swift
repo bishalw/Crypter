@@ -8,21 +8,21 @@ import Foundation
 import CoreData
 
 protocol PortfolioDataService {
+    var savedEntites: Published<[PortfolioEntity]>.Publisher { get }
     func updatePortfolio(coin: CoinModel, amount: Double)
 }
 
-class PortfolioDataServiceImpl {
+class PortfolioDataServiceImpl: PortfolioDataService {
     
     private let container: NSPersistentContainer
     private let containerName: String = "PortfolioContainer"
     private let entityName: String = "PortfolioEntity"
     
-    @Published var savedEntites: [PortfolioEntity] = []
+    @Published private(set) var savedEntitesValue: [PortfolioEntity] = []
+    var savedEntites: Published<[PortfolioEntity]>.Publisher { $savedEntitesValue }
     
-    init(){
-        // on init setting the container
+    init() {
         container = NSPersistentContainer(name: containerName)
-        // loading core data on initialization
         container.loadPersistentStores { (_, error) in
             if let error = error {
                 print("Error loading Core Data! \(error)")
@@ -31,12 +31,10 @@ class PortfolioDataServiceImpl {
         }
     }
     
-    //MARK: PUBLIC
+    // MARK: PUBLIC
     
     func updatePortfolio(coin: CoinModel, amount: Double) {
-        
-        if let entity = savedEntites.first(where: { $0.coinID == coin.id }) {
-            
+        if let entity = savedEntitesValue.first(where: { $0.coinID == coin.id }) {
             if amount > 0 {
                 update(entity: entity, amount: amount)
             } else {
@@ -44,16 +42,15 @@ class PortfolioDataServiceImpl {
             }
         } else {
             add(coin: coin, amount: amount)
-            
         }
     }
     
-    //MARK: PRIVATE
+    // MARK: PRIVATE
     
     private func getPortfolio() {
         let request = NSFetchRequest<PortfolioEntity>(entityName: entityName)
         do {
-           savedEntites = try container.viewContext.fetch(request)
+            savedEntitesValue = try container.viewContext.fetch(request)
         } catch let error {
             print("Error fetching Portfolio Entities. \(error)")
         }
@@ -83,9 +80,9 @@ class PortfolioDataServiceImpl {
             print("Error saving to Core Data. \(error)")
         }
     }
+
     private func applyChanges() {
         save()
         getPortfolio()
     }
-    
 }
