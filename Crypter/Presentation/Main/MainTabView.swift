@@ -22,6 +22,14 @@ struct MainTabView: View {
                     .tabItem {
                         Label("Portfolio", systemImage: "creditcard")
                     }
+            }.onAppear {
+                let appearance = UITabBarAppearance()
+                  appearance.configureWithOpaqueBackground()
+                  UITabBar.appearance().standardAppearance = appearance
+                  
+                  if #available(iOS 15.0, *) {
+                      UITabBar.appearance().scrollEdgeAppearance = appearance
+                  }
             }
         }
       
