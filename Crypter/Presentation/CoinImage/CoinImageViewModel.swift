@@ -19,23 +19,18 @@ class CoinImageViewModelImpl: ObservableObject {
     init(coinImageRepository: CoinImageRepository, coin: CoinModel) {
         self.coinImageRepository = coinImageRepository
         self.coin = coin
-        addSubscribers()
         fetchImage()
     }
 
-    private func addSubscribers() {
-        coinImageRepository.image
+    private func fetchImage() {
+        isLoading = true
+        coinImageRepository.loadImage(for: coin)
             .receive(on: RunLoop.main)
             .sink { [weak self] returnedImage in
                 self?.isLoading = false
                 self?.image = returnedImage
             }
             .store(in: &cancellables)
-    }
-
-    private func fetchImage() {
-        isLoading = true
-        coinImageRepository.getImage(coin: coin)
     }
 }
 extension CoinImageViewModelImpl {

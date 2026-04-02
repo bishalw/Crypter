@@ -12,7 +12,5 @@ import UIKit
 Domain folder if needed to seperate into a seperate module
  */
 protocol CoinImageRepository {
-    var image: CurrentValueSubject<UIImage?,Never> { get }
-    func getImage(coin: CoinModel)
-
+    func loadImage(for coin: CoinModel) -> AnyPublisher<UIImage?, Never>
 }

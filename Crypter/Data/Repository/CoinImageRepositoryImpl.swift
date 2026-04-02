@@ -12,8 +12,6 @@ class CoinImageRepositoryImpl: CoinImageRepository {
 
     let networkingManager: NetworkingManager
     let localFileManager: LocalFileManager
-    var image: CurrentValueSubject<UIImage?,Never> = CurrentValueSubject(nil)
-    var imageSubscription: AnyCancellable?
     private let folderName = "coin_images"
     
     init(networkingManager: NetworkingManager, localFileManager: LocalFileManager) {
@@ -21,12 +19,12 @@ class CoinImageRepositoryImpl: CoinImageRepository {
         self.localFileManager = localFileManager
     }
     
-    func getImage(coin: CoinModel) {
+    func loadImage(for coin: CoinModel) -> AnyPublisher<UIImage?, Never> {
         if let savedImage = fetchLocalImage(for: coin.id) {
-            image.send(savedImage)
-        } else {
-            downloadAndSaveImage(for: coin)
+            return Just(savedImage).eraseToAnyPublisher()
         }
+
+        return downloadAndSaveImage(for: coin)
     }
     
     // MARK: private functions
@@ -35,16 +33,21 @@ class CoinImageRepositoryImpl: CoinImageRepository {
         return localFileManager.getImage(imageName: imageName, folderName: folderName)
     }
 
-    func downloadAndSaveImage(for coin: CoinModel) {
-        guard let coinImageURL = CoinAPI.coinImageURL(coin: coin).url else { return }
+    func downloadAndSaveImage(for coin: CoinModel) -> AnyPublisher<UIImage?, Never> {
+        guard let coinImageURL = CoinAPI.coinImageURL(coin: coin).url else {
+            return Just(nil).eraseToAnyPublisher()
+        }
 
-        imageSubscription = networkingManager.downloadImage(url: coinImageURL)
-            .sink(receiveCompletion: handleCompletion) { [weak self] downloadedImage in
+        return networkingManager.downloadImage(url: coinImageURL)
+            .handleEvents(receiveOutput: { [weak self] downloadedImage in
                 guard let self = self, let image = downloadedImage else { return }
-
-                self.image.send(image)
                 self.localFileManager.saveImage(image: image, imageName: coin.id, folderName: self.folderName)
+            })
+            .catch { [weak self] error -> Just<UIImage?> in
+                self?.handleCompletion(.failure(error))
+                return Just(nil)
             }
+            .eraseToAnyPublisher()
     }
     
     func handleCompletion(_ completion: Subscribers.Completion<Error>) {
