@@ -15,6 +15,7 @@ protocol PortfolioViewModel: ObservableObject {
     var totalPortfolio24hChange: Double { get }
     var totalPortfolio24hChangePercent: Double { get }
     func updatePortfolio(coin: CoinModel, amount: Double)
+    func reloadData()
 }
 class PortfolioViewModelImpl: PortfolioViewModel {
 

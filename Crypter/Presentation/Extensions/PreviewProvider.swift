@@ -276,6 +276,8 @@ class PreviewPortfolioViewModel: PortfolioViewModel {
             portfolioCoins.removeAll { $0.id == coin.id }
         }
     }
+    
+    func reloadData() {}
 }
 
 class PreviewDetailViewModel: DetailViewModel {

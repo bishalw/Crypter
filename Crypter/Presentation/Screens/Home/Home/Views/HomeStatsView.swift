@@ -9,13 +9,12 @@ import SwiftUI
 struct HomeStatsView: View {
     
     var statistics: [StatisticModel]
-    @Binding var showPortfolio: Bool
     
     var body: some View {
         HStack {
             ForEach(statistics) { stat in
                 StatisticView(stat: stat)
-                    .frame(width: UIScreen.main.bounds.width/3)
+                    .frame(maxWidth: .infinity)
             }
         }
     }
@@ -23,8 +22,6 @@ struct HomeStatsView: View {
 
 struct HomeStatsView_Previews: PreviewProvider {
     static var previews: some View {
-        HomeStatsView(
-            statistics: [],
-            showPortfolio: .constant(false))
+        HomeStatsView(statistics: [])
     }
 }

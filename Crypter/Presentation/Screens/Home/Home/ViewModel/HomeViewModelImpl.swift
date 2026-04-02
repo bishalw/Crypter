@@ -28,13 +28,14 @@ class HomeViewModelImpl: HomeViewModel {
     @Published var sortOption: SortOption = .rank
     @Published var searchText: String = ""
     
-    private let portfolioDataService = PortfolioDataServiceImpl()
+    private let portfolioDataService: PortfolioDataService
     private let cryptoStore: CryptoStore
     private var cancellables = Set<AnyCancellable>()
 
     
-    init(cryptoStore: CryptoStore) {
+    init(cryptoStore: CryptoStore, portfolioDataService: PortfolioDataService) {
         self.cryptoStore = cryptoStore
+        self.portfolioDataService = portfolioDataService
         cryptoStore.fetchAllCoins()
         cryptoStore.fetchGlobalData()
         addSubscribers()
@@ -60,6 +61,16 @@ class HomeViewModelImpl: HomeViewModel {
             .sink { [weak self] marketDataModel in
                 guard let self = self else { return }
                 self.statistics = self.mapGlobalMarketData(marketDataModel: marketDataModel)
+            }
+            .store(in: &cancellables)
+
+        cryptoStore.coins
+            .combineLatest(portfolioDataService.savedEntitiesPublisher)
+            .map { [weak self] allCoins, portfolioEntities in
+                self?.mapAllCoinsToPortfolioCoins(allCoins: allCoins ?? [], portfolioEntities: portfolioEntities) ?? []
+            }
+            .sink { [weak self] returnedCoins in
+                self?.portfolioCoins = returnedCoins
             }
             .store(in: &cancellables)
         
@@ -131,6 +142,16 @@ class HomeViewModelImpl: HomeViewModel {
             StatisticModel(title: "24h Volume", value: data.volume),
             StatisticModel(title: "BTC Dominance", value: data.btcDominance)
         ]
+    }
+
+    private func mapAllCoinsToPortfolioCoins(allCoins: [CoinModel], portfolioEntities: [PortfolioEntity]) -> [CoinModel] {
+        allCoins.compactMap { coin -> CoinModel? in
+            guard let entity = portfolioEntities.first(where: { $0.coinID == coin.id }) else {
+                return nil
+            }
+
+            return coin.updateHoldings(amount: entity.amount)
+        }
     }
     
 }

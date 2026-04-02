@@ -7,7 +7,7 @@
 import SwiftUI
 
 struct CoinImageView<ViewModel>: View where ViewModel: CoinImageViewModel {
-    @StateObject var vm: ViewModel
+    @ObservedObject var vm: ViewModel
 
     var body: some View {
             if let image = vm.image {
@@ -28,4 +28,3 @@ struct CoinImageView_Previews: PreviewProvider {
       Text("To DO")
     }
 }
-

@@ -54,7 +54,8 @@ class PortfolioDataServiceImpl: PortfolioDataService {
         if let error = initError {
             print("error")
         }
-        
+
+        getPortfolio()
     }
     
     // MARK: PUBLIC
@@ -66,7 +67,7 @@ class PortfolioDataServiceImpl: PortfolioDataService {
             } else {
                 delete(entity: entity)
             }
-        } else {
+        } else if amount > 0 {
             add(coin: coin, amount: amount)
         }
     }

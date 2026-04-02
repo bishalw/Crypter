@@ -36,4 +36,8 @@ class Core: ObservableObject {
     private(set) lazy var cryptoStore: CryptoStore = {
         return CryptoStoreImpl(repository: self.cryptoRepository)
     }()
+
+    private(set) lazy var portfolioDataService: PortfolioDataService = {
+        return PortfolioDataServiceImpl()
+    }()
 }

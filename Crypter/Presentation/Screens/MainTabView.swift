@@ -11,28 +11,31 @@ struct MainTabView: View {
     @EnvironmentObject var core: Core
     
     var body: some View {
-        NavigationStack {
-            TabView {
-                HomeView(vm: HomeViewModelImpl(cryptoStore: core.cryptoStore))
-                    .tabItem {
-                        Label("Home", systemImage: "house")
-                    }
-                
-                PortfolioView(vm: PortfolioViewModelImpl(cryptoStore: core.cryptoStore, portfolioDataService: PortfolioDataServiceImpl()))
-                    .tabItem {
-                        Label("Portfolio", systemImage: "creditcard")
-                    }
-            }.onAppear {
-                let appearance = UITabBarAppearance()
-                  appearance.configureWithOpaqueBackground()
-                  UITabBar.appearance().standardAppearance = appearance
-                  
-                  if #available(iOS 15.0, *) {
-                      UITabBar.appearance().scrollEdgeAppearance = appearance
-                  }
-            }
+        TabView {
+            HomeView(vm: HomeViewModelImpl(
+                cryptoStore: core.cryptoStore,
+                portfolioDataService: core.portfolioDataService
+            ))
+                .tabItem {
+                    Label("Home", systemImage: "house")
+                }
+            
+            PortfolioView(vm: PortfolioViewModelImpl(
+                cryptoStore: core.cryptoStore,
+                portfolioDataService: core.portfolioDataService
+            ))
+                .tabItem {
+                    Label("Portfolio", systemImage: "creditcard")
+                }
+        }.onAppear {
+            let appearance = UITabBarAppearance()
+              appearance.configureWithOpaqueBackground()
+              UITabBar.appearance().standardAppearance = appearance
+              
+              if #available(iOS 15.0, *) {
+                  UITabBar.appearance().scrollEdgeAppearance = appearance
+              }
         }
-
     }
 }
 

@@ -14,32 +14,58 @@ struct PortfolioView<ViewModel>: View where ViewModel: PortfolioViewModel {
     @StateObject var vm: ViewModel
     @State private var selectedCoin: CoinModel? = nil
     @State private var showDetailView: Bool = false
+    @State private var showPortfolioEditor: Bool = false
 
     var body: some View {
         NavigationStack {
-            NavigationView {
-                VStack(spacing: 0) {
+            VStack(spacing: 0) {
+                if vm.portfolioCoins.isEmpty {
+                    emptyStateView
+                } else {
                     statsRow
 
-                    if vm.portfolioCoins.isEmpty {
-                        emptyStateView
-                    } else {
-                        PortfolioAllocationChartView(
-                            coins: vm.portfolioCoins,
-                            totalValue: vm.totalPortfolioValue
-                        )
-                        .padding(.vertical, 12)
+                    PortfolioAllocationChartView(
+                        coins: vm.portfolioCoins,
+                        totalValue: vm.totalPortfolioValue
+                    )
+                    .padding(.bottom, 8)
 
-                        coinList
-                    }
+                    Divider()
+                        .padding(.horizontal)
+                        .padding(.bottom, 8)
+
+                    coinList
                 }
-                .navigationTitle("Portfolio")
-                .navigationBarTitleDisplayMode(.inline)
-                .navigationDestination(isPresented: $showDetailView) {
-                    if let coin = selectedCoin {
-                        DetailView(vm: DetailViewModelImpl(coin: coin, cryptoStore: core.cryptoStore))
-                    }
+            }
+            .navigationTitle("Portfolio")
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationDestination(isPresented: $showDetailView) {
+                if let coin = selectedCoin {
+                    DetailView(vm: DetailViewModelImpl(coin: coin, cryptoStore: core.cryptoStore))
                 }
+            }
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        showPortfolioEditor = true
+                    } label: {
+                        Image(systemName: "plus")
+                            .font(.headline)
+                    }
+                    .accessibilityLabel("Add coin to portfolio")
+                }
+            }
+            .sheet(isPresented: $showPortfolioEditor) {
+                PortfolioEditorView(
+                    vm: PortfolioEditorViewModel(
+                        cryptoStore: core.cryptoStore,
+                        portfolioDataService: core.portfolioDataService
+                    )
+                )
+                .environmentObject(core)
+            }
+            .refreshable {
+                vm.reloadData()
             }
         }
     }
@@ -47,36 +73,93 @@ struct PortfolioView<ViewModel>: View where ViewModel: PortfolioViewModel {
 
 extension PortfolioView {
     private var statsRow: some View {
-        HStack(spacing: 0) {
-            StatisticView(stat: StatisticModel(
+        HStack(spacing: 12) {
+            statCard(
                 title: "Portfolio Value",
                 value: vm.myTotalHoldingDisplayString,
                 percentageChange: vm.totalPortfolio24hChangePercent
-            ))
-            .frame(maxWidth: .infinity)
+            )
 
-            Divider()
-                .frame(height: 40)
-
-            StatisticView(stat: StatisticModel(
+            statCard(
                 title: "24h Change",
                 value: vm.totalPortfolio24hChange >= 0
                     ? "+\(vm.totalPortfolio24hChange.asCurrencyWith2Decimals())"
-                    : vm.totalPortfolio24hChange.asCurrencyWith2Decimals()
-            ))
-            .frame(maxWidth: .infinity)
+                    : vm.totalPortfolio24hChange.asCurrencyWith2Decimals(),
+                percentageChange: nil
+            )
         }
         .padding(.horizontal)
         .padding(.vertical, 12)
     }
 
+    private func statCard(title: String, value: String, percentageChange: Double?) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title)
+                .font(.caption)
+                .foregroundColor(Color.theme.secondaryText)
+
+            Text(value)
+                .font(.headline)
+                .foregroundColor(Color.theme.accent)
+
+            if let change = percentageChange {
+                HStack(spacing: 4) {
+                    Image(systemName: "triangle.fill")
+                        .font(.caption2)
+                        .rotationEffect(Angle(degrees: change >= 0 ? 0 : 180))
+                    Text(change.asPercentString())
+                        .font(.caption)
+                        .bold()
+                }
+                .foregroundColor(change >= 0 ? Color.theme.green : Color.theme.red)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(Color.theme.background.opacity(0.5))
+        )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title): \(value)")
+    }
+
     private var emptyStateView: some View {
-        Text("You haven't added any coins to your portfolio yet. Click on the + button in the Home tab to get started! 🧐")
-            .font(.callout)
-            .foregroundColor(Color.theme.accent)
-            .fontWeight(.medium)
-            .multilineTextAlignment(.center)
-            .padding(50)
+        VStack(spacing: 16) {
+            Image(systemName: "chart.pie")
+                .font(.system(size: 60))
+                .foregroundColor(Color.theme.accent.opacity(0.4))
+
+            Text("Build Your Portfolio")
+                .font(.title2)
+                .fontWeight(.semibold)
+                .foregroundColor(Color.theme.accent)
+
+            Text("Add your first coin to start tracking your portfolio value and allocation.")
+                .font(.subheadline)
+                .foregroundColor(Color.theme.secondaryText)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 24)
+
+            Button {
+                showPortfolioEditor = true
+            } label: {
+                Text("Add Your First Coin")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(Color.theme.accent)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            }
+            .padding(.horizontal, 24)
+            .accessibilityHint("Opens the portfolio editor to add a new coin")
+        }
+        .padding(.horizontal, 32)
+        .padding(.vertical, 48)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Build Your Portfolio. Add your first coin to start tracking your portfolio value and allocation.")
     }
 
     private var coinList: some View {
@@ -84,6 +167,7 @@ extension PortfolioView {
             ForEach(vm.portfolioCoins) { coin in
                 CoinRowView(coin: coin, showHoldingsColumn: true)
                     .listRowInsets(.init(top: 10, leading: 0, bottom: 10, trailing: 10))
+                    .listRowBackground(Color.clear)
                     .onTapGesture {
                         selectedCoin = coin
                         showDetailView.toggle()
