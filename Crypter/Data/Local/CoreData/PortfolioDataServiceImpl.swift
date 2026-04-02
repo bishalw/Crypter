@@ -13,6 +13,22 @@ protocol PortfolioDataService {
     func updatePortfolio(coin: CoinModel, amount: Double)
 }
 
+enum CoreDataError: Error {
+    case saving
+    case fetching
+    case loadFail(error: Error)
+    
+    var description: String {
+        switch self {
+        case .saving:
+            return "Error saving to core data"
+        case .fetching:
+            return "Error Fetching from coredata"
+        case .loadFail:
+            return "Error Loading CoreData"
+        }
+    }
+}
 class PortfolioDataServiceImpl: PortfolioDataService {
     private let container: NSPersistentContainer
     private let containerName: String = "PortfolioContainer"
@@ -28,14 +44,17 @@ class PortfolioDataServiceImpl: PortfolioDataService {
         savedEntitiesSubject.value
     }
     
-    init() {
+    init()  {
         container = NSPersistentContainer(name: containerName)
+        var initError: Error?
         container.loadPersistentStores { (_, error) in
-            if let error = error {
-                print("Error loading Core Data! \(error)")
-            }
-            self.getPortfolio()
+            initError = error
         }
+        
+        if let error = initError {
+            print("error")
+        }
+        
     }
     
     // MARK: PUBLIC

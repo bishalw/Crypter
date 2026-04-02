@@ -186,6 +186,34 @@
 			path = Detail;
 			sourceTree = "<group>";
 		};
+		581B9AF12C4D754800CA0F15 /* Screens */ = {
+			isa = PBXGroup;
+			children = (
+				584E027E2C27FAAA00156FFA /* MainTabView.swift */,
+				581B9AF22C4D755700CA0F15 /* Home */,
+				581B9AF32C4D756B00CA0F15 /* Portfolio */,
+				5806A28129234C30000D5786 /* Detail */,
+				583FE39C2949BEB200B6599B /* Settings */,
+			);
+			path = Screens;
+			sourceTree = "<group>";
+		};
+		581B9AF22C4D755700CA0F15 /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				58F7C5032880ED2D003622E0 /* Home */,
+			);
+			path = Home;
+			sourceTree = "<group>";
+		};
+		581B9AF32C4D756B00CA0F15 /* Portfolio */ = {
+			isa = PBXGroup;
+			children = (
+				584E027B2C27F5F000156FFA /* Portfolio */,
+			);
+			path = Portfolio;
+			sourceTree = "<group>";
+		};
 		582B94432B54744E004A1049 /* Impl */ = {
 			isa = PBXGroup;
 			children = (
@@ -386,14 +414,6 @@
 			path = Data;
 			sourceTree = "<group>";
 		};
-		58D16DA82C365DF500A78C3A /* Main */ = {
-			isa = PBXGroup;
-			children = (
-				584E027E2C27FAAA00156FFA /* MainTabView.swift */,
-			);
-			path = Main;
-			sourceTree = "<group>";
-		};
 		58F2595C2B424DAE00EDCABB /* DataService */ = {
 			isa = PBXGroup;
 			children = (
@@ -428,9 +448,9 @@
 			children = (
 				58F7C4D32880E0AB003622E0 /* CrypterApp.swift */,
 				580367192C1AB1A900749B60 /* Core.swift */,
-				58BFB9B528B1ABD400574410 /* Data */,
-				586CB3E52B5125FF0023AF7C /* Domain */,
 				58F7C5022880ED27003622E0 /* Presentation */,
+				586CB3E52B5125FF0023AF7C /* Domain */,
+				58BFB9B528B1ABD400574410 /* Data */,
 				58F7C4D92880E0AC003622E0 /* Preview Content */,
 			);
 			path = Crypter;
@@ -476,11 +496,7 @@
 		58F7C5022880ED27003622E0 /* Presentation */ = {
 			isa = PBXGroup;
 			children = (
-				58D16DA82C365DF500A78C3A /* Main */,
-				58F7C5032880ED2D003622E0 /* Home */,
-				584E027B2C27F5F000156FFA /* Portfolio */,
-				5806A28129234C30000D5786 /* Detail */,
-				583FE39C2949BEB200B6599B /* Settings */,
+				581B9AF12C4D754800CA0F15 /* Screens */,
 				58F7C5082880EF7E003622E0 /* CoinImage */,
 				586CB3E22B51252E0023AF7C /* HelperViews */,
 				58F7C4FF2880E20C003622E0 /* Extensions */,

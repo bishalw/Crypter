@@ -10,7 +10,6 @@ import Combine
 protocol GlobalAPIService  {
     func fetchGlobalData() -> AnyPublisher<GlobalDataDTO,Error>
 }
-
 class GlobalAPIServiceImpl: GlobalAPIService {
     
     var networkingManager: NetworkingManager

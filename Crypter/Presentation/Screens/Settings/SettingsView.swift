@@ -39,7 +39,6 @@ struct SettingsView: View {
                 }
             }
         }
-    
 }
 extension SettingsView {
     private var InfoSection: some View {

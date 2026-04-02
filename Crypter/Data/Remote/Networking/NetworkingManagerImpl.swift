@@ -15,19 +15,25 @@ protocol NetworkingManager {
 
 class NetworkingManagerImpl: NetworkingManager {
     
+    private var urlSession: URLSession
+    private var decoder: JSONDecoder
     
+    init(urlSession: URLSession = URLSession.shared, decoder: JSONDecoder = JSONDecoder()) {
+        self.urlSession = urlSession
+        self.decoder = decoder
+    }
     func download<T: Decodable>(url: URL, decodingType: T.Type) -> AnyPublisher<T, Error> {
-            return URLSession.shared.dataTaskPublisher(for: url)
+            return urlSession.dataTaskPublisher(for: url)
                 .subscribe(on: DispatchQueue.global(qos: .default))
                 .tryMap(handleOutput)
-                .decode(type: decodingType, decoder: JSONDecoder())
+                .decode(type: decodingType, decoder: decoder)
                 .mapError(mapError)
                 .receive(on: DispatchQueue.main)
                 .eraseToAnyPublisher()
     }
     
     func downloadImage(url: URL) -> AnyPublisher<UIImage?, Error> {
-        return URLSession.shared.dataTaskPublisher(for: url)
+        return urlSession.dataTaskPublisher(for: url)
             .subscribe(on: DispatchQueue.global(qos: .default))
             .tryMap (handleOutput)
             .receive(on: DispatchQueue.main)
@@ -57,17 +63,3 @@ class NetworkingManagerImpl: NetworkingManager {
 
 
 
-class MockNetworkingManager: NetworkingManager {
-
-    func download<T: Decodable>(url: URL, decodingType: T.Type) -> AnyPublisher<T, Error> {
-        // Simulate a successful network response with an empty publisher
-        return Empty<T, Error>()
-            .eraseToAnyPublisher()
-    }
-
-    func downloadImage(url: URL) -> AnyPublisher<UIImage?, Error> {
-        // Simulate a successful network response with an empty publisher
-        return Empty<UIImage?, Error>()
-            .eraseToAnyPublisher()
-    }
-}

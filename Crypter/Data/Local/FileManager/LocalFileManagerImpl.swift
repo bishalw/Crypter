@@ -15,7 +15,11 @@ protocol LocalFileManager {
 
 class LocalFileManagerImpl: LocalFileManager{
 
+    private var fileManager: FileManager
     
+    init(fileManager: FileManager = FileManager.default) {
+        self.fileManager = fileManager
+    }
     func saveImage(image: UIImage, imageName: String, folderName: String){
         
         //create folder
@@ -36,7 +40,7 @@ class LocalFileManagerImpl: LocalFileManager{
     func getImage(imageName: String, folderName: String) -> UIImage? {
         
         guard let url = getURLForImage(imageName: imageName, folderName: folderName),
-              FileManager.default.fileExists(atPath: url.path) else {
+              fileManager.fileExists(atPath: url.path) else {
               return nil
         }
         
@@ -47,9 +51,9 @@ class LocalFileManagerImpl: LocalFileManager{
         
         guard let url = getURLForFolder(folderName: folderName) else { return }
        
-        if !FileManager.default.fileExists(atPath: url.path){
+        if !fileManager.fileExists(atPath: url.path){
             do {
-                try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true, attributes: nil)
+                try fileManager.createDirectory(at: url, withIntermediateDirectories: true, attributes: nil)
             } catch let error {
                 print("Error creating directory. FolderName: \(folderName). \(error)")
             }
@@ -59,7 +63,7 @@ class LocalFileManagerImpl: LocalFileManager{
     // file://cachedirectory/{folderName}
     private func getURLForFolder(folderName: String) -> URL? {
         
-        guard let url = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else {
+        guard let url = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first else {
             return nil
         }
         return url.appendingPathComponent(folderName)

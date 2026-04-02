@@ -47,7 +47,7 @@ struct HomeView<ViewModel>: View where ViewModel: HomeViewModel {
                     }
                 }
             }
-            }
+        }
         
     }
     

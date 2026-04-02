@@ -10,3 +10,4 @@ protocol DomainMapper {
     associatedtype ModelType
     func toDomain() -> ModelType
 }
+
