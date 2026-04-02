@@ -54,3 +54,17 @@ struct PortfolioView<ViewModel>: View where ViewModel: PortfolioViewModel {
         }
     }
 }
+
+struct PortfolioView_Previews: PreviewProvider {
+    static var previews: some View {
+        Group {
+            PortfolioView(vm: PreviewPortfolioViewModel())
+                .environmentObject(Core.preview)
+                .previewDisplayName("With Holdings")
+
+            PortfolioView(vm: PreviewPortfolioViewModel(empty: true))
+                .environmentObject(Core.preview)
+                .previewDisplayName("Empty Portfolio")
+        }
+    }
+}

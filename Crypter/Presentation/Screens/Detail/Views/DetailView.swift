@@ -156,6 +156,9 @@ struct StatisticsGrid<T: Identifiable>: View {
 
 struct DetailView_Previews: PreviewProvider {
     static var previews: some View {
-        Text("Detail Preview")
+        NavigationStack {
+            DetailView(vm: PreviewDetailViewModel())
+                .environmentObject(Core.preview)
+        }
     }
 }

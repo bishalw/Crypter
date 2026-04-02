@@ -69,23 +69,10 @@ struct HomeView<ViewModel>: View where ViewModel: HomeViewModel {
 }
 
 
-struct HomeView_Previews: PreviewProvider{
-    static var previews: some View{
-        NavigationView {
-            EmptyView()
-                .navigationBarHidden(true)
-        }
-
+struct HomeView_Previews: PreviewProvider {
+    static var previews: some View {
+        HomeView(vm: PreviewHomeViewModel())
+            .environmentObject(Core.preview)
     }
 }
 
-//                    HomeHeaderView(
-//                        isPortfolioShown: false,
-//                        onAddButtonTapped: {
-//                            showPortfolioViewSheet.toggle()
-//                        },
-//                        onInfoButtonTapped: {
-//                            showSettingsView.toggle()
-//                        },
-//                        onTogglePortfolio: { _ in }
-//                    )
