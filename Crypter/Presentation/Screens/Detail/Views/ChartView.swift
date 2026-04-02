@@ -9,128 +9,671 @@ import Foundation
 import SwiftUI
 import Charts
 
+// MARK: - Time Range
+
+enum ChartTimeRange: String, CaseIterable, Identifiable {
+    case day = "24H"
+    case week = "7D"
+    case month = "30D"
+    case year = "1Y"
+    case all = "ALL"
+
+    var id: String { rawValue }
+}
+
+// MARK: - Reference Line
+
+enum ChartReferenceLine: String, CaseIterable, Identifiable {
+    case none = "None"
+    case startPrice = "Start"
+    case currentPrice = "Current"
+    case ath = "ATH"
+    case high24h = "24h High"
+    case low24h = "24h Low"
+
+    var id: String { rawValue }
+}
+
+// MARK: - Chart State
+
+enum ChartDataState {
+    case empty
+    case loaded([Double])
+}
+
+// MARK: - ChartView
+
 struct ChartView: View {
-    
-    let data: [Double]
-    let maxY: Double
-    let minY: Double
-    let dateFormatter = DateFormatter()
+
+    private static let dayRangePointFloor = 12
+
+    let coin: CoinModel
+    let allData: [Double]
     let lineColor: Color
-    let baselineY: Double
-    let animation = CABasicAnimation(keyPath: "data")
-    
+
     @State private var selectedIndex: Int? = nil
-    @State private var showValue: Bool = false
-    @State private var tapLocation: CGPoint = .zero
-    
+    @State private var selectedTimeRange: ChartTimeRange = .week
+    @State private var selectedReferenceLine: ChartReferenceLine = .none
+
     init(coin: CoinModel) {
-        data = coin.price  ?? []
-        maxY = data.max() ?? 0
-        minY = data.min() ?? 0
-        
-        let priceChange = (data.last ?? 0) - (data.first ?? 0)
-        lineColor = priceChange > 0 ? Color.theme.green : Color.theme.red
-        animation.fromValue = data.first
-        animation.toValue = data.last
-        animation.duration = 2 // animate over 2 seconds
-        baselineY = (maxY - minY) * 0.5 + minY
+        self.coin = coin
+        self.allData = coin.price ?? []
+
+        let priceChange = ((coin.price ?? []).last ?? 0) - ((coin.price ?? []).first ?? 0)
+        self.lineColor = priceChange >= 0 ? Color.theme.green : Color.theme.red
     }
-    
+
     var body: some View {
-        if #available(iOS 16, *) {
-            VStack {
-                Chart {
-                    ForEach(0..<data.count, id: \.self) { index in
-                        LineMark(
-                            x: .value("Index", index),
-                            y: .value("Value", self.data[index])
-                        )
-                        .foregroundStyle(lineColor.gradient)
-                        .interpolationMethod(.catmullRom)
-                        
-                        AreaMark(
-                            x: .value("Index", index),
-                            yStart: .value("Min", minY),
-                            yEnd: .value("Value", data[index])
-                        )
-                        .foregroundStyle(LinearGradient(gradient: Gradient(colors: [lineColor, .clear]), startPoint: .top, endPoint: .bottom))
-                        .opacity(0.5)
-                    }
-                    if showValue {
-                        RuleMark(y: .value("Baseline", baselineY))
-                            .lineStyle(StrokeStyle(lineWidth: 2, dash: [5]))
-                            .foregroundStyle(Color.gray)
-                    }
+        VStack(spacing: 12) {
+            TimeRangePicker(selected: $selectedTimeRange)
+
+            chartContent
+
+            if case .loaded(let displayData) = chartDataState {
+                ChartSummaryRow(data: displayData)
+
+                ReferenceLinePicker(
+                    selected: $selectedReferenceLine,
+                    options: availableReferenceLines
+                )
+
+                if hasHoldings {
+                    PortfolioSummaryCard(coin: coin)
                 }
-                .chartYScale(domain: minY...maxY)
-                .chartXAxis(content: {
-                    let value = AxisMarkValues.automatic(minimumStride: 7, desiredCount: 7)
-                    let date = Date()
-                    let dayInSeconds = Double(60 * 60 * 24)
-                    AxisMarks(values: value, content: { value in
-                        switch value.index {
-                        case 0:
-                            AxisValueLabel(getDayOfTheWeek(date: Date(timeIntervalSince1970: date.timeIntervalSince1970 - (dayInSeconds * 6))))
-                        case 1:
-                            AxisValueLabel(getDayOfTheWeek(date: Date(timeIntervalSince1970: date.timeIntervalSince1970 - (dayInSeconds * 5))))
-                        case 2:
-                            AxisValueLabel(getDayOfTheWeek(date: Date(timeIntervalSince1970: date.timeIntervalSince1970 - (dayInSeconds * 4))))
-                        case 3:
-                            AxisValueLabel(getDayOfTheWeek(date: Date(timeIntervalSince1970: date.timeIntervalSince1970 - (dayInSeconds * 3))))
-                        case 4:
-                            AxisValueLabel(getDayOfTheWeek(date: Date(timeIntervalSince1970: date.timeIntervalSince1970 - (dayInSeconds * 2))))
-                        case 5:
-                            AxisValueLabel(getDayOfTheWeek(date: Date(timeIntervalSince1970: date.timeIntervalSince1970 - dayInSeconds)))
-                        case 6:
-                            AxisValueLabel(getDayOfTheWeek(date: date))
-                        default:
-                            AxisValueLabel()
-                        }
-                    })
-                })
-                .frame(height: 250)
-                .gesture(
-                    DragGesture(minimumDistance: 0)
-                        .onChanged { handleGestureChanged(value: $0) }
-                        .onEnded { _ in
-                            showValue = false
-                        }
-                    
-                )
-                .overlay(
-                    Group {
-                        if let selectedIndex = selectedIndex, showValue {
-                            VStack {
-                                Text("$ \(data[selectedIndex], specifier: "%.2f")")
-                                    .font(.headline)
-                                    .cornerRadius(5)
-                                    .shadow(radius: 5)
-                                Spacer()
-                            }
-                            .position(x: CGFloat(selectedIndex) * UIScreen.main.bounds.width / CGFloat(data.count), y: 100)
-                        }
-                    }
-                )
             }
-        } else {
-            Text("Charts are supported in iOS 16.0. Please update :)")
+        }
+        .onChange(of: selectedTimeRange) { _,_ in
+            resetSelection()
+            if !availableReferenceLines.contains(selectedReferenceLine) {
+                selectedReferenceLine = .none
+            }
         }
     }
-    private func handleGestureChanged(value: DragGesture.Value) {
-        let stepWidth = UIScreen.main.bounds.width / CGFloat(data.count)
-        let tappedIndex = Int(value.location.x / stepWidth)
-        if tappedIndex >= 0 && tappedIndex < data.count {
-            selectedIndex = tappedIndex
-            tapLocation = value.location
-            showValue = true
+
+    private var chartDataState: ChartDataState {
+        displayData.isEmpty ? .empty : .loaded(displayData)
+    }
+
+    private var displayData: [Double] {
+        switch selectedTimeRange {
+        case .day:
+            let count = max(Self.dayRangePointFloor, allData.count / 4)
+            return Array(allData.suffix(count))
+        case .week, .month, .year, .all:
+            return allData
+        }
+    }
+
+    private var yScaleDomain: ClosedRange<Double> {
+        guard let minValue = displayData.min(), let maxValue = displayData.max() else {
+            return 0...1
+        }
+
+        if minValue == maxValue {
+            let inset = Swift.max(1, abs(maxValue) * 0.02)
+            return (minValue - inset)...(maxValue + inset)
+        }
+
+        let padding = Swift.max((maxValue - minValue) * 0.12, 1)
+        return (minValue - padding)...(maxValue + padding)
+    }
+
+    private var availableReferenceLines: [ChartReferenceLine] {
+        var options: [ChartReferenceLine] = [.none]
+
+        if displayData.first != nil {
+            options.append(.startPrice)
+        }
+
+        if displayData.last != nil {
+            options.append(.currentPrice)
+        }
+
+        if let ath = coin.ath, yScaleDomain.contains(ath) {
+            options.append(.ath)
+        }
+
+        if let high24H = coin.high24H, yScaleDomain.contains(high24H) {
+            options.append(.high24h)
+        }
+
+        if let low24H = coin.low24H, yScaleDomain.contains(low24H) {
+            options.append(.low24h)
+        }
+
+        return options
+    }
+
+    private var selectedPrice: Double? {
+        guard let selectedIndex, displayData.indices.contains(selectedIndex) else { return nil }
+        return displayData[selectedIndex]
+    }
+
+    private var selectedPriceText: String {
+        selectedPrice?.asCurrencyWith2Decimals() ?? ""
+    }
+
+    private var hasHoldings: Bool {
+        (coin.currentHoldings ?? 0) > 0
+    }
+
+    @ViewBuilder
+    private var chartContent: some View {
+        switch chartDataState {
+        case .empty:
+            ChartPlaceholderView(
+                state: .empty,
+                rangeLabel: selectedTimeRange.rawValue
+            )
+        case .loaded(let displayData):
+            if #available(iOS 16, *) {
+                chartBody(data: displayData)
+            } else {
+                Text("Charts require iOS 16.0+")
+                    .font(.callout)
+                    .foregroundColor(Color.theme.secondaryText)
+                    .frame(height: 250)
+            }
+        }
+    }
+
+    @available(iOS 16, *)
+    private func chartBody(data: [Double]) -> some View {
+        Chart {
+            ForEach(Array(data.enumerated()), id: \.offset) { index, price in
+                LineMark(
+                    x: .value("Index", index),
+                    y: .value("Price", price)
+                )
+                .foregroundStyle(lineColor.gradient)
+                .interpolationMethod(.catmullRom)
+
+                AreaMark(
+                    x: .value("Index", index),
+                    yStart: .value("Baseline", yScaleDomain.lowerBound),
+                    yEnd: .value("Price", price)
+                )
+                .foregroundStyle(
+                    LinearGradient(
+                        gradient: Gradient(colors: [lineColor.opacity(0.35), .clear]),
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+            }
+
+            if let value = referenceLineValue {
+                RuleMark(y: .value("Reference", value))
+                    .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 3]))
+                    .foregroundStyle(Color.theme.secondaryText.opacity(0.6))
+                    .annotation(position: .top, alignment: .leading) {
+                        Text(selectedReferenceLine.rawValue)
+                            .font(.caption2)
+                            .foregroundColor(Color.theme.secondaryText)
+                    }
+            }
+
+            if let selectedIndex, displayData.indices.contains(selectedIndex) {
+                RuleMark(x: .value("Selected", selectedIndex))
+                    .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 2]))
+                    .foregroundStyle(Color.theme.secondaryText.opacity(0.45))
+
+                PointMark(
+                    x: .value("Selected Index", selectedIndex),
+                    y: .value("Selected Price", displayData[selectedIndex])
+                )
+                .symbolSize(70)
+                .foregroundStyle(lineColor)
+                .annotation(position: .top, spacing: 10) {
+                    ChartTooltip(price: displayData[selectedIndex], accentColor: lineColor)
+                }
+
+                PointMark(
+                    x: .value("Selected Highlight", selectedIndex),
+                    y: .value("Selected Highlight Price", displayData[selectedIndex])
+                )
+                .symbolSize(20)
+                .foregroundStyle(Color.white)
+            } else if hasHoldings, let currentPrice = displayData.last {
+                PointMark(
+                    x: .value("Portfolio Index", data.count - 1),
+                    y: .value("Portfolio Price", currentPrice)
+                )
+                .symbolSize(75)
+                .foregroundStyle(Color.theme.accent)
+                .annotation(position: .topTrailing, spacing: 8) {
+                    PortfolioMarkerBadge(
+                        symbol: coin.symbol.uppercased(),
+                        holdingsText: coin.currentHoldings?.asNumberString() ?? "0"
+                    )
+                }
+            }
+        }
+        .chartYScale(domain: yScaleDomain)
+        .chartXAxis(.hidden)
+        .chartYAxis {
+            AxisMarks(position: .leading, values: .automatic(desiredCount: 4)) { value in
+                AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [4]))
+                    .foregroundStyle(Color.theme.secondaryText.opacity(0.18))
+                AxisValueLabel {
+                    if let doubleValue = value.as(Double.self) {
+                        Text(doubleValue.asCurrencyWith2Decimals())
+                            .font(.caption2)
+                            .foregroundColor(Color.theme.secondaryText)
+                    }
+                }
+            }
+        }
+        .frame(height: 250)
+        .padding(.horizontal)
+        .background(chartSurface)
+        .chartOverlay { proxy in
+            GeometryReader { geometry in
+                Rectangle()
+                    .fill(Color.clear)
+                    .contentShape(Rectangle())
+                    .gesture(
+                        DragGesture(minimumDistance: 0)
+                            .onChanged { value in
+                                handleDrag(value: value, proxy: proxy, geometry: geometry)
+                            }
+                            .onEnded { _ in
+                                withAnimation(.easeOut(duration: 0.2)) {
+                                    resetSelection()
+                                }
+                            }
+                    )
+            }
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(chartAccessibilityLabel)
+        .accessibilityValue(selectedPriceText.isEmpty ? selectedTimeRange.rawValue : "Selected price \(selectedPriceText)")
+    }
+
+    private var chartSurface: some View {
+        RoundedRectangle(cornerRadius: 16)
+            .fill(Color.theme.background)
+            .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 4)
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color.theme.secondaryText.opacity(0.08), lineWidth: 1)
+            )
+    }
+
+    @available(iOS 16, *)
+    private func handleDrag(
+        value: DragGesture.Value,
+        proxy: ChartProxy,
+        geometry: GeometryProxy
+    ) {
+        guard let plotFrame = proxy.plotFrame else { return }
+
+        let plotRect = geometry[plotFrame]
+        let xPosition = value.location.x - plotRect.origin.x
+        guard xPosition >= 0, xPosition <= plotRect.size.width else { return }
+        guard let index: Int = proxy.value(atX: xPosition) else { return }
+
+        let clampedIndex = max(0, min(index, displayData.count - 1))
+        withAnimation(.interactiveSpring(response: 0.22, dampingFraction: 0.82)) {
+            selectedIndex = clampedIndex
+        }
+    }
+
+    private func resetSelection() {
+        selectedIndex = nil
+    }
+
+    private var referenceLineValue: Double? {
+        guard availableReferenceLines.contains(selectedReferenceLine) else { return nil }
+
+        switch selectedReferenceLine {
+        case .none:
+            return nil
+        case .startPrice:
+            return displayData.first
+        case .currentPrice:
+            return displayData.last
+        case .ath:
+            return coin.ath
+        case .high24h:
+            return coin.high24H
+        case .low24h:
+            return coin.low24H
+        }
+    }
+
+    private var chartAccessibilityLabel: String {
+        guard let first = displayData.first, let last = displayData.last, first != 0 else {
+            return "Price chart, no data available"
+        }
+
+        let change = ((last - first) / first) * 100
+        let trend = change >= 0 ? "up" : "down"
+        return "Price chart for \(coin.name), \(selectedTimeRange.rawValue) view, trending \(trend) \(abs(change).asPercentString()). Current price \(last.asCurrencyWith2Decimals())"
+    }
+}
+
+// MARK: - Time Range Picker
+
+struct TimeRangePicker: View {
+    @Binding var selected: ChartTimeRange
+
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(ChartTimeRange.allCases) { range in
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        selected = range
+                    }
+                } label: {
+                    Text(range.rawValue)
+                        .font(.caption)
+                        .fontWeight(selected == range ? .bold : .regular)
+                        .foregroundColor(selected == range ? Color.theme.accent : Color.theme.secondaryText)
+                        .padding(.vertical, 6)
+                        .padding(.horizontal, 12)
+                        .background(
+                            selected == range
+                                ? Color.theme.accent.opacity(0.1)
+                                : Color.clear
+                        )
+                        .clipShape(Capsule())
+                }
+                .accessibilityLabel("\(range.rawValue) time range")
+                .accessibilityAddTraits(selected == range ? .isSelected : [])
+            }
+        }
+        .padding(.horizontal)
+        .frame(maxWidth: .infinity)
+    }
+}
+
+// MARK: - Reference Line Picker
+
+struct ReferenceLinePicker: View {
+    @Binding var selected: ChartReferenceLine
+    let options: [ChartReferenceLine]
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(options) { line in
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            selected = line == .none ? .none : (selected == line ? .none : line)
+                        }
+                    } label: {
+                        Text(line.rawValue)
+                            .font(.caption2)
+                            .foregroundColor(selected == line ? Color.theme.accent : Color.theme.secondaryText)
+                            .padding(.vertical, 4)
+                            .padding(.horizontal, 8)
+                            .background(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .stroke(
+                                        selected == line
+                                            ? Color.theme.accent
+                                            : Color.theme.secondaryText.opacity(0.3),
+                                        lineWidth: 1
+                                    )
+                            )
+                    }
+                    .accessibilityLabel("\(line.rawValue) reference line")
+                    .accessibilityAddTraits(selected == line ? .isSelected : [])
+                }
+            }
+            .padding(.horizontal)
         }
     }
 }
 
-extension ChartView {
-    func getDayOfTheWeek(date: Date)-> String{
-           dateFormatter.dateFormat = "EEE"
-           let weekDay = dateFormatter.string(from: date)
-           return weekDay
-     }
+// MARK: - Chart Tooltip
+
+struct ChartTooltip: View {
+    let price: Double
+    let accentColor: Color
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text("Price")
+                .font(.caption2)
+                .foregroundColor(Color.theme.secondaryText)
+            Text(price.asCurrencyWith2Decimals())
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundColor(Color.theme.accent)
+                .minimumScaleFactor(0.8)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color.theme.background)
+                .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(accentColor.opacity(0.3), lineWidth: 1)
+        )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Selected price \(price.asCurrencyWith2Decimals())")
+    }
+}
+
+// MARK: - Chart Summary Row
+
+struct ChartSummaryRow: View {
+    let data: [Double]
+
+    private var startPrice: Double { data.first ?? 0 }
+    private var currentPrice: Double { data.last ?? 0 }
+    private var highPrice: Double { data.max() ?? 0 }
+    private var lowPrice: Double { data.min() ?? 0 }
+    private var changePercent: Double {
+        guard startPrice > 0 else { return 0 }
+        return ((currentPrice - startPrice) / startPrice) * 100
+    }
+
+    var body: some View {
+        HStack {
+            summaryItem(label: "Start", value: compactCurrency(startPrice))
+            Spacer()
+            summaryItem(label: "Current", value: compactCurrency(currentPrice))
+            Spacer()
+            summaryItem(label: "High", value: compactCurrency(highPrice))
+            Spacer()
+            summaryItem(label: "Low", value: compactCurrency(lowPrice))
+            Spacer()
+            VStack(spacing: 2) {
+                Text("Change")
+                    .font(.caption2)
+                    .foregroundColor(Color.theme.secondaryText)
+                Text(changePercent.asPercentString())
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(changePercent >= 0 ? Color.theme.green : Color.theme.red)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                    .monospacedDigit()
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Change \(changePercent.asPercentString())")
+        }
+        .padding(.horizontal)
+    }
+
+    private func summaryItem(label: String, value: String) -> some View {
+        VStack(spacing: 2) {
+            Text(label)
+                .font(.caption2)
+                .foregroundColor(Color.theme.secondaryText)
+            Text(value)
+                .font(.caption)
+                .fontWeight(.semibold)
+                .foregroundColor(Color.theme.accent)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+                .monospacedDigit()
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(label) \(value)")
+    }
+
+    private func compactCurrency(_ value: Double) -> String {
+        abs(value) >= 1_000 ? "$\(value.formattedWithAbbreviations())" : value.asCurrencyWith2Decimals()
+    }
+}
+
+// MARK: - Portfolio Marker Badge
+
+struct PortfolioMarkerBadge: View {
+    let symbol: String
+    let holdingsText: String
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "briefcase.fill")
+                .font(.caption2)
+            Text("\(holdingsText) \(symbol)")
+                .font(.caption2)
+                .fontWeight(.semibold)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+        }
+        .foregroundColor(Color.theme.accent)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 5)
+        .background(
+            Capsule()
+                .fill(Color.theme.background)
+        )
+        .overlay(
+            Capsule()
+                .stroke(Color.theme.accent.opacity(0.18), lineWidth: 1)
+        )
+        .shadow(color: Color.black.opacity(0.08), radius: 4, x: 0, y: 2)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Your position marker, \(holdingsText) \(symbol)")
+    }
+}
+
+// MARK: - Portfolio Summary Card
+
+struct PortfolioSummaryCard: View {
+    let coin: CoinModel
+
+    private var holdingsValue: Double {
+        (coin.currentHoldings ?? 0) * coin.currentPrice
+    }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "briefcase.fill")
+                .font(.caption)
+                .foregroundColor(Color.theme.accent)
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text("Your Position")
+                    .font(.caption2)
+                    .foregroundColor(Color.theme.secondaryText)
+                Text("\(coin.currentHoldings?.asNumberString() ?? "0") \(coin.symbol.uppercased())")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(Color.theme.accent)
+            }
+
+            Spacer()
+
+            VStack(alignment: .trailing, spacing: 1) {
+                Text("Value")
+                    .font(.caption2)
+                    .foregroundColor(Color.theme.secondaryText)
+                Text(holdingsValue.asCurrencyWith2Decimals())
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(Color.theme.accent)
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color.theme.accent.opacity(0.05))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(Color.theme.accent.opacity(0.15), lineWidth: 1)
+        )
+        .padding(.horizontal)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Your position: \(coin.currentHoldings?.asNumberString() ?? "0") \(coin.symbol.uppercased()) worth \(holdingsValue.asCurrencyWith2Decimals())")
+    }
+}
+
+// MARK: - Chart Placeholder View
+
+struct ChartPlaceholderView: View {
+    enum State {
+        case empty
+    }
+
+    let state: State
+    let rangeLabel: String
+
+    var body: some View {
+        VStack(spacing: 12) {
+            switch state {
+            case .empty:
+                Image(systemName: "chart.line.downtrend.xyaxis")
+                    .font(.system(size: 36))
+                    .foregroundColor(Color.theme.secondaryText.opacity(0.5))
+                Text("No price data available")
+                    .font(.callout)
+                    .foregroundColor(Color.theme.secondaryText)
+                Text("No \(rangeLabel) chart data is available for this coin yet.")
+                    .font(.caption)
+                    .foregroundColor(Color.theme.secondaryText.opacity(0.7))
+                    .multilineTextAlignment(.center)
+            }
+        }
+        .frame(height: 250)
+        .frame(maxWidth: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.theme.secondaryText.opacity(0.03))
+        )
+        .padding(.horizontal)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("No \(rangeLabel) price data available for this coin")
+    }
+}
+
+// MARK: - Previews
+
+struct ChartView_Previews: PreviewProvider {
+    static var previews: some View {
+        Group {
+            ChartView(coin: DeveloperPreview.instance.coin)
+                .padding()
+                .previewLayout(.sizeThatFits)
+                .previewDisplayName("With Data (Holdings)")
+
+            ChartView(coin: CoinModel(
+                id: "empty", symbol: "---", name: "No Data Coin",
+                image: "", currentPrice: 0,
+                marketCap: nil, marketCapRank: nil, fullyDilutedValuation: nil,
+                totalVolume: nil, high24H: nil, low24H: nil,
+                priceChange24H: nil, priceChangePercentage24H: nil,
+                marketCapChange24H: nil, marketCapChangePercentage24H: nil,
+                circulatingSupply: nil, totalSupply: nil, maxSupply: nil,
+                ath: nil, athChangePercentage: nil, athDate: nil,
+                atl: nil, atlChangePercentage: nil, atlDate: nil,
+                lastUpdated: nil, price: [],
+                priceChangePercentage24HInCurrency: nil, currentHoldings: nil
+            ))
+            .padding()
+            .previewLayout(.sizeThatFits)
+            .previewDisplayName("Empty State")
+        }
+    }
 }
