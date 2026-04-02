@@ -9,11 +9,12 @@ import Foundation
 import Combine
 
 protocol PortfolioViewModel: ObservableObject {
-
-    var portfolioCoins: [CoinModel] {get}
+    var portfolioCoins: [CoinModel] { get }
     var totalPortfolioValue: Double { get }
     var myTotalHoldingDisplayString: String { get }
-    
+    var totalPortfolio24hChange: Double { get }
+    var totalPortfolio24hChangePercent: Double { get }
+    func updatePortfolio(coin: CoinModel, amount: Double)
 }
 class PortfolioViewModelImpl: PortfolioViewModel {
 
@@ -103,8 +104,20 @@ extension PortfolioViewModelImpl {
     var totalPortfolioValue: Double {
         portfolioCoins.map { $0.currentHoldingsValue }.reduce(0, +)
     }
-    
+
     var myTotalHoldingDisplayString: String {
         "$\(totalPortfolioValue.formattedWithAbbreviations())"
+    }
+
+    var totalPortfolio24hChange: Double {
+        portfolioCoins.reduce(0) { result, coin in
+            result + (coin.priceChange24H ?? 0) * (coin.currentHoldings ?? 0)
+        }
+    }
+
+    var totalPortfolio24hChangePercent: Double {
+        let previousValue = totalPortfolioValue - totalPortfolio24hChange
+        guard previousValue > 0 else { return 0 }
+        return (totalPortfolio24hChange / previousValue) * 100
     }
 }
