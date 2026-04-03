@@ -41,6 +41,113 @@ enum ChartDataState {
     case loaded([Double])
 }
 
+// MARK: - Shared Sparkline Helpers
+
+enum SparklineStyle {
+    static func lineColor(for data: [Double]) -> Color {
+        let priceChange = (data.last ?? 0) - (data.first ?? 0)
+        return priceChange >= 0 ? Color.theme.green : Color.theme.red
+    }
+
+    static func yScaleDomain(for data: [Double]) -> ClosedRange<Double> {
+        guard let minValue = data.min(), let maxValue = data.max() else {
+            return 0...1
+        }
+
+        if minValue == maxValue {
+            let inset = Swift.max(1, abs(maxValue) * 0.02)
+            return (minValue - inset)...(maxValue + inset)
+        }
+
+        let padding = Swift.max((maxValue - minValue) * 0.12, 1)
+        return (minValue - padding)...(maxValue + padding)
+    }
+}
+
+struct MiniSparklineView: View {
+    let data: [Double]
+
+    private var lineColor: Color {
+        SparklineStyle.lineColor(for: data)
+    }
+
+    private var yScaleDomain: ClosedRange<Double> {
+        SparklineStyle.yScaleDomain(for: data)
+    }
+
+    var body: some View {
+        Group {
+            if data.isEmpty {
+                placeholder
+            } else if #available(iOS 16, *) {
+                chartBody
+            } else {
+                placeholder
+            }
+        }
+    }
+
+    private var placeholder: some View {
+        RoundedRectangle(cornerRadius: 14, style: .continuous)
+            .fill(Color.theme.background)
+            .overlay {
+                VStack(spacing: 8) {
+                    Image(systemName: "chart.line.uptrend.xyaxis")
+                        .font(.title3)
+                        .foregroundColor(Color.theme.secondaryText.opacity(0.6))
+                    Text("7D chart unavailable")
+                        .font(.caption)
+                        .foregroundColor(Color.theme.secondaryText)
+                }
+            }
+            .frame(height: 120)
+    }
+
+    @available(iOS 16, *)
+    private var chartBody: some View {
+        Chart {
+            ForEach(Array(data.enumerated()), id: \.offset) { index, price in
+                AreaMark(
+                    x: .value("Index", index),
+                    yStart: .value("Baseline", yScaleDomain.lowerBound),
+                    yEnd: .value("Price", price)
+                )
+                .foregroundStyle(
+                    LinearGradient(
+                        gradient: Gradient(colors: [lineColor.opacity(0.28), .clear]),
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+
+                LineMark(
+                    x: .value("Index", index),
+                    y: .value("Price", price)
+                )
+                .interpolationMethod(.catmullRom)
+                .foregroundStyle(lineColor.gradient)
+                .lineStyle(StrokeStyle(lineWidth: 2))
+            }
+        }
+        .chartXScale(domain: 0...(max(data.count - 1, 1)))
+        .chartYScale(domain: yScaleDomain)
+        .chartXAxis(.hidden)
+        .chartYAxis(.hidden)
+        .frame(height: 120)
+        .padding(.horizontal, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color.theme.background)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .stroke(Color.theme.secondaryText.opacity(0.08), lineWidth: 1)
+                )
+        )
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Seven day price trend")
+    }
+}
+
 // MARK: - ChartView
 
 struct ChartView: View {
@@ -58,9 +165,7 @@ struct ChartView: View {
     init(coin: CoinModel) {
         self.coin = coin
         self.allData = coin.price ?? []
-
-        let priceChange = ((coin.price ?? []).last ?? 0) - ((coin.price ?? []).first ?? 0)
-        self.lineColor = priceChange >= 0 ? Color.theme.green : Color.theme.red
+        self.lineColor = SparklineStyle.lineColor(for: coin.price ?? [])
     }
 
     var body: some View {
@@ -105,17 +210,7 @@ struct ChartView: View {
     }
 
     private var yScaleDomain: ClosedRange<Double> {
-        guard let minValue = displayData.min(), let maxValue = displayData.max() else {
-            return 0...1
-        }
-
-        if minValue == maxValue {
-            let inset = Swift.max(1, abs(maxValue) * 0.02)
-            return (minValue - inset)...(maxValue + inset)
-        }
-
-        let padding = Swift.max((maxValue - minValue) * 0.12, 1)
-        return (minValue - padding)...(maxValue + padding)
+        SparklineStyle.yScaleDomain(for: displayData)
     }
 
     private var availableReferenceLines: [ChartReferenceLine] {

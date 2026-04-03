@@ -8,6 +8,7 @@ import SwiftUI
 struct PortfolioAllocationChartView: View {
     let coins: [CoinModel]
     let totalValue: Double
+    let totalChange: Double
 
     @State private var selectedIndex: Int? = nil
     @State private var drawProgress: Double = 0
@@ -26,11 +27,38 @@ struct PortfolioAllocationChartView: View {
     private var displayItems: [ChartItem] {
         let sorted = coins.sorted { $0.currentHoldingsValue > $1.currentHoldingsValue }
         if sorted.count <= 5 {
-            return sorted.map { ChartItem(id: $0.id, symbol: $0.symbol.uppercased(), value: $0.currentHoldingsValue) }
+            return sorted.map { coin in
+                ChartItem(
+                    id: coin.id,
+                    label: coin.symbol.uppercased(),
+                    symbol: coin.symbol.uppercased(),
+                    value: coin.currentHoldingsValue,
+                    percentage: percentage(for: coin.currentHoldingsValue),
+                    isAggregate: false
+                )
+            }
         }
-        var items = sorted.prefix(4).map { ChartItem(id: $0.id, symbol: $0.symbol.uppercased(), value: $0.currentHoldingsValue) }
+        var items = sorted.prefix(4).map { coin in
+            ChartItem(
+                id: coin.id,
+                label: coin.symbol.uppercased(),
+                symbol: coin.symbol.uppercased(),
+                value: coin.currentHoldingsValue,
+                percentage: percentage(for: coin.currentHoldingsValue),
+                isAggregate: false
+            )
+        }
         let othersValue = sorted.dropFirst(4).reduce(0.0) { $0 + $1.currentHoldingsValue }
-        items.append(ChartItem(id: "others", symbol: "Others", value: othersValue))
+        items.append(
+            ChartItem(
+                id: "others",
+                label: "Other Holdings",
+                symbol: "Others",
+                value: othersValue,
+                percentage: percentage(for: othersValue),
+                isAggregate: true
+            )
+        )
         return items
     }
 
@@ -38,12 +66,21 @@ struct PortfolioAllocationChartView: View {
         var result: [(start: Double, end: Double)] = []
         var current: Double = 0
         for item in displayItems {
-            let pct = totalValue > 0 ? item.value / totalValue : 0
-            let sweep = pct * 360
+            let sweep = item.percentage * 360
             result.append((current, current + sweep))
             current += sweep
         }
         return result
+    }
+
+    private var totalChangeColor: Color {
+        if totalChange > 0 {
+            return Color.theme.green
+        } else if totalChange < 0 {
+            return Color.theme.red
+        } else {
+            return Color.theme.secondaryText
+        }
     }
 
     var body: some View {
@@ -62,7 +99,6 @@ struct PortfolioAllocationChartView: View {
                             radius: 12, x: 0, y: 4
                         )
                 )
-                .padding(.horizontal)
         }
     }
 
@@ -84,66 +120,73 @@ struct PortfolioAllocationChartView: View {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .fill(.ultraThinMaterial)
         )
-        .padding(.horizontal)
     }
 
     // MARK: - Chart Content
 
     private var chartContent: some View {
         ViewThatFits(in: .horizontal) {
-            HStack(spacing: 24) {
-                donutChart
-                legendView
-            }
-            VStack(spacing: 16) {
-                donutChart
-                legendView
-            }
+            regularChartContent
+            compactChartContent
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     // MARK: - Donut Chart
 
-    private var donutChart: some View {
-        GeometryReader { geo in
-            let size = min(geo.size.width, geo.size.height)
-            ZStack {
-                ForEach(Array(slices.enumerated()), id: \.offset) { index, slice in
-                    let isSelected = selectedIndex == index
-                    let sliceDelay = Double(index) * 0.12
+    private func donutChart(size: CGFloat) -> some View {
+        ZStack {
+            ForEach(Array(slices.enumerated()), id: \.offset) { index, slice in
+                let isSelected = selectedIndex == index
+                let sliceDelay = Double(index) * 0.12
 
-                    DonutSlice(
-                        startDegrees: min(slice.start, drawProgress * 360),
-                        endDegrees: min(slice.end, drawProgress * 360),
-                        angularInset: 1.5
-                    )
-                    .fill(sliceColors[index % sliceColors.count])
-                    .scaleEffect(isSelected ? 1.07 : 1.0)
-                    .opacity(selectedIndex == nil || isSelected ? 1.0 : 0.35)
-                    .animation(.spring(response: 0.35, dampingFraction: 0.7), value: selectedIndex)
-                    .onTapGesture {
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
-                            selectedIndex = selectedIndex == index ? nil : index
-                        }
+                DonutSlice(
+                    startDegrees: min(slice.start, drawProgress * 360),
+                    endDegrees: min(slice.end, drawProgress * 360),
+                    angularInset: 1.5
+                )
+                .fill(sliceColors[index % sliceColors.count])
+                .scaleEffect(isSelected ? 1.07 : 1.0)
+                .opacity(selectedIndex == nil || isSelected ? 1.0 : 0.35)
+                .animation(.spring(response: 0.35, dampingFraction: 0.7), value: selectedIndex)
+                .onTapGesture {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                        selectedIndex = selectedIndex == index ? nil : index
                     }
-                    .animation(
-                        .easeOut(duration: 0.7).delay(sliceDelay),
-                        value: drawProgress
-                    )
                 }
-                centerLabel
-                    .animation(.spring(response: 0.35, dampingFraction: 0.7), value: selectedIndex)
+                .animation(
+                    .easeOut(duration: 0.7).delay(sliceDelay),
+                    value: drawProgress
+                )
             }
-            .frame(width: size, height: size)
-            .position(x: geo.size.width / 2, y: geo.size.height / 2)
+            centerLabel
+                .animation(.spring(response: 0.35, dampingFraction: 0.7), value: selectedIndex)
+                .frame(width: size * 0.54)
         }
-        .frame(minWidth: 120, idealWidth: 140, maxWidth: 160)
-        .aspectRatio(1, contentMode: .fit)
+        .frame(width: size, height: size)
         .onAppear {
             withAnimation(.easeOut(duration: 0.8)) {
                 drawProgress = 1.0
             }
         }
+    }
+
+    private var regularChartContent: some View {
+        HStack(alignment: .center, spacing: 24) {
+            donutChart(size: 156)
+            legendView
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var compactChartContent: some View {
+        VStack(spacing: 18) {
+            donutChart(size: 188)
+            legendView
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     // MARK: - Center Label
@@ -152,32 +195,44 @@ struct PortfolioAllocationChartView: View {
     private var centerLabel: some View {
         if let index = selectedIndex, index < displayItems.count {
             let item = displayItems[index]
-            let pct = totalValue > 0 ? item.value / totalValue * 100 : 0
-            VStack(spacing: 2) {
-                Text(item.symbol)
-                    .font(.caption)
+            VStack(spacing: 3) {
+                Text(item.label)
+                    .font(.caption.weight(.semibold))
                     .fontWeight(.semibold)
                     .foregroundColor(Color.theme.accent)
                     .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-                Text(String(format: "%.1f%%", pct))
-                    .font(.caption2)
+                    .minimumScaleFactor(0.65)
+                Text(percentageText(for: item.percentage))
+                    .font(.caption2.weight(.medium))
                     .fontWeight(.medium)
                     .foregroundColor(sliceColors[index % sliceColors.count])
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                Text(item.value.asCompactCurrency())
+                    .font(.caption2)
+                    .foregroundColor(Color.theme.secondaryText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.65)
+                    .monospacedDigit()
             }
+            .multilineTextAlignment(.center)
             .transition(.scale(scale: 0.8).combined(with: .opacity))
         } else {
-            VStack(spacing: 2) {
-                Text("Holdings")
-                    .font(.caption2)
-                    .foregroundColor(Color.theme.secondaryText)
-                Text("\(coins.count)")
-                    .font(.headline)
+            VStack(spacing: 3) {
+                Text(totalValue.asCompactCurrency())
+                    .font(.headline.weight(.semibold))
                     .foregroundColor(Color.theme.accent)
-                Text(coins.count == 1 ? "coin" : "coins")
+                    .monospacedDigit()
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.65)
+                Text(totalChange.asSignedCompactCurrency())
                     .font(.caption2)
-                    .foregroundColor(Color.theme.secondaryText)
+                    .foregroundColor(totalChangeColor)
+                    .monospacedDigit()
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
             }
+            .multilineTextAlignment(.center)
             .transition(.scale(scale: 0.8).combined(with: .opacity))
         }
     }
@@ -188,7 +243,6 @@ struct PortfolioAllocationChartView: View {
         VStack(alignment: .leading, spacing: 6) {
             ForEach(Array(displayItems.enumerated()), id: \.element.id) { index, item in
                 let isSelected = selectedIndex == index
-                let pct = totalValue > 0 ? item.value / totalValue * 100 : 0
                 let color = sliceColors[index % sliceColors.count]
 
                 Button {
@@ -206,17 +260,23 @@ struct PortfolioAllocationChartView: View {
                                 .font(.caption)
                                 .fontWeight(isSelected ? .bold : .medium)
                                 .foregroundColor(Color.theme.accent)
-                            Text(item.value.asCurrencyWith2Decimals())
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.8)
+                            Text(item.value.asCompactCurrency())
                                 .font(.caption2)
                                 .foregroundColor(Color.theme.secondaryText)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.75)
+                                .monospacedDigit()
                         }
 
-                        Spacer()
+                        Spacer(minLength: 12)
 
-                        Text(String(format: "%.1f%%", pct))
+                        Text(percentageText(for: item.percentage))
                             .font(.caption)
                             .fontWeight(isSelected ? .semibold : .regular)
                             .foregroundColor(isSelected ? color : Color.theme.secondaryText)
+                            .monospacedDigit()
                     }
                     .padding(.vertical, 4)
                     .padding(.horizontal, 8)
@@ -225,10 +285,27 @@ struct PortfolioAllocationChartView: View {
                             .fill(isSelected ? color.opacity(0.12) : Color.clear)
                     )
                 }
+                .opacity(selectedIndex == nil || isSelected ? 1.0 : 0.62)
                 .buttonStyle(.plain)
-                .accessibilityLabel("\(item.symbol), \(String(format: "%.1f", pct)) percent, \(item.value.asCurrencyWith2Decimals())")
+                .accessibilityLabel(accessibilityLabel(for: item))
             }
         }
+    }
+
+    private func percentage(for value: Double) -> Double {
+        guard totalValue > 0 else { return 0 }
+        return value / totalValue
+    }
+
+    private func percentageText(for ratio: Double) -> String {
+        guard ratio > 0 else { return "0.0%" }
+        let percent = ratio * 100
+        return percent < 0.1 ? "<0.1%" : String(format: "%.1f%%", percent)
+    }
+
+    private func accessibilityLabel(for item: ChartItem) -> String {
+        let prefix = item.isAggregate ? "Other holdings, combined smaller holdings" : item.symbol
+        return "\(prefix), \(percentageText(for: item.percentage)), \(item.value.asCompactCurrency())"
     }
 }
 
@@ -236,17 +313,18 @@ struct PortfolioAllocationChartView: View {
 
 private struct ChartItem {
     let id: String
+    let label: String
     let symbol: String
     let value: Double
+    let percentage: Double
+    let isAggregate: Bool
 }
 
 private struct DonutSlice: Shape {
     var startDegrees: Double
     var endDegrees: Double
-    var holeRatio: CGFloat = 0.55
+    var holeRatio: CGFloat = 0.49
     var angularInset: Double = 1.5
-    /// Minimum visible sweep in degrees — slices smaller than this are rendered at this size
-    private static let minimumSweep: Double = 6.0
 
     var animatableData: AnimatablePair<Double, Double> {
         get { AnimatablePair(startDegrees, endDegrees) }
@@ -254,17 +332,16 @@ private struct DonutSlice: Shape {
     }
 
     func path(in rect: CGRect) -> Path {
-        let rawSweep = endDegrees - startDegrees
-        guard rawSweep > 0 else { return Path() }
+        let sweep = endDegrees - startDegrees
+        guard sweep > 0 else { return Path() }
 
-        let effectiveSweep = max(rawSweep, Self.minimumSweep)
-        let inset = min(angularInset, effectiveSweep / 3)
+        let inset = min(angularInset, sweep / 3)
 
         let center = CGPoint(x: rect.midX, y: rect.midY)
         let outerRadius = min(rect.width, rect.height) / 2
         let innerRadius = outerRadius * holeRatio
         let start = Angle.degrees(startDegrees + inset - 90)
-        let end = Angle.degrees(startDegrees + effectiveSweep - inset - 90)
+        let end = Angle.degrees(endDegrees - inset - 90)
 
         var path = Path()
         path.addArc(center: center, radius: outerRadius, startAngle: start, endAngle: end, clockwise: false)
@@ -284,12 +361,13 @@ struct PortfolioAllocationChartView_Previews: PreviewProvider {
             dev.coin2.updateHoldings(amount: 10.0)
         ]
         let total = coins.map { $0.currentHoldingsValue }.reduce(0, +)
+        let totalChange = coins.reduce(0) { $0 + (($1.priceChange24H ?? 0) * ($1.currentHoldings ?? 0)) }
 
         Group {
-            PortfolioAllocationChartView(coins: coins, totalValue: total)
+            PortfolioAllocationChartView(coins: coins, totalValue: total, totalChange: totalChange)
                 .previewDisplayName("With Data")
 
-            PortfolioAllocationChartView(coins: [], totalValue: 0)
+            PortfolioAllocationChartView(coins: [], totalValue: 0, totalChange: 0)
                 .previewDisplayName("Empty State")
         }
         .previewLayout(.sizeThatFits)

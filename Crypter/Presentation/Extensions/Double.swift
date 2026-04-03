@@ -83,6 +83,17 @@ extension Double {
     func asPercentString() -> String{
         return asNumberString() + "%"
     }
+
+    func asCompactCurrency() -> String {
+        let sign = self < 0 ? "-" : ""
+        return sign + "$" + abs(self).formattedWithAbbreviations()
+    }
+
+    func asSignedCompactCurrency() -> String {
+        guard self != 0 else { return asCompactCurrency() }
+        let prefix = self > 0 ? "+" : ""
+        return prefix + asCompactCurrency()
+    }
     /// Converts a Double into a string representation
     ///```
     ///Convert 12 to 12.00
@@ -107,7 +118,7 @@ extension Double {
             let stringFormatted = formatted.asNumberString()
             return "\(sign)\(stringFormatted)Bn"
         case 1_000_000...:
-            let formatted = num / 1_000
+            let formatted = num / 1_000_000
             let stringFormatted = formatted.asNumberString()
             return "\(sign)\(stringFormatted)M"
         case 1_000...:

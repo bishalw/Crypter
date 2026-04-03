@@ -18,23 +18,11 @@ struct PortfolioView<ViewModel>: View where ViewModel: PortfolioViewModel {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
+            Group {
                 if vm.portfolioCoins.isEmpty {
                     emptyStateView
                 } else {
-                    statsRow
-
-                    PortfolioAllocationChartView(
-                        coins: vm.portfolioCoins,
-                        totalValue: vm.totalPortfolioValue
-                    )
-                    .padding(.bottom, 8)
-
-                    Divider()
-                        .padding(.horizontal)
-                        .padding(.bottom, 8)
-
-                    coinList
+                    portfolioContent
                 }
             }
             .navigationTitle("Portfolio")
@@ -72,6 +60,10 @@ struct PortfolioView<ViewModel>: View where ViewModel: PortfolioViewModel {
 }
 
 extension PortfolioView {
+    private var totalChangeValueText: String {
+        vm.totalPortfolio24hChange.asSignedCompactCurrency()
+    }
+
     private var statsRow: some View {
         HStack(spacing: 12) {
             statCard(
@@ -82,9 +74,7 @@ extension PortfolioView {
 
             statCard(
                 title: "24h Change",
-                value: vm.totalPortfolio24hChange >= 0
-                    ? "+\(vm.totalPortfolio24hChange.asCurrencyWith2Decimals())"
-                    : vm.totalPortfolio24hChange.asCurrencyWith2Decimals(),
+                value: totalChangeValueText,
                 percentageChange: nil
             )
         }
@@ -97,10 +87,15 @@ extension PortfolioView {
             Text(title)
                 .font(.caption)
                 .foregroundColor(Color.theme.secondaryText)
+                .lineLimit(1)
+                .minimumScaleFactor(0.9)
 
             Text(value)
                 .font(.headline)
                 .foregroundColor(Color.theme.accent)
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+                .monospacedDigit()
 
             if let change = percentageChange {
                 HStack(spacing: 4) {
@@ -110,6 +105,9 @@ extension PortfolioView {
                     Text(change.asPercentString())
                         .font(.caption)
                         .bold()
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                        .monospacedDigit()
                 }
                 .foregroundColor(change >= 0 ? Color.theme.green : Color.theme.red)
             }
@@ -162,27 +160,46 @@ extension PortfolioView {
         .accessibilityLabel("Build Your Portfolio. Add your first coin to start tracking your portfolio value and allocation.")
     }
 
-    private var coinList: some View {
+    private var portfolioContent: some View {
         List {
-            ForEach(vm.portfolioCoins) { coin in
-                CoinRowView(coin: coin, showHoldingsColumn: true)
-                    .listRowInsets(.init(top: 10, leading: 0, bottom: 10, trailing: 10))
+            Section {
+                statsRow
+                    .listRowInsets(.init(top: 12, leading: 16, bottom: 6, trailing: 16))
+                    .listRowSeparator(.hidden)
                     .listRowBackground(Color.clear)
-                    .onTapGesture {
-                        selectedCoin = coin
-                        showDetailView.toggle()
-                    }
-                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                        Button(role: .destructive) {
-                            vm.updatePortfolio(coin: coin, amount: 0)
-                        } label: {
-                            Label("Remove", systemImage: "trash")
+
+                PortfolioAllocationChartView(
+                    coins: vm.portfolioCoins,
+                    totalValue: vm.totalPortfolioValue,
+                    totalChange: vm.totalPortfolio24hChange
+                )
+                .listRowInsets(.init(top: 0, leading: 16, bottom: 10, trailing: 16))
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+            }
+
+            Section {
+                ForEach(vm.portfolioCoins) { coin in
+                    CoinRowView(coin: coin, showHoldingsColumn: true)
+                        .listRowInsets(.init(top: 10, leading: 16, bottom: 10, trailing: 16))
+                        .listRowBackground(Color.clear)
+                        .onTapGesture {
+                            selectedCoin = coin
+                            showDetailView.toggle()
                         }
-                    }
+                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            Button(role: .destructive) {
+                                vm.updatePortfolio(coin: coin, amount: 0)
+                            } label: {
+                                Label("Remove", systemImage: "trash")
+                            }
+                        }
+                }
             }
         }
-        .listStyle(PlainListStyle())
+        .listStyle(.plain)
     }
+
 }
 
 struct PortfolioView_Previews: PreviewProvider {
