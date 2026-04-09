@@ -169,30 +169,50 @@ struct ChartView: View {
     }
 
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 16) {
             TimeRangePicker(selected: $selectedTimeRange)
-
+            
             chartContent
+                .padding(.top, 4)
 
             if case .loaded(let displayData) = chartDataState {
-                ChartSummaryRow(data: displayData)
+                VStack(spacing: 16) {
+                    ChartSummaryRow(data: displayData)
+                    
+                    Divider()
+                        .padding(.horizontal)
+                        .opacity(0.5)
 
-                ReferenceLinePicker(
-                    selected: $selectedReferenceLine,
-                    options: availableReferenceLines
-                )
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Reference Lines")
+                            .font(.caption)
+                            .fontWeight(.bold)
+                            .foregroundColor(Color.theme.secondaryText)
+                            .padding(.horizontal)
+                        
+                        ReferenceLinePicker(
+                            selected: $selectedReferenceLine,
+                            options: availableReferenceLines
+                        )
+                    }
 
-                if hasHoldings {
-                    PortfolioSummaryCard(coin: coin)
+                    if hasHoldings {
+                        PortfolioSummaryCard(coin: coin)
+                            .padding(.bottom, 4)
+                    }
                 }
             }
         }
-        .onChange(of: selectedTimeRange) { _,_ in
-            resetSelection()
-            if !availableReferenceLines.contains(selectedReferenceLine) {
-                selectedReferenceLine = .none
-            }
-        }
+        .padding(.vertical)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color.theme.background)
+                .shadow(color: Color.black.opacity(0.04), radius: 10, x: 0, y: 4)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(Color.theme.secondaryText.opacity(0.1), lineWidth: 1)
+                )
+        )
     }
 
     private var chartDataState: ChartDataState {
@@ -305,6 +325,8 @@ struct ChartView: View {
                         Text(selectedReferenceLine.rawValue)
                             .font(.caption2)
                             .foregroundColor(Color.theme.secondaryText)
+                            .padding(.horizontal, 4)
+                            .background(Color.theme.background.opacity(0.8))
                     }
             }
 
@@ -329,19 +351,6 @@ struct ChartView: View {
                 )
                 .symbolSize(20)
                 .foregroundStyle(Color.white)
-            } else if hasHoldings, let currentPrice = displayData.last {
-                PointMark(
-                    x: .value("Portfolio Index", data.count - 1),
-                    y: .value("Portfolio Price", currentPrice)
-                )
-                .symbolSize(75)
-                .foregroundStyle(Color.theme.accent)
-                .annotation(position: .topTrailing, spacing: 8) {
-                    PortfolioMarkerBadge(
-                        symbol: coin.symbol.uppercased(),
-                        holdingsText: coin.currentHoldings?.asNumberString() ?? "0"
-                    )
-                }
             }
         }
         .chartYScale(domain: yScaleDomain)
@@ -353,15 +362,13 @@ struct ChartView: View {
                 AxisValueLabel {
                     if let doubleValue = value.as(Double.self) {
                         Text(doubleValue.asCurrencyWith2Decimals())
-                            .font(.caption2)
+                            .font(.system(size: 8, design: .monospaced))
                             .foregroundColor(Color.theme.secondaryText)
                     }
                 }
             }
         }
         .frame(height: 250)
-        .padding(.horizontal)
-        .background(chartSurface)
         .chartOverlay { proxy in
             GeometryReader { geometry in
                 Rectangle()
@@ -409,8 +416,12 @@ struct ChartView: View {
         guard let index: Int = proxy.value(atX: xPosition) else { return }
 
         let clampedIndex = max(0, min(index, displayData.count - 1))
-        withAnimation(.interactiveSpring(response: 0.22, dampingFraction: 0.82)) {
-            selectedIndex = clampedIndex
+        
+        if selectedIndex != clampedIndex {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            withAnimation(.interactiveSpring(response: 0.22, dampingFraction: 0.82)) {
+                selectedIndex = clampedIndex
+            }
         }
     }
 
@@ -457,30 +468,35 @@ struct TimeRangePicker: View {
         HStack(spacing: 0) {
             ForEach(ChartTimeRange.allCases) { range in
                 Button {
-                    withAnimation(.easeInOut(duration: 0.2)) {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                         selected = range
                     }
                 } label: {
                     Text(range.rawValue)
-                        .font(.caption)
-                        .fontWeight(selected == range ? .bold : .regular)
+                        .font(.system(.caption, design: .rounded))
+                        .fontWeight(selected == range ? .bold : .medium)
                         .foregroundColor(selected == range ? Color.theme.accent : Color.theme.secondaryText)
-                        .padding(.vertical, 6)
-                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .frame(maxWidth: .infinity)
                         .background(
-                            selected == range
-                                ? Color.theme.accent.opacity(0.1)
-                                : Color.clear
+                            ZStack {
+                                if selected == range {
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .fill(Color.theme.accent.opacity(0.15))
+                                        .matchedGeometryEffect(id: "range_background", in: rangeNamespace)
+                                }
+                            }
                         )
-                        .clipShape(Capsule())
                 }
-                .accessibilityLabel("\(range.rawValue) time range")
-                .accessibilityAddTraits(selected == range ? .isSelected : [])
             }
         }
+        .padding(4)
+        .background(Color.theme.secondaryText.opacity(0.05))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
         .padding(.horizontal)
-        .frame(maxWidth: .infinity)
     }
+    
+    @Namespace private var rangeNamespace
 }
 
 // MARK: - Reference Line Picker
@@ -491,33 +507,35 @@ struct ReferenceLinePicker: View {
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
+            HStack(spacing: 10) {
                 ForEach(options) { line in
                     Button {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            selected = line == .none ? .none : (selected == line ? .none : line)
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            if line == .none {
+                                selected = .none
+                            } else {
+                                selected = (selected == line) ? .none : line
+                            }
                         }
                     } label: {
                         Text(line.rawValue)
-                            .font(.caption2)
+                            .font(.system(size: 11, weight: .semibold, design: .rounded))
                             .foregroundColor(selected == line ? Color.theme.accent : Color.theme.secondaryText)
-                            .padding(.vertical, 4)
-                            .padding(.horizontal, 8)
+                            .padding(.vertical, 6)
+                            .padding(.horizontal, 12)
                             .background(
-                                RoundedRectangle(cornerRadius: 6)
-                                    .stroke(
-                                        selected == line
-                                            ? Color.theme.accent
-                                            : Color.theme.secondaryText.opacity(0.3),
-                                        lineWidth: 1
-                                    )
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(selected == line ? Color.theme.accent.opacity(0.12) : Color.theme.background)
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(selected == line ? Color.theme.accent : Color.theme.secondaryText.opacity(0.2), lineWidth: 1)
                             )
                     }
-                    .accessibilityLabel("\(line.rawValue) reference line")
-                    .accessibilityAddTraits(selected == line ? .isSelected : [])
                 }
             }
             .padding(.horizontal)
+            .padding(.vertical, 2)
         }
     }
 }

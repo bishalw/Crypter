@@ -107,6 +107,7 @@ struct PortfolioEditorView: View {
     @State private var selectedCoin: CoinModel? = nil
     @State private var quantityText: String = ""
     @State private var didApplyInitialSelection = false
+    @FocusState private var isQuantityFocused: Bool
 
     var body: some View {
         NavigationStack {
@@ -115,13 +116,18 @@ struct PortfolioEditorView: View {
 
                 if let coin = selectedCoin {
                     selectedCoinDetail(coin: coin)
-                        .transition(.move(edge: .top).combined(with: .opacity))
+                        .padding()
+                        .transition(.asymmetric(
+                            insertion: .move(edge: .top).combined(with: .opacity),
+                            removal: .move(edge: .top).combined(with: .opacity)
+                        ))
                 }
 
                 coinList
                 Spacer(minLength: 0)
             }
-            .navigationTitle(selectedCoin == nil ? "Manage Portfolio" : "Edit Holding")
+            .background(Color.theme.background.ignoresSafeArea())
+            .navigationTitle(selectedCoin == nil ? "Manage Portfolio" : (vm.currentHoldings(for: selectedCoin!) == nil ? "Add \(selectedCoin?.symbol.uppercased() ?? "")" : "Update \(selectedCoin?.symbol.uppercased() ?? "")"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -131,15 +137,19 @@ struct PortfolioEditorView: View {
                         Image(systemName: "xmark")
                             .font(.headline)
                     }
-                    .accessibilityLabel("Close portfolio editor")
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save") {
+                    let buttonTitle: String = {
+                        guard let coin = selectedCoin else { return "Save" }
+                        return vm.currentHoldings(for: coin) == nil ? "Add" : "Update"
+                    }()
+                    
+                    Button(buttonTitle) {
                         saveButtonPressed()
                     }
                     .font(.headline)
                     .disabled(!canSave)
-                    .accessibilityHint("Saves the selected coin amount to your portfolio")
+                    .opacity(selectedCoin == nil ? 0 : 1)
                 }
             }
             .onAppear {
@@ -156,69 +166,65 @@ struct PortfolioEditorView: View {
 
 extension PortfolioEditorView {
     private var coinList: some View {
-        List(vm.allCoins) { coin in
-            coinRow(coin: coin)
-                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    withAnimation(.easeInOut(duration: 0.25)) {
-                        selectCoin(coin)
-                    }
+        ScrollView {
+            LazyVStack(spacing: 12) {
+                ForEach(vm.allCoins) { coin in
+                    coinRow(coin: coin)
+                        .padding(.horizontal)
+                        .onTapGesture {
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                selectCoin(coin)
+                            }
+                        }
                 }
-                .listRowBackground(
-                    selectedCoin?.id == coin.id
-                        ? Color.theme.green.opacity(0.1)
-                        : Color.clear
-                )
+            }
+            .padding(.top)
         }
-        .listStyle(.plain)
     }
 
     private func coinRow(coin: CoinModel) -> some View {
+        let isSelected = selectedCoin?.id == coin.id
         let holdings = coin.currentHoldings ?? 0
 
         return HStack(spacing: 12) {
-            CoinImageView(
-                vm: CoinImageViewModelImpl(
-                    coinImageRepository: core.coinImageRepository,
-                    coin: coin
-                )
-            )
-            .frame(width: 36, height: 36)
-            .clipShape(Circle())
+            CoinImageView(vm: CoinImageViewModelImpl(coinImageRepository: core.coinImageRepository, coin: coin))
+                .frame(width: 32, height: 32)
+                .clipShape(Circle())
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(coin.symbol.uppercased())
                     .font(.headline)
+                    .foregroundColor(Color.theme.accent)
                 Text(coin.name)
                     .font(.caption)
                     .foregroundColor(Color.theme.secondaryText)
-                    .lineLimit(1)
             }
 
             Spacer()
 
             VStack(alignment: .trailing, spacing: 2) {
                 Text(coin.currentPrice.asCurrencyWith6Decimals())
-                    .font(.subheadline.bold())
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .foregroundColor(Color.theme.accent)
 
                 if holdings > 0 {
                     Text("\(holdings.asNumberString()) held")
-                        .font(.caption)
-                        .foregroundColor(Color.theme.secondaryText)
+                        .font(.caption2)
+                        .fontWeight(.bold)
+                        .foregroundColor(Color.theme.green)
                 }
             }
-
-            if selectedCoin?.id == coin.id {
-                Image(systemName: "checkmark.circle.fill")
-                    .foregroundColor(Color.theme.green)
-            }
         }
-        .padding(.vertical, 4)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(coin.name), \(coin.symbol.uppercased()), price \(coin.currentPrice.asCurrencyWith2Decimals())")
-        .accessibilityValue(holdings > 0 ? "\(holdings.asNumberString()) currently held" : "Not in portfolio")
-        .accessibilityHint("Select to edit the amount in your portfolio")
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(isSelected ? Color.theme.accent.opacity(0.05) : Color.theme.background)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(isSelected ? Color.theme.accent.opacity(0.3) : Color.theme.secondaryText.opacity(0.1), lineWidth: 1)
+        )
+        .scaleEffect(isSelected ? 0.98 : 1.0)
     }
 }
 
@@ -226,62 +232,74 @@ extension PortfolioEditorView {
 
 extension PortfolioEditorView {
     private func selectedCoinDetail(coin: CoinModel) -> some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 12) {
-                CoinImageView(
-                    vm: CoinImageViewModelImpl(
-                        coinImageRepository: core.coinImageRepository,
-                        coin: coin
-                    )
-                )
-                .id(coin.id)
-                .frame(width: 32, height: 32)
-                .clipShape(Circle())
-
-                Text(coin.symbol.uppercased())
-                    .font(.headline)
-
+        VStack(spacing: 16) {
+            HStack {
+                HStack(spacing: 8) {
+                    CoinImageView(vm: CoinImageViewModelImpl(coinImageRepository: core.coinImageRepository, coin: coin))
+                        .frame(width: 24, height: 24)
+                        .clipShape(Circle())
+                    Text(coin.name)
+                        .font(.headline)
+                }
+                
                 Spacer()
-
+                
                 Text(coin.currentPrice.asCurrencyWith6Decimals())
-                    .font(.subheadline)
+                    .font(.caption)
+                    .monospacedDigit()
                     .foregroundColor(Color.theme.secondaryText)
             }
-            .padding(.horizontal)
-            .padding(.top, 12)
 
-            HStack {
-                Text("Amount")
-                    .font(.subheadline)
-                    .foregroundColor(Color.theme.secondaryText)
-                Spacer()
-                TextField("0.00", text: $quantityText)
-                    .keyboardType(.decimalPad)
-                    .multilineTextAlignment(.trailing)
-                    .font(.title3.bold())
-                    .frame(maxWidth: 150)
-                    .accessibilityLabel("Coin amount")
-                    .accessibilityHint("Enter how much \(coin.name) you hold using a decimal number")
+            Divider()
+
+            VStack(alignment: .trailing, spacing: 4) {
+                HStack {
+                    Text("Holdings")
+                        .font(.subheadline)
+                        .foregroundColor(Color.theme.secondaryText)
+                    Spacer()
+                    TextField("Enter Amount", text: $quantityText)
+                        .keyboardType(.decimalPad)
+                        .multilineTextAlignment(.trailing)
+                        .font(.system(.title3, design: .rounded))
+                        .fontWeight(.bold)
+                        .focused($isQuantityFocused)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(isQuantityFocused && quantityText.isEmpty ? Color.theme.accent.opacity(0.05) : Color.clear)
+                        )
+                }
+                
+                if quantityText.isEmpty {
+                    Text("How much \(coin.symbol.uppercased()) do you own?")
+                        .font(.caption2)
+                        .foregroundColor(Color.theme.accent)
+                        .transition(.opacity)
+                }
             }
-            .padding(.horizontal)
-            .padding(.top, 12)
 
             HStack {
-                Text("Value")
+                Text("Total Value")
                     .font(.subheadline)
                     .foregroundColor(Color.theme.secondaryText)
                 Spacer()
                 Text(currentValue.asCurrencyWith2Decimals())
-                    .font(.subheadline.bold())
-                    .foregroundColor(currentValue > 0 ? Color.theme.green : Color.theme.secondaryText)
+                    .font(.system(.headline, design: .rounded))
+                    .foregroundColor(currentValue > 0 ? Color.theme.green : Color.theme.accent)
             }
-            .padding(.horizontal)
-            .padding(.top, 8)
-            .padding(.bottom, 12)
-
-            Divider()
         }
-        .background(Color.theme.background)
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.theme.background)
+                .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color.theme.accent.opacity(0.2), lineWidth: 1)
+        )
     }
 
     private var currentValue: Double {
@@ -309,11 +327,17 @@ extension PortfolioEditorView {
 
     private func selectCoin(_ coin: CoinModel) {
         selectedCoin = coin
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
 
         if let holdings = vm.currentHoldings(for: coin) {
             quantityText = holdings.asNumberString()
         } else {
             quantityText = ""
+        }
+        
+        // Short delay to ensure view is rendered before focusing
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            isQuantityFocused = true
         }
     }
 

@@ -113,6 +113,9 @@ struct PortfolioAllocationChartView: View {
                     Button {
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) {
                             selectedIndex = selectedIndex == index ? nil : index
+                            if selectedIndex != nil {
+                                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                            }
                         }
                     } label: {
                         HStack(spacing: 8) { // Tighter spacing between dot and text
@@ -165,6 +168,12 @@ struct PortfolioAllocationChartView: View {
 
     private func donutChart(size: CGFloat) -> some View {
         ZStack {
+            // Subtle inner background to define the "hole" better
+            Circle()
+                .fill(Color.theme.accent.opacity(0.03))
+                .frame(width: size * 0.7)
+                .blur(radius: 5)
+
             ForEach(Array(slices.enumerated()), id: \.offset) { index, slice in
                 let isSelected = selectedIndex == index
                 let sliceColor = sliceColors[index % sliceColors.count]
@@ -172,29 +181,37 @@ struct PortfolioAllocationChartView: View {
                 DonutSlice(
                     startDegrees: min(slice.start, drawProgress * 360),
                     endDegrees: min(slice.end, drawProgress * 360),
-                    angularInset: 1.0 // Reduced inset slightly
+                    angularInset: 0.8
                 )
-                .fill(sliceColor)
-                // ADDED: Stroke to separate slices beautifully
+                .fill(
+                    LinearGradient(
+                        colors: [sliceColor, sliceColor.opacity(0.8)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
                 .overlay(
-                     DonutSlice(startDegrees: min(slice.start, drawProgress * 360), endDegrees: min(slice.end, drawProgress * 360), angularInset: 1.0)
-                        .stroke(Color.theme.background, lineWidth: 1.5)
+                     DonutSlice(startDegrees: min(slice.start, drawProgress * 360), endDegrees: min(slice.end, drawProgress * 360), angularInset: 0.8)
+                        .stroke(Color.theme.background, lineWidth: 2)
                 )
                 .scaleEffect(isSelected ? 1.08 : 1.0)
-                .opacity(selectedIndex == nil || isSelected ? 1.0 : 0.3)
+                .opacity(selectedIndex == nil || isSelected ? 1.0 : 0.4)
+                .shadow(color: isSelected ? sliceColor.opacity(0.3) : Color.clear, radius: 10, x: 0, y: 0)
                 .animation(.spring(response: 0.4, dampingFraction: 0.6), value: selectedIndex)
                 .onTapGesture {
                     withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) {
                         selectedIndex = selectedIndex == index ? nil : index
+                        if selectedIndex != nil {
+                            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                        }
                     }
                 }
                 .animation(.easeOut(duration: 0.8).delay(Double(index) * 0.08), value: drawProgress)
             }
             
             centerLabel
-                .frame(width: size * 0.55)
+                .frame(width: size * 0.58)
         }
-        // ADDED: padding so the scaleEffect(1.08) doesn't clip the edges of the ZStack
         .padding(12)
         .frame(width: size + 24, height: size + 24)
         .onAppear {
@@ -217,38 +234,44 @@ struct PortfolioAllocationChartView: View {
     }
 
     @ViewBuilder
-        private var centerLabel: some View {
-            VStack(spacing: 2) { // <-- tighter spacing
-                if let index = selectedIndex, index < displayItems.count {
-                    let item = displayItems[index]
-                    Text(item.label)
-                        .font(.caption2.weight(.bold)) // <-- caption2 instead of caption
-                        .foregroundColor(Color.theme.accent)
-                    
-                    Text(percentageText(for: item.percentage))
-                        .font(.caption2.weight(.bold))
-                        .foregroundColor(sliceColors[index % sliceColors.count])
-                    
-                    Text(item.value.asCompactCurrency())
-                        .font(.system(size: 10)) // <-- smaller text for value
-                        .foregroundColor(Color.theme.secondaryText)
-                } else {
-                    Text(totalValue.asCompactCurrency())
-                        .font(.subheadline.weight(.bold)) // <-- subheadline instead of headline
-                        .foregroundColor(Color.theme.accent)
-                    
+    private var centerLabel: some View {
+        VStack(spacing: 0) {
+            if let index = selectedIndex, index < displayItems.count {
+                let item = displayItems[index]
+                Text(item.symbol)
+                    .font(.system(size: 8, weight: .bold, design: .rounded))
+                    .foregroundColor(Color.theme.secondaryText)
+                
+                Text(percentageText(for: item.percentage))
+                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                    .foregroundColor(sliceColors[index % sliceColors.count])
+                
+                Text(item.value.asCompactCurrency())
+                    .font(.system(size: 10, weight: .medium, design: .monospaced))
+                    .foregroundColor(Color.theme.accent)
+            } else {
+                Text("TOTAL")
+                    .font(.system(size: 8, weight: .bold, design: .rounded))
+                    .foregroundColor(Color.theme.secondaryText)
+                
+                Text(totalValue.asCompactCurrency())
+                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                    .foregroundColor(Color.theme.accent)
+                
+                HStack(spacing: 2) {
+                    Image(systemName: totalChange >= 0 ? "arrow.up" : "arrow.down")
+                        .font(.system(size: 8, weight: .bold))
                     Text(totalChange.asSignedCompactCurrency())
-                        .font(.caption2.weight(.medium))
-                        .foregroundColor(totalChangeColor)
+                        .font(.system(size: 9, weight: .bold, design: .monospaced))
                 }
+                .foregroundColor(totalChangeColor)
             }
-            .lineLimit(1)
-            .minimumScaleFactor(0.5)
-            .multilineTextAlignment(.center)
-            .monospacedDigit()
-            .contentTransition(.numericText())
-            .animation(.easeInOut(duration: 0.2), value: selectedIndex)
         }
+        .lineLimit(1)
+        .minimumScaleFactor(0.5)
+        .multilineTextAlignment(.center)
+        .contentTransition(.numericText())
+    }
 
     
     // ... [Helper functions percentage(), percentageText() remain the same]
@@ -287,7 +310,7 @@ private struct ChartItem {
 private struct DonutSlice: Shape {
     var startDegrees: Double
     var endDegrees: Double
-    var holeRatio: CGFloat = 0.49
+    var holeRatio: CGFloat = 0.65
     var angularInset: Double = 1.5
 
     var animatableData: AnimatablePair<Double, Double> {

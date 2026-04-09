@@ -10,43 +10,47 @@ import SwiftUI
 struct SearchBarView: View {
     
     @Binding var searchText: String
+    @FocusState private var isFocused: Bool
     
     var body: some View {
-        HStack {
+        HStack(spacing: 12) {
             Image(systemName: "magnifyingglass")
-                .foregroundColor(
-                    searchText.isEmpty ? Color.theme.secondaryText : Color.theme.accent
-                )
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundColor(searchText.isEmpty ? Color.theme.secondaryText : Color.theme.accent)
             
             TextField("Search by name or symbol...", text: $searchText)
+                .font(.system(.body, design: .rounded))
                 .foregroundColor(Color.theme.accent)
                 .disableAutocorrection(true)
-                .overlay(
-                    Image(systemName: "xmark.circle.fill")
-                        .padding()
-                        .offset(x: 10)
-                        .foregroundColor(Color.theme.accent)
-                        .opacity(searchText.isEmpty ? 0.0 : 1.0)
-                        .onTapGesture {
-                            UIApplication.shared.endEditing()
-                            searchText = ""
-                        }
-                    ,alignment: .trailing
-                )
+                .focused($isFocused)
             
+            if !searchText.isEmpty {
+                Button {
+                    withAnimation(.spring()) {
+                        searchText = ""
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    }
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(Color.theme.secondaryText)
+                }
+                .transition(.scale.combined(with: .opacity))
+            }
         }
-        .font(.headline)
-        .padding()
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
         .background(
-            RoundedRectangle(cornerRadius: 25)
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .fill(Color.theme.background)
-                .shadow( color: Color.theme.accent.opacity(0.15),
-                         radius: 10, x:0, y:0)
+                .shadow(color: Color.black.opacity(isFocused ? 0.08 : 0.04), radius: isFocused ? 12 : 8, x: 0, y: 4)
         )
-        .padding()
-        
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(isFocused ? Color.theme.accent.opacity(0.3) : Color.theme.secondaryText.opacity(0.1), lineWidth: 1)
+        )
+        .padding(.horizontal)
+        .padding(.vertical, 8)
     }
-        
 }
 
 struct SearchBarView_Previews: PreviewProvider {

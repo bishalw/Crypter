@@ -9,25 +9,56 @@ import SwiftUI
 struct StatisticView: View {
     
     let stat: StatisticModel
+    
+    private var iconName: String? {
+        switch stat.title {
+        case "Current Price": return "dollarsign.circle"
+        case "Market Capitalization": return "chart.pie"
+        case "Rank": return "number"
+        case "Volume": return "chart.bar"
+        case "24h High": return "arrow.up.circle"
+        case "24h Low": return "arrow.down.circle"
+        case "24h Price Change": return "clock"
+        case "24h Market Cap Change": return "chart.line.uptrend.xyaxis"
+        case "Block Time": return "timer"
+        case "Hashing Algorithm": return "cpu"
+        case "Market Cap": return "chart.pie"
+        case "Portfolio Value": return "briefcase"
+        case "24h Change": return "chart.line.uptrend.xyaxis"
+        default: return nil
+        }
+    }
+    
     var body: some View {
-        VStack(alignment: .leading, spacing: 4){
-            Text(stat.title)
-                .font(.caption)
-                .foregroundColor(Color.theme.secondaryText)
-            Text(stat.value)
-                .font(.headline)
-                .foregroundColor(Color.theme.accent)
-            HStack (spacing: 4) {
-                Image(systemName: "triangle.fill")
-                    .font(.caption2)
-                    .rotationEffect(
-                        Angle(degrees:(stat.percentageChange ?? 0) >= 0 ? 0 : 180))
-                Text(stat.percentageChange?.asPercentString() ?? "")
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 4) {
+                if let icon = iconName {
+                    Image(systemName: icon)
+                        .font(.caption2)
+                }
+                Text(stat.title)
                     .font(.caption)
-                    .bold()
             }
-            .foregroundColor((stat.percentageChange ?? 0) >= 0 ? Color.theme.green : Color.theme.red)
-            .opacity(stat.percentageChange == nil ? 0.0 : 1.0)
+            .foregroundColor(Color.theme.secondaryText)
+            
+            Text(stat.value)
+                .font(.system(.headline, design: .rounded))
+                .foregroundColor(Color.theme.accent)
+                .minimumScaleFactor(0.8)
+                .lineLimit(1)
+            
+            if let percentageChange = stat.percentageChange {
+                HStack(spacing: 4) {
+                    Image(systemName: "triangle.fill")
+                        .font(.system(size: 8))
+                        .rotationEffect(Angle(degrees: percentageChange >= 0 ? 0 : 180))
+                    
+                    Text(percentageChange.asPercentString())
+                        .font(.caption2)
+                        .bold()
+                }
+                .foregroundColor(percentageChange >= 0 ? Color.theme.green : Color.theme.red)
+            }
         }
     }
 }
