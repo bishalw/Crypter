@@ -18,62 +18,103 @@ struct HomeView<ViewModel>: View where ViewModel: HomeViewModel {
     
     var body: some View {
         NavigationStack {
-            VStack {
-                
-                HomeStatsView(statistics: vm.statistics)
-                
-                SearchBarView(searchText: $vm.searchText)
-                
-                ColumnTitleView(sortOption: $vm.sortOption, isPortfolioViewShown: false)
-                    .font(.caption)
-                    .foregroundColor(Color.theme.secondaryText)
-                    .padding(.horizontal)
-                
-                allCoinsList
-                
-                Spacer(minLength: 0)
+            ScrollView {
+                VStack(spacing: 24) {
+                    HomeStatsView(statistics: vm.statistics)
+                        .padding(.top, 8)
+                    
+                    SearchBarView(searchText: $vm.searchText)
+                    
+                    sortingHeader
+                    
+                    allCoinsCards
+                }
+                .padding()
             }
+            .background(Color.theme.background.ignoresSafeArea())
+            .navigationTitle("Market")
+            .navigationBarTitleDisplayMode(.large)
             .sheet(item: $editorCoin) { coin in
                 HomeAddHoldingSheet(
                     vm: HomeAddHoldingViewModel(
                         coin: coin,
-                        portfolioDataService: core.portfolioDataService,
+                        portfolioDataService: core.portfolioDataService
                     )
                 )
                 .environmentObject(core)
             }
-            .navigationTitle("Prices")
-            .navigationBarTitleDisplayMode(.inline)
             .navigationDestination(isPresented: $showDetailView) {
                 if let coin = selectedCoin {
                     DetailView(vm: DetailViewModelImpl(coin: coin, cryptoStore: core.cryptoStore))
                 }
             }
+            .refreshable {
+                vm.reloadData()
+            }
         }
     }
     
-    private var allCoinsList: some View {
-        List {
-            ForEach(vm.allCoins) { coin in
-                CoinRowView(coin: coin, showHoldingsColumn: false)
-                    .onTapGesture {
-                        selectedCoin = coin
-                        showDetailView.toggle()
-                    }
-                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                        Button {
-                            editorCoin = coin
-                        } label: {
-                            Label("Add to Portfolio", systemImage: "plus.circle")
-                        }
-                        .tint(Color.theme.green)
-                    }
+    private var sortingHeader: some View {
+        HStack {
+            Text("Top Cryptos")
+                .font(.title3)
+                .bold()
+                .foregroundColor(Color.theme.accent)
+            
+            Spacer()
+            
+            Menu {
+                Button("Rank", action: { vm.sortOption = .rank })
+                Button("Rank Reversed", action: { vm.sortOption = .rankReversed })
+                Button("Highest Price", action: { vm.sortOption = .price })
+                Button("Lowest Price", action: { vm.sortOption = .priceReversed })
+            } label: {
+                HStack(spacing: 4) {
+                    Text("Sort")
+                    Image(systemName: "chevron.up.chevron.down")
+                }
+                .font(.caption)
+                .fontWeight(.bold)
+                .foregroundColor(Color.theme.secondaryText)
+                .padding(.vertical, 6)
+                .padding(.horizontal, 10)
+                .background(Color.theme.secondaryText.opacity(0.1))
+                .clipShape(Capsule())
             }
         }
-        .listStyle(PlainListStyle())
-        .refreshable {
-            vm.reloadData()
+    }
+    
+    private var allCoinsCards: some View {
+        VStack(spacing: 12) {
+            ForEach(vm.allCoins) { coin in
+                Button {
+                    selectedCoin = coin
+                    showDetailView = true
+                } label: {
+                    CoinRowView(coin: coin, showHoldingsColumn: false)
+                        .padding()
+                        .background(cardBackground)
+                }
+                .buttonStyle(.plain)
+                .contextMenu {
+                    Button {
+                        editorCoin = coin
+                    } label: {
+                        Label("Add to Portfolio", systemImage: "plus.circle")
+                    }
+                }
+            }
         }
+    }
+    
+    private var cardBackground: some View {
+        RoundedRectangle(cornerRadius: 16, style: .continuous)
+            .fill(Color.theme.background)
+            .shadow(color: Color.black.opacity(0.04), radius: 10, x: 0, y: 4)
+            .overlay(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(Color.theme.secondaryText.opacity(0.1), lineWidth: 1)
+            )
     }
 }
 
@@ -153,16 +194,30 @@ struct HomeAddHoldingSheet: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    coinHeader
-                    MiniSparklineView(data: vm.coin.price ?? [])
-                    changeCard
-                    holdingsCard
-                    valueCard
+                VStack(spacing: 24) {
+                    coinHeaderCard
+                    
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("7D Price Trend")
+                            .font(.caption)
+                            .fontWeight(.bold)
+                            .foregroundColor(Color.theme.secondaryText)
+                        
+                        MiniSparklineView(data: vm.coin.price ?? [])
+                            .frame(height: 120)
+                    }
+                    
+                    inputCard
+                    
+                    if vm.liveValue > 0 {
+                        valueCard
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
                 }
                 .padding()
             }
-            .navigationTitle(vm.currentHoldingsText == nil ? "Add Holding" : "Update Holding")
+            .background(Color.theme.background.ignoresSafeArea())
+            .navigationTitle(vm.currentHoldings == nil ? "Add Holding" : "Update Holding")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -172,19 +227,17 @@ struct HomeAddHoldingSheet: View {
                         Image(systemName: "xmark")
                             .font(.headline)
                     }
-                    .accessibilityLabel("Close add holding sheet")
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save Holding") {
+                    Button(vm.currentHoldings == nil ? "Add" : "Update") {
                         saveHolding()
                     }
                     .font(.headline)
                     .disabled(!vm.canSave)
-                    .accessibilityHint("Saves this coin holding to your portfolio")
                 }
             }
             .onAppear {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                     isQuantityFocused = true
                 }
             }
@@ -193,118 +246,101 @@ struct HomeAddHoldingSheet: View {
 }
 
 extension HomeAddHoldingSheet {
-    private var coinHeader: some View {
-        HStack(spacing: 14) {
-            CoinImageView(
-                vm: CoinImageViewModelImpl(
-                    coinImageRepository: core.coinImageRepository,
-                    coin: vm.coin
-                )
-            )
-            .frame(width: 52, height: 52)
-            .clipShape(Circle())
+    private var coinHeaderCard: some View {
+        HStack(spacing: 16) {
+            CoinImageView(vm: CoinImageViewModelImpl(coinImageRepository: core.coinImageRepository, coin: vm.coin))
+                .frame(width: 44, height: 44)
+                .clipShape(Circle())
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text(vm.coin.name)
-                    .font(.title3.weight(.semibold))
-                    .foregroundColor(Color.theme.accent)
+                    .font(.headline)
                 Text(vm.coin.symbol.uppercased())
-                    .font(.subheadline.weight(.medium))
+                    .font(.caption)
                     .foregroundColor(Color.theme.secondaryText)
             }
 
             Spacer()
 
-            VStack(alignment: .trailing, spacing: 4) {
-                Text("Current Price")
-                    .font(.caption)
-                    .foregroundColor(Color.theme.secondaryText)
+            VStack(alignment: .trailing, spacing: 2) {
                 Text(vm.coin.currentPrice.asCurrencyWith6Decimals())
-                    .font(.headline.weight(.semibold))
-                    .foregroundColor(Color.theme.accent)
+                    .font(.system(.subheadline, design: .rounded))
+                    .fontWeight(.bold)
+                
+                HStack(spacing: 4) {
+                    Image(systemName: (vm.coin.priceChangePercentage24H ?? 0) >= 0 ? "arrow.up.right" : "arrow.down.right")
+                    Text(vm.coin.priceChangePercentage24H?.asPercentString() ?? "0.00%")
+                }
+                .font(.caption2)
+                .fontWeight(.bold)
+                .foregroundColor(priceChangeColor)
             }
         }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(vm.coin.name), \(vm.coin.symbol.uppercased()), current price \(vm.coin.currentPrice.asCurrencyWith2Decimals())")
+        .padding()
+        .background(cardBackground)
     }
 
-    private var changeCard: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("24H Change")
-                    .font(.caption)
+    private var inputCard: some View {
+        VStack(alignment: .trailing, spacing: 8) {
+            HStack {
+                Text("How much do you own?")
+                    .font(.subheadline)
                     .foregroundColor(Color.theme.secondaryText)
-                Text(vm.coin.priceChangePercentage24H?.asPercentString() ?? "N/A")
-                    .font(.headline.weight(.semibold))
-                    .foregroundColor(priceChangeColor)
+                
+                Spacer()
+                
+                TextField("Enter Amount", text: $vm.quantityText)
+                    .keyboardType(.decimalPad)
+                    .multilineTextAlignment(.trailing)
+                    .font(.system(.title3, design: .rounded))
+                    .fontWeight(.bold)
+                    .focused($isQuantityFocused)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(isQuantityFocused && vm.quantityText.isEmpty ? Color.theme.accent.opacity(0.05) : Color.clear)
+                    )
             }
-
-            Spacer()
-
+            
             if let currentHoldingsText = vm.currentHoldingsText {
                 Text(currentHoldingsText)
-                    .font(.caption.weight(.medium))
-                    .foregroundColor(Color.theme.accent)
-                    .multilineTextAlignment(.trailing)
+                    .font(.caption2)
+                    .foregroundColor(Color.theme.green)
+                    .fontWeight(.bold)
             }
         }
-        .padding(14)
-        .background(cardBackground)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("Twenty four hour change \(vm.coin.priceChangePercentage24H?.asPercentString() ?? "not available")")
-    }
-
-    private var holdingsCard: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("How much do you own?")
-                .font(.headline)
-                .foregroundColor(Color.theme.accent)
-
-            TextField("0.00", text: $vm.quantityText)
-                .keyboardType(.decimalPad)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-                .font(.title2.weight(.semibold))
-                .foregroundColor(Color.theme.accent)
-                .focused($isQuantityFocused)
-                .accessibilityLabel("Coin amount")
-                .accessibilityHint("Enter how much \(vm.coin.name) you hold")
-        }
-        .padding(16)
+        .padding()
         .background(cardBackground)
     }
 
     private var valueCard: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Position Value")
+                Text("Current Position Value")
                     .font(.caption)
                     .foregroundColor(Color.theme.secondaryText)
                 Text(vm.liveValue.asCurrencyWith2Decimals())
-                    .font(.title3.weight(.semibold))
-                    .foregroundColor(vm.liveValue > 0 ? Color.theme.green : Color.theme.accent)
+                    .font(.system(.title2, design: .rounded))
+                    .fontWeight(.bold)
+                    .foregroundColor(Color.theme.green)
             }
-
             Spacer()
-
-            Text("7D trend")
-                .font(.caption.weight(.medium))
-                .foregroundColor(Color.theme.secondaryText)
         }
-        .padding(14)
+        .padding()
         .background(cardBackground)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("Position value \(vm.liveValue.asCurrencyWith2Decimals())")
     }
 
     private var cardBackground: some View {
         RoundedRectangle(cornerRadius: 16, style: .continuous)
             .fill(Color.theme.background)
+            .shadow(color: Color.black.opacity(0.04), radius: 10, x: 0, y: 4)
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(Color.theme.secondaryText.opacity(0.08), lineWidth: 1)
+                    .stroke(Color.theme.secondaryText.opacity(0.1), lineWidth: 1)
             )
     }
+}
 
     private func saveHolding() {
         vm.saveHolding()

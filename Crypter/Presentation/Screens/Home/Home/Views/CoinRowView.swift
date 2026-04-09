@@ -30,15 +30,16 @@ struct CoinRowView: View {
     }
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 0) {
             leftColumn
+            
             if showHoldingsColumn {
                 centerColumn
+                    .padding(.horizontal, 8)
             }
+            
             rightColumn
         }
-        .font(.subheadline)
-        .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.theme.background.opacity(0.001))
     }
 }
@@ -56,62 +57,61 @@ struct CoinRowView_Previews: PreviewProvider {
 }
 extension CoinRowView {
     private var leftColumn: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 12) {
             Text("\(coin.rank)")
-                .font(.caption)
+                .font(.system(size: 10, weight: .bold, design: .rounded))
                 .foregroundColor(Color.theme.secondaryText)
-                .frame(minWidth: 28, alignment: .leading)
+                .frame(width: 20, alignment: .leading)
 
             CoinImageView(vm: CoinImageViewModelImpl(coinImageRepository: core.coinImageRepository, coin: coin))
-                .frame(width: 30, height: 30)
+                .frame(width: 32, height: 32)
+                .clipShape(Circle())
 
-            Text(coin.symbol.uppercased())
-                .font(.headline)
-                .foregroundColor(Color.theme.accent)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(coin.symbol.uppercased())
+                    .font(.system(.subheadline, design: .rounded))
+                    .fontWeight(.bold)
+                    .foregroundColor(Color.theme.accent)
+                Text(coin.name)
+                    .font(.system(size: 11))
+                    .foregroundColor(Color.theme.secondaryText)
+                    .lineLimit(1)
+            }
         }
-        .layoutPriority(1)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
     
     private var centerColumn: some View {
         VStack(alignment: .trailing, spacing: 2) {
             Text(holdingsValueText)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
-                .monospacedDigit()
+                .font(.system(.subheadline, design: .rounded))
+                .fontWeight(.bold)
+                .foregroundColor(Color.theme.accent)
             Text(holdingsAmountText)
-                .font(.caption)
-                .lineLimit(1)
-                .minimumScaleFactor(0.75)
-                .monospacedDigit()
+                .font(.system(size: 11, design: .monospaced))
+                .foregroundColor(Color.theme.secondaryText)
         }
-        .foregroundColor(Color.theme.accent)
-        .frame(width: 108, alignment: .trailing)
-        .fixedSize(horizontal: false, vertical: true)
+        .frame(minWidth: 80, alignment: .trailing)
     }
     
     private var rightColumn: some View {
         VStack(alignment: .trailing, spacing: 2) {
             Text(priceText)
-                .bold()
+                .font(.system(.subheadline, design: .rounded))
+                .fontWeight(.bold)
                 .foregroundColor(Color.theme.accent)
-                .lineLimit(1)
-                .minimumScaleFactor(0.72)
-                .monospacedDigit()
-            Text(percentChangeText)
-                .font(.caption)
-                .foregroundColor(
-                    (coin.priceChangePercentage24H ?? 0) >= 0 ?
-                    Color.theme.green :
-                    Color.theme.red
-                )
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-                .monospacedDigit()
+            
+            HStack(spacing: 4) {
+                Image(systemName: (coin.priceChangePercentage24H ?? 0) >= 0 ? "arrow.up.right" : "arrow.down.right")
+                Text(percentChangeText)
+            }
+            .font(.system(size: 11, weight: .bold, design: .rounded))
+            .foregroundColor(
+                (coin.priceChangePercentage24H ?? 0) >= 0 ?
+                Color.theme.green :
+                Color.theme.red
+            )
         }
-        .frame(width: showHoldingsColumn ? 104 : 118, alignment: .trailing)
-        .fixedSize(horizontal: false, vertical: true)
+        .frame(minWidth: 90, alignment: .trailing)
     }
 }
