@@ -12,6 +12,7 @@ struct DetailView<ViewModel>: View where ViewModel: DetailViewModel {
     @StateObject var vm: ViewModel
     @EnvironmentObject var core: Core
     @State private var showFullDescription: Bool = false
+    @State private var isShowingHoldings: Bool = true
     
     private let spacing: CGFloat = 20
     
@@ -63,9 +64,34 @@ extension DetailView {
     
     private var priceHeader: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(vm.coin.currentPrice.asCurrencyWith6Decimals())
-                .font(.system(size: 34, weight: .bold, design: .rounded))
-                .foregroundColor(Color.theme.accent)
+            let hasHoldings = (vm.coin.currentHoldings ?? 0) > 0
+            let totalValue = (vm.coin.currentHoldings ?? 0) * vm.coin.currentPrice
+            
+            VStack(alignment: .leading, spacing: 2) {
+                if isShowingHoldings && hasHoldings {
+                    Text(totalValue.asCurrencyWith2Decimals())
+                        .font(.system(size: 34, weight: .bold, design: .rounded))
+                    Text("\(vm.coin.currentPrice.asCurrencyWith6Decimals()) per \(vm.coin.symbol.uppercased())")
+                        .font(.caption)
+                        .foregroundColor(Color.theme.secondaryText)
+                } else {
+                    Text(vm.coin.currentPrice.asCurrencyWith6Decimals())
+                        .font(.system(size: 34, weight: .bold, design: .rounded))
+                    Text("Market Price")
+                        .font(.caption)
+                        .foregroundColor(Color.theme.secondaryText)
+                }
+            }
+            .foregroundColor(Color.theme.accent)
+            .contentTransition(.numericText())
+            .onTapGesture {
+                if hasHoldings {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                        isShowingHoldings.toggle()
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    }
+                }
+            }
             
             HStack(spacing: 4) {
                 Image(systemName: (vm.coin.priceChangePercentage24H ?? 0) >= 0 ? "triangle.fill" : "triangle.fill")

@@ -156,7 +156,6 @@ struct ChartView: View {
 
     let coin: CoinModel
     let allData: [Double]
-    let lineColor: Color
 
     @State private var selectedIndex: Int? = nil
     @State private var selectedTimeRange: ChartTimeRange = .week
@@ -165,7 +164,6 @@ struct ChartView: View {
     init(coin: CoinModel) {
         self.coin = coin
         self.allData = coin.price ?? []
-        self.lineColor = SparklineStyle.lineColor(for: coin.price ?? [])
     }
 
     var body: some View {
@@ -195,11 +193,6 @@ struct ChartView: View {
                             options: availableReferenceLines
                         )
                     }
-
-                    if hasHoldings {
-                        PortfolioSummaryCard(coin: coin)
-                            .padding(.bottom, 4)
-                    }
                 }
             }
         }
@@ -217,6 +210,15 @@ struct ChartView: View {
 
     private var chartDataState: ChartDataState {
         displayData.isEmpty ? .empty : .loaded(displayData)
+    }
+
+    private var isPositiveTimeframe: Bool {
+        guard let first = displayData.first, let last = displayData.last else { return true }
+        return last >= first
+    }
+
+    private var timeframeColor: Color {
+        isPositiveTimeframe ? Color.theme.green : Color.theme.red
     }
 
     private var displayData: [Double] {
@@ -300,7 +302,7 @@ struct ChartView: View {
                     x: .value("Index", index),
                     y: .value("Price", price)
                 )
-                .foregroundStyle(lineColor.gradient)
+                .foregroundStyle(timeframeColor.gradient)
                 .interpolationMethod(.catmullRom)
 
                 AreaMark(
@@ -310,7 +312,7 @@ struct ChartView: View {
                 )
                 .foregroundStyle(
                     LinearGradient(
-                        gradient: Gradient(colors: [lineColor.opacity(0.35), .clear]),
+                        gradient: Gradient(colors: [timeframeColor.opacity(0.35), .clear]),
                         startPoint: .top,
                         endPoint: .bottom
                     )
@@ -320,14 +322,7 @@ struct ChartView: View {
             if let value = referenceLineValue {
                 RuleMark(y: .value("Reference", value))
                     .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 3]))
-                    .foregroundStyle(Color.theme.secondaryText.opacity(0.6))
-                    .annotation(position: .top, alignment: .leading) {
-                        Text(selectedReferenceLine.rawValue)
-                            .font(.caption2)
-                            .foregroundColor(Color.theme.secondaryText)
-                            .padding(.horizontal, 4)
-                            .background(Color.theme.background.opacity(0.8))
-                    }
+                    .foregroundStyle(timeframeColor.opacity(0.6))
             }
 
             if let selectedIndex, displayData.indices.contains(selectedIndex) {
@@ -340,9 +335,9 @@ struct ChartView: View {
                     y: .value("Selected Price", displayData[selectedIndex])
                 )
                 .symbolSize(70)
-                .foregroundStyle(lineColor)
+                .foregroundStyle(timeframeColor)
                 .annotation(position: .top, spacing: 10) {
-                    ChartTooltip(price: displayData[selectedIndex], accentColor: lineColor)
+                    ChartTooltip(price: displayData[selectedIndex], accentColor: timeframeColor)
                 }
 
                 PointMark(
@@ -371,20 +366,35 @@ struct ChartView: View {
         .frame(height: 250)
         .chartOverlay { proxy in
             GeometryReader { geometry in
-                Rectangle()
-                    .fill(Color.clear)
-                    .contentShape(Rectangle())
-                    .gesture(
-                        DragGesture(minimumDistance: 0)
-                            .onChanged { value in
-                                handleDrag(value: value, proxy: proxy, geometry: geometry)
-                            }
-                            .onEnded { _ in
-                                withAnimation(.easeOut(duration: 0.2)) {
-                                    resetSelection()
+                ZStack(alignment: .topLeading) {
+                    Rectangle()
+                        .fill(Color.clear)
+                        .contentShape(Rectangle())
+                        .gesture(
+                            DragGesture(minimumDistance: 0)
+                                .onChanged { value in
+                                    handleDrag(value: value, proxy: proxy, geometry: geometry)
                                 }
-                            }
-                    )
+                                .onEnded { _ in
+                                    withAnimation(.easeOut(duration: 0.2)) {
+                                        resetSelection()
+                                    }
+                                }
+                        )
+                    
+                    if let value = referenceLineValue,
+                       let yPosition = proxy.position(forY: value) {
+                        Text(selectedReferenceLine.rawValue)
+                            .font(.system(size: 10, weight: .bold, design: .rounded))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(timeframeColor)
+                            .clipShape(Capsule())
+                            .offset(y: yPosition - 10)
+                            .transition(.opacity.combined(with: .move(edge: .leading)))
+                    }
+                }
             }
         }
         .accessibilityElement(children: .combine)
@@ -634,92 +644,6 @@ struct ChartSummaryRow: View {
 
     private func compactCurrency(_ value: Double) -> String {
         abs(value) >= 1_000 ? "$\(value.formattedWithAbbreviations())" : value.asCurrencyWith2Decimals()
-    }
-}
-
-// MARK: - Portfolio Marker Badge
-
-struct PortfolioMarkerBadge: View {
-    let symbol: String
-    let holdingsText: String
-
-    var body: some View {
-        HStack(spacing: 6) {
-            Image(systemName: "briefcase.fill")
-                .font(.caption2)
-            Text("\(holdingsText) \(symbol)")
-                .font(.caption2)
-                .fontWeight(.semibold)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-        }
-        .foregroundColor(Color.theme.accent)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 5)
-        .background(
-            Capsule()
-                .fill(Color.theme.background)
-        )
-        .overlay(
-            Capsule()
-                .stroke(Color.theme.accent.opacity(0.18), lineWidth: 1)
-        )
-        .shadow(color: Color.black.opacity(0.08), radius: 4, x: 0, y: 2)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("Your position marker, \(holdingsText) \(symbol)")
-    }
-}
-
-// MARK: - Portfolio Summary Card
-
-struct PortfolioSummaryCard: View {
-    let coin: CoinModel
-
-    private var holdingsValue: Double {
-        (coin.currentHoldings ?? 0) * coin.currentPrice
-    }
-
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "briefcase.fill")
-                .font(.caption)
-                .foregroundColor(Color.theme.accent)
-
-            VStack(alignment: .leading, spacing: 1) {
-                Text("Your Position")
-                    .font(.caption2)
-                    .foregroundColor(Color.theme.secondaryText)
-                Text("\(coin.currentHoldings?.asNumberString() ?? "0") \(coin.symbol.uppercased())")
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                    .foregroundColor(Color.theme.accent)
-            }
-
-            Spacer()
-
-            VStack(alignment: .trailing, spacing: 1) {
-                Text("Value")
-                    .font(.caption2)
-                    .foregroundColor(Color.theme.secondaryText)
-                Text(holdingsValue.asCurrencyWith2Decimals())
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                    .foregroundColor(Color.theme.accent)
-            }
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background(
-            RoundedRectangle(cornerRadius: 10)
-                .fill(Color.theme.accent.opacity(0.05))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .stroke(Color.theme.accent.opacity(0.15), lineWidth: 1)
-        )
-        .padding(.horizontal)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("Your position: \(coin.currentHoldings?.asNumberString() ?? "0") \(coin.symbol.uppercased()) worth \(holdingsValue.asCurrencyWith2Decimals())")
     }
 }
 
