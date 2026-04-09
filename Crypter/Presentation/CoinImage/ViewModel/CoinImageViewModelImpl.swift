@@ -11,6 +11,7 @@ import Combine
 protocol CoinImageViewModel: ObservableObject{
     var image: UIImage? { get set }
     var isLoading: Bool { get set }
+    func fetchImageIfNeeded()
 }
 
 class CoinImageViewModelImpl: ObservableObject, CoinImageViewModel {
@@ -24,6 +25,10 @@ class CoinImageViewModelImpl: ObservableObject, CoinImageViewModel {
     init(coinImageRepository: CoinImageRepository, coin: CoinModel) {
         self.coinImageRepository = coinImageRepository
         self.coin = coin
+    }
+
+    func fetchImageIfNeeded() {
+        guard image == nil, !isLoading else { return }
         fetchImage()
     }
 

@@ -7,9 +7,14 @@
 import SwiftUI
 
 struct CoinImageView<ViewModel>: View where ViewModel: CoinImageViewModel {
-    @ObservedObject var vm: ViewModel
+    @StateObject private var vm: ViewModel
+
+    init(vm: ViewModel) {
+        _vm = StateObject(wrappedValue: vm)
+    }
 
     var body: some View {
+        Group {
             if let image = vm.image {
                 Image(uiImage: image)
                     .resizable()
@@ -21,6 +26,10 @@ struct CoinImageView<ViewModel>: View where ViewModel: CoinImageViewModel {
                     .foregroundColor(Color.theme.secondaryText)
             }
         }
+        .task {
+            vm.fetchImageIfNeeded()
+        }
+    }
 }
 
 struct CoinImageView_Previews: PreviewProvider {

@@ -8,6 +8,9 @@
 import Foundation
 import SwiftUI
 
+import Foundation
+import SwiftUI
+
 struct PortfolioView<ViewModel>: View where ViewModel: PortfolioViewModel {
 
     @EnvironmentObject var core: Core
@@ -18,7 +21,10 @@ struct PortfolioView<ViewModel>: View where ViewModel: PortfolioViewModel {
 
     var body: some View {
         NavigationStack {
-            Group {
+            ZStack {
+                // Keep background color consistent
+                Color.theme.background.ignoresSafeArea()
+                
                 if vm.portfolioCoins.isEmpty {
                     emptyStateView
                 } else {
@@ -26,7 +32,7 @@ struct PortfolioView<ViewModel>: View where ViewModel: PortfolioViewModel {
                 }
             }
             .navigationTitle("Portfolio")
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarTitleDisplayMode(.large) // Large title feels more like a dashboard
             .navigationDestination(isPresented: $showDetailView) {
                 if let coin = selectedCoin {
                     DetailView(vm: DetailViewModelImpl(coin: coin, cryptoStore: core.cryptoStore))
@@ -37,20 +43,17 @@ struct PortfolioView<ViewModel>: View where ViewModel: PortfolioViewModel {
                     Button {
                         showPortfolioEditor = true
                     } label: {
-                        Image(systemName: "plus")
-                            .font(.headline)
+                        // Improved toolbar button design
+                        Image(systemName: "plus.circle.fill")
+                            .font(.title3)
+                            .foregroundColor(Color.theme.accent)
                     }
                     .accessibilityLabel("Add coin to portfolio")
                 }
             }
             .sheet(isPresented: $showPortfolioEditor) {
-                PortfolioEditorView(
-                    vm: PortfolioEditorViewModel(
-                        cryptoStore: core.cryptoStore,
-                        portfolioDataService: core.portfolioDataService
-                    )
-                )
-                .environmentObject(core)
+                PortfolioEditorView(vm: PortfolioEditorViewModel(cryptoStore: core.cryptoStore, portfolioDataService: core.portfolioDataService))
+                    .environmentObject(core)
             }
             .refreshable {
                 vm.reloadData()
@@ -60,12 +63,10 @@ struct PortfolioView<ViewModel>: View where ViewModel: PortfolioViewModel {
 }
 
 extension PortfolioView {
-    private var totalChangeValueText: String {
-        vm.totalPortfolio24hChange.asSignedCompactCurrency()
-    }
-
+    
+    // MARK: - Stats Section
     private var statsRow: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 16) {
             statCard(
                 title: "Portfolio Value",
                 value: vm.myTotalHoldingDisplayString,
@@ -74,97 +75,101 @@ extension PortfolioView {
 
             statCard(
                 title: "24h Change",
-                value: totalChangeValueText,
+                value: vm.totalPortfolio24hChange.asSignedCompactCurrency(),
                 percentageChange: nil
             )
         }
         .padding(.horizontal)
-        .padding(.vertical, 12)
+        .padding(.vertical, 8)
     }
 
     private func statCard(title: String, value: String, percentageChange: Double?) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 8) {
             Text(title)
-                .font(.caption)
+                .font(.caption.weight(.medium))
                 .foregroundColor(Color.theme.secondaryText)
-                .lineLimit(1)
-                .minimumScaleFactor(0.9)
+                .textCase(.uppercase) // Adds a subtle dashboard feel
 
             Text(value)
-                .font(.headline)
+                .font(.title3.weight(.bold))
                 .foregroundColor(Color.theme.accent)
-                .lineLimit(1)
-                .minimumScaleFactor(0.75)
+                .minimumScaleFactor(0.7)
                 .monospacedDigit()
 
             if let change = percentageChange {
                 HStack(spacing: 4) {
                     Image(systemName: "triangle.fill")
-                        .font(.caption2)
+                        .font(.system(size: 8))
                         .rotationEffect(Angle(degrees: change >= 0 ? 0 : 180))
                     Text(change.asPercentString())
-                        .font(.caption)
-                        .bold()
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
+                        .font(.caption.weight(.bold))
                         .monospacedDigit()
                 }
                 .foregroundColor(change >= 0 ? Color.theme.green : Color.theme.red)
+            } else {
+                // Placeholder to keep cards the exact same height
+                Text(" ")
+                    .font(.caption)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(12)
-        .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(Color.theme.background.opacity(0.5))
-        )
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(title): \(value)")
+        .padding(16)
+        // Upgraded the card background to use materials instead of flat colors
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 4)
     }
 
+    // MARK: - Empty State
     private var emptyStateView: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "chart.pie")
-                .font(.system(size: 60))
-                .foregroundColor(Color.theme.accent.opacity(0.4))
+        VStack(spacing: 20) {
+            ZStack {
+                Circle()
+                    .fill(Color.theme.accent.opacity(0.1))
+                    .frame(width: 120, height: 120)
+                
+                Image(systemName: "chart.pie.fill")
+                    .font(.system(size: 50))
+                    .foregroundColor(Color.theme.accent)
+            }
+            .padding(.bottom, 8)
 
             Text("Build Your Portfolio")
-                .font(.title2)
-                .fontWeight(.semibold)
+                .font(.title2.weight(.bold))
                 .foregroundColor(Color.theme.accent)
 
             Text("Add your first coin to start tracking your portfolio value and allocation.")
-                .font(.subheadline)
+                .font(.callout)
                 .foregroundColor(Color.theme.secondaryText)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 24)
+                .padding(.horizontal, 32)
 
             Button {
                 showPortfolioEditor = true
             } label: {
-                Text("Add Your First Coin")
+                Text("Add First Coin")
                     .font(.headline)
-                    .foregroundColor(.white)
+                    // Used system background so it contrasts against the accent color perfectly in both light/dark modes
+                    .foregroundColor(Color.theme.background)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
+                    .padding(.vertical, 16)
                     .background(Color.theme.accent)
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .shadow(color: Color.theme.accent.opacity(0.3), radius: 10, x: 0, y: 5)
             }
-            .padding(.horizontal, 24)
-            .accessibilityHint("Opens the portfolio editor to add a new coin")
+            .padding(.horizontal, 32)
+            .padding(.top, 16)
         }
-        .padding(.horizontal, 32)
-        .padding(.vertical, 48)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("Build Your Portfolio. Add your first coin to start tracking your portfolio value and allocation.")
     }
 
+    // MARK: - Main Content
     private var portfolioContent: some View {
         List {
+            // Grouping Stats and Chart into a single section with no row separators
             Section {
                 statsRow
-                    .listRowInsets(.init(top: 12, leading: 16, bottom: 6, trailing: 16))
+                    .listRowInsets(EdgeInsets()) // Removed all default list padding
                     .listRowSeparator(.hidden)
                     .listRowBackground(Color.clear)
 
@@ -173,33 +178,58 @@ extension PortfolioView {
                     totalValue: vm.totalPortfolioValue,
                     totalChange: vm.totalPortfolio24hChange
                 )
-                .listRowInsets(.init(top: 0, leading: 16, bottom: 10, trailing: 16))
+                .padding(.horizontal, 16) // Handle padding manually
+                .padding(.bottom, 16)
+                .listRowInsets(EdgeInsets())
                 .listRowSeparator(.hidden)
                 .listRowBackground(Color.clear)
             }
 
+            // Assets Section
             Section {
+                HStack {
+                    Text("Your Assets")
+                        .font(.headline)
+                        .foregroundColor(Color.theme.accent)
+                    
+                    Spacer()
+                    
+                    Menu {
+                        Button("Highest Holdings", action: { vm.sortOption = .holdings })
+                        Button("Lowest Holdings", action: { vm.sortOption = .holdingsReversed })
+                        Button("Highest Price", action: { vm.sortOption = .price })
+                        Button("Lowest Price", action: { vm.sortOption = .priceReversed })
+                    } label: {
+                        Image(systemName: "arrow.up.arrow.down")
+                            .font(.subheadline)
+                            .foregroundColor(Color.theme.secondaryText)
+                    }
+                }
                 ForEach(vm.portfolioCoins) { coin in
                     CoinRowView(coin: coin, showHoldingsColumn: true)
-                        .listRowInsets(.init(top: 10, leading: 16, bottom: 10, trailing: 16))
+                        .padding(.vertical, 4) // Slight vertical breathing room
+                        .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                         .listRowBackground(Color.clear)
+                        .listRowSeparator(.visible) // Keep separator for list items only
+                        .listRowSeparatorTint(Color.theme.secondaryText.opacity(0.3))
+                        .contentShape(Rectangle()) // Ensures entire row is tappable
                         .onTapGesture {
                             selectedCoin = coin
-                            showDetailView.toggle()
+                            showDetailView = true
                         }
                         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                             Button(role: .destructive) {
-                                vm.updatePortfolio(coin: coin, amount: 0)
+                                withAnimation { vm.updatePortfolio(coin: coin, amount: 0) }
                             } label: {
-                                Label("Remove", systemImage: "trash")
+                                Label("Delete", systemImage: "trash.fill")
                             }
                         }
                 }
             }
         }
         .listStyle(.plain)
+        .scrollIndicators(.hidden) // Cleaner look for dashboards
     }
-
 }
 
 struct PortfolioView_Previews: PreviewProvider {

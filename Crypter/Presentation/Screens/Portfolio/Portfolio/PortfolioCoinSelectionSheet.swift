@@ -234,6 +234,7 @@ extension PortfolioEditorView {
                         coin: coin
                     )
                 )
+                .id(coin.id)
                 .frame(width: 32, height: 32)
                 .clipShape(Circle())
 

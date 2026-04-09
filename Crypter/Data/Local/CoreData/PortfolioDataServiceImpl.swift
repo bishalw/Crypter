@@ -51,7 +51,7 @@ class PortfolioDataServiceImpl: PortfolioDataService {
             initError = error
         }
         
-        if let error = initError {
+        if initError != nil {
             print("error")
         }
 

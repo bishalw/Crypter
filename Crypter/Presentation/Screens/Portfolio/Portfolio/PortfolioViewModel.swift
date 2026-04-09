@@ -14,9 +14,19 @@ protocol PortfolioViewModel: ObservableObject {
     var myTotalHoldingDisplayString: String { get }
     var totalPortfolio24hChange: Double { get }
     var totalPortfolio24hChangePercent: Double { get }
+    var sortOption: SortOption { get set }
     func updatePortfolio(coin: CoinModel, amount: Double)
     func reloadData()
 }
+
+extension PortfolioViewModel {
+    // Default so lightweight preview VMs can conform without storing this.
+    var sortOption: SortOption {
+        get { .holdings }
+        set { }
+    }
+}
+
 class PortfolioViewModelImpl: PortfolioViewModel {
 
     @Published var portfolioCoins: [CoinModel] = []

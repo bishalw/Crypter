@@ -5,6 +5,8 @@
 
 import SwiftUI
 
+import SwiftUI
+
 struct PortfolioAllocationChartView: View {
     let coins: [CoinModel]
     let totalValue: Double
@@ -15,54 +17,27 @@ struct PortfolioAllocationChartView: View {
     @Environment(\.colorScheme) private var colorScheme
 
     private let sliceColors: [Color] = [
-        Color(red: 0.30, green: 0.78, blue: 0.55),  // mint green
-        Color(red: 0.36, green: 0.53, blue: 0.95),  // royal blue
-        Color(red: 0.95, green: 0.62, blue: 0.27),  // warm amber
-        Color(red: 0.68, green: 0.42, blue: 0.90),  // soft violet
-        Color(red: 0.92, green: 0.40, blue: 0.53),  // coral pink
-        Color(red: 0.25, green: 0.72, blue: 0.78),  // teal
-        Color(red: 0.95, green: 0.80, blue: 0.30),  // gold
+        Color(red: 0.30, green: 0.78, blue: 0.55),
+        Color(red: 0.36, green: 0.53, blue: 0.95),
+        Color(red: 0.95, green: 0.62, blue: 0.27),
+        Color(red: 0.68, green: 0.42, blue: 0.90),
+        Color(red: 0.92, green: 0.40, blue: 0.53),
+        Color(red: 0.25, green: 0.72, blue: 0.78),
+        Color(red: 0.95, green: 0.80, blue: 0.30),
     ]
 
-    private var displayItems: [ChartItem] {
+    private var displayItems: [ChartItem] { /* ... Existing Logic remains unchanged ... */
         let sorted = coins.sorted { $0.currentHoldingsValue > $1.currentHoldingsValue }
         if sorted.count <= 5 {
-            return sorted.map { coin in
-                ChartItem(
-                    id: coin.id,
-                    label: coin.symbol.uppercased(),
-                    symbol: coin.symbol.uppercased(),
-                    value: coin.currentHoldingsValue,
-                    percentage: percentage(for: coin.currentHoldingsValue),
-                    isAggregate: false
-                )
-            }
+            return sorted.map { ChartItem(id: $0.id, label: $0.symbol.uppercased(), symbol: $0.symbol.uppercased(), value: $0.currentHoldingsValue, percentage: percentage(for: $0.currentHoldingsValue), isAggregate: false) }
         }
-        var items = sorted.prefix(4).map { coin in
-            ChartItem(
-                id: coin.id,
-                label: coin.symbol.uppercased(),
-                symbol: coin.symbol.uppercased(),
-                value: coin.currentHoldingsValue,
-                percentage: percentage(for: coin.currentHoldingsValue),
-                isAggregate: false
-            )
-        }
+        var items = sorted.prefix(4).map { ChartItem(id: $0.id, label: $0.symbol.uppercased(), symbol: $0.symbol.uppercased(), value: $0.currentHoldingsValue, percentage: percentage(for: $0.currentHoldingsValue), isAggregate: false) }
         let othersValue = sorted.dropFirst(4).reduce(0.0) { $0 + $1.currentHoldingsValue }
-        items.append(
-            ChartItem(
-                id: "others",
-                label: "Other Holdings",
-                symbol: "Others",
-                value: othersValue,
-                percentage: percentage(for: othersValue),
-                isAggregate: true
-            )
-        )
+        items.append(ChartItem(id: "others", label: "Other Holdings", symbol: "Others", value: othersValue, percentage: percentage(for: othersValue), isAggregate: true))
         return items
     }
 
-    private var slices: [(start: Double, end: Double)] {
+    private var slices: [(start: Double, end: Double)] { /* ... Existing Logic ... */
         var result: [(start: Double, end: Double)] = []
         var current: Double = 0
         for item in displayItems {
@@ -74,13 +49,7 @@ struct PortfolioAllocationChartView: View {
     }
 
     private var totalChangeColor: Color {
-        if totalChange > 0 {
-            return Color.theme.green
-        } else if totalChange < 0 {
-            return Color.theme.red
-        } else {
-            return Color.theme.secondaryText
-        }
+        totalChange > 0 ? Color.theme.green : (totalChange < 0 ? Color.theme.red : Color.theme.secondaryText)
     }
 
     var body: some View {
@@ -88,209 +57,204 @@ struct PortfolioAllocationChartView: View {
             emptyState
         } else {
             chartContent
-                .padding(16)
+                .padding(20) // Increased padding for breathing room
                 .background(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
                         .fill(.ultraThinMaterial)
-                        .shadow(
-                            color: colorScheme == .dark
-                                ? Color.black.opacity(0.3)
-                                : Color.black.opacity(0.06),
-                            radius: 12, x: 0, y: 4
-                        )
+                        // Adjusted shadow: lighter for light mode, removed for dark mode (let the material shine)
+                        .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.0 : 0.08), radius: 15, x: 0, y: 8)
+                )
+                // Add a subtle border for dark mode definition
+                .overlay(
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .stroke(Color.white.opacity(colorScheme == .dark ? 0.1 : 0.0), lineWidth: 1)
                 )
         }
     }
 
     // MARK: - Empty State
-
     private var emptyState: some View {
-        VStack(spacing: 8) {
-            Image(systemName: "chart.pie")
-                .font(.largeTitle)
-                .foregroundColor(Color.theme.secondaryText.opacity(0.5))
+        VStack(spacing: 12) {
+            Image(systemName: "chart.pie.fill")
+                .font(.system(size: 40))
+                .foregroundColor(Color.theme.secondaryText.opacity(0.3))
             Text("No allocation data")
-                .font(.subheadline)
+                .font(.callout.weight(.medium))
                 .foregroundColor(Color.theme.secondaryText)
         }
         .frame(maxWidth: .infinity)
-        .frame(height: 140)
-        .padding(16)
+        .frame(height: 160)
         .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .fill(.ultraThinMaterial)
         )
     }
 
+    
     // MARK: - Chart Content
-
-    private var chartContent: some View {
-        ViewThatFits(in: .horizontal) {
-            regularChartContent
-            compactChartContent
+        private var chartContent: some View {
+            // Tighter spacing between chart and legend
+            HStack(alignment: .center, spacing: 16) {
+                // Reduced size slightly to give the legend more horizontal room
+                donutChart(size: 110)
+                
+                legendView
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
 
-    // MARK: - Donut Chart
+        // MARK: - Legend
+        private var legendView: some View {
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(Array(displayItems.enumerated()), id: \.element.id) { index, item in
+                    let isSelected = selectedIndex == index
+                    let color = sliceColors[index % sliceColors.count]
+
+                    Button {
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) {
+                            selectedIndex = selectedIndex == index ? nil : index
+                        }
+                    } label: {
+                        HStack(spacing: 8) { // Tighter spacing between dot and text
+                            Circle()
+                                .fill(color)
+                                .frame(width: 8, height: 8) // Slightly smaller dot
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(item.symbol)
+                                    // Scaled down the font slightly
+                                    .font(.subheadline.weight(isSelected ? .bold : .semibold))
+                                    .foregroundColor(Color.theme.accent)
+                                    // CRITICAL: Stop the wrapping
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.6)
+                                
+                                Text(item.value.asCompactCurrency())
+                                    .font(.caption2)
+                                    .foregroundColor(Color.theme.secondaryText)
+                                    // CRITICAL: Stop the wrapping
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.6)
+                            }
+
+                            // CRITICAL: Reduce the minimum length so it doesn't push text away
+                            Spacer(minLength: 4)
+
+                            Text(percentageText(for: item.percentage))
+                                .font(.subheadline.weight(isSelected ? .bold : .semibold))
+                                .foregroundColor(isSelected ? color : Color.theme.secondaryText)
+                                // CRITICAL: Stop the wrapping
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.6)
+                        }
+                        .monospacedDigit()
+                        // Reduced horizontal padding so it fits better
+                        .padding(.vertical, 4)
+                        .padding(.horizontal, 8)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .fill(isSelected ? color.opacity(0.15) : Color.clear)
+                        )
+                    }
+                    .opacity(selectedIndex == nil || isSelected ? 1.0 : 0.4)
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        // You can now DELETE regularChartContent and compactChartContent!
 
     private func donutChart(size: CGFloat) -> some View {
         ZStack {
             ForEach(Array(slices.enumerated()), id: \.offset) { index, slice in
                 let isSelected = selectedIndex == index
-                let sliceDelay = Double(index) * 0.12
+                let sliceColor = sliceColors[index % sliceColors.count]
 
                 DonutSlice(
                     startDegrees: min(slice.start, drawProgress * 360),
                     endDegrees: min(slice.end, drawProgress * 360),
-                    angularInset: 1.5
+                    angularInset: 1.0 // Reduced inset slightly
                 )
-                .fill(sliceColors[index % sliceColors.count])
-                .scaleEffect(isSelected ? 1.07 : 1.0)
-                .opacity(selectedIndex == nil || isSelected ? 1.0 : 0.35)
-                .animation(.spring(response: 0.35, dampingFraction: 0.7), value: selectedIndex)
+                .fill(sliceColor)
+                // ADDED: Stroke to separate slices beautifully
+                .overlay(
+                     DonutSlice(startDegrees: min(slice.start, drawProgress * 360), endDegrees: min(slice.end, drawProgress * 360), angularInset: 1.0)
+                        .stroke(Color.theme.background, lineWidth: 1.5)
+                )
+                .scaleEffect(isSelected ? 1.08 : 1.0)
+                .opacity(selectedIndex == nil || isSelected ? 1.0 : 0.3)
+                .animation(.spring(response: 0.4, dampingFraction: 0.6), value: selectedIndex)
                 .onTapGesture {
-                    withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                    withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) {
                         selectedIndex = selectedIndex == index ? nil : index
                     }
                 }
-                .animation(
-                    .easeOut(duration: 0.7).delay(sliceDelay),
-                    value: drawProgress
-                )
+                .animation(.easeOut(duration: 0.8).delay(Double(index) * 0.08), value: drawProgress)
             }
+            
             centerLabel
-                .animation(.spring(response: 0.35, dampingFraction: 0.7), value: selectedIndex)
-                .frame(width: size * 0.54)
+                .frame(width: size * 0.55)
         }
-        .frame(width: size, height: size)
+        // ADDED: padding so the scaleEffect(1.08) doesn't clip the edges of the ZStack
+        .padding(12)
+        .frame(width: size + 24, height: size + 24)
         .onAppear {
-            withAnimation(.easeOut(duration: 0.8)) {
-                drawProgress = 1.0
-            }
+            withAnimation(.easeOut(duration: 0.8)) { drawProgress = 1.0 }
         }
     }
 
     private var regularChartContent: some View {
-        HStack(alignment: .center, spacing: 24) {
-            donutChart(size: 156)
+        HStack(alignment: .center, spacing: 20) {
+            donutChart(size: 150)
             legendView
-                .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var compactChartContent: some View {
-        VStack(spacing: 18) {
-            donutChart(size: 188)
+        VStack(spacing: 24) {
+            donutChart(size: 170)
             legendView
-                .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
-
-    // MARK: - Center Label
 
     @ViewBuilder
-    private var centerLabel: some View {
-        if let index = selectedIndex, index < displayItems.count {
-            let item = displayItems[index]
-            VStack(spacing: 3) {
-                Text(item.label)
-                    .font(.caption.weight(.semibold))
-                    .fontWeight(.semibold)
-                    .foregroundColor(Color.theme.accent)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.65)
-                Text(percentageText(for: item.percentage))
-                    .font(.caption2.weight(.medium))
-                    .fontWeight(.medium)
-                    .foregroundColor(sliceColors[index % sliceColors.count])
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-                Text(item.value.asCompactCurrency())
-                    .font(.caption2)
-                    .foregroundColor(Color.theme.secondaryText)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.65)
-                    .monospacedDigit()
-            }
-            .multilineTextAlignment(.center)
-            .transition(.scale(scale: 0.8).combined(with: .opacity))
-        } else {
-            VStack(spacing: 3) {
-                Text(totalValue.asCompactCurrency())
-                    .font(.headline.weight(.semibold))
-                    .foregroundColor(Color.theme.accent)
-                    .monospacedDigit()
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.65)
-                Text(totalChange.asSignedCompactCurrency())
-                    .font(.caption2)
-                    .foregroundColor(totalChangeColor)
-                    .monospacedDigit()
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-            }
-            .multilineTextAlignment(.center)
-            .transition(.scale(scale: 0.8).combined(with: .opacity))
-        }
-    }
-
-    // MARK: - Legend
-
-    private var legendView: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            ForEach(Array(displayItems.enumerated()), id: \.element.id) { index, item in
-                let isSelected = selectedIndex == index
-                let color = sliceColors[index % sliceColors.count]
-
-                Button {
-                    withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
-                        selectedIndex = selectedIndex == index ? nil : index
-                    }
-                } label: {
-                    HStack(spacing: 10) {
-                        RoundedRectangle(cornerRadius: 3, style: .continuous)
-                            .fill(color)
-                            .frame(width: 12, height: 12)
-
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text(item.symbol)
-                                .font(.caption)
-                                .fontWeight(isSelected ? .bold : .medium)
-                                .foregroundColor(Color.theme.accent)
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.8)
-                            Text(item.value.asCompactCurrency())
-                                .font(.caption2)
-                                .foregroundColor(Color.theme.secondaryText)
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.75)
-                                .monospacedDigit()
-                        }
-
-                        Spacer(minLength: 12)
-
-                        Text(percentageText(for: item.percentage))
-                            .font(.caption)
-                            .fontWeight(isSelected ? .semibold : .regular)
-                            .foregroundColor(isSelected ? color : Color.theme.secondaryText)
-                            .monospacedDigit()
-                    }
-                    .padding(.vertical, 4)
-                    .padding(.horizontal, 8)
-                    .background(
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .fill(isSelected ? color.opacity(0.12) : Color.clear)
-                    )
+        private var centerLabel: some View {
+            VStack(spacing: 2) { // <-- tighter spacing
+                if let index = selectedIndex, index < displayItems.count {
+                    let item = displayItems[index]
+                    Text(item.label)
+                        .font(.caption2.weight(.bold)) // <-- caption2 instead of caption
+                        .foregroundColor(Color.theme.accent)
+                    
+                    Text(percentageText(for: item.percentage))
+                        .font(.caption2.weight(.bold))
+                        .foregroundColor(sliceColors[index % sliceColors.count])
+                    
+                    Text(item.value.asCompactCurrency())
+                        .font(.system(size: 10)) // <-- smaller text for value
+                        .foregroundColor(Color.theme.secondaryText)
+                } else {
+                    Text(totalValue.asCompactCurrency())
+                        .font(.subheadline.weight(.bold)) // <-- subheadline instead of headline
+                        .foregroundColor(Color.theme.accent)
+                    
+                    Text(totalChange.asSignedCompactCurrency())
+                        .font(.caption2.weight(.medium))
+                        .foregroundColor(totalChangeColor)
                 }
-                .opacity(selectedIndex == nil || isSelected ? 1.0 : 0.62)
-                .buttonStyle(.plain)
-                .accessibilityLabel(accessibilityLabel(for: item))
             }
+            .lineLimit(1)
+            .minimumScaleFactor(0.5)
+            .multilineTextAlignment(.center)
+            .monospacedDigit()
+            .contentTransition(.numericText())
+            .animation(.easeInOut(duration: 0.2), value: selectedIndex)
         }
-    }
+
+    
+    // ... [Helper functions percentage(), percentageText() remain the same]
+
+
+// ... [ChartItem & DonutSlice & Previews remain the same]
 
     private func percentage(for value: Double) -> Double {
         guard totalValue > 0 else { return 0 }

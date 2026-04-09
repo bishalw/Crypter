@@ -312,8 +312,5 @@ class PreviewDetailViewModel: DetailViewModel {
 // MARK: - Preview Core
 
 extension Core {
-    static var preview: Core {
-        Core()
-    }
+    static let preview: Core = Core()
 }
-

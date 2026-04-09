@@ -9,21 +9,43 @@ import SwiftUI
 
 struct MainTabView: View {
     @EnvironmentObject var core: Core
+    private let homeTabOverride: AnyView?
+    private let portfolioTabOverride: AnyView?
+
+    init(
+        homeTabOverride: AnyView? = nil,
+        portfolioTabOverride: AnyView? = nil
+    ) {
+        self.homeTabOverride = homeTabOverride
+        self.portfolioTabOverride = portfolioTabOverride
+    }
     
     var body: some View {
         TabView {
-            HomeView(vm: HomeViewModelImpl(
-                cryptoStore: core.cryptoStore,
-                portfolioDataService: core.portfolioDataService
-            ))
+            Group {
+                if let homeTabOverride {
+                    homeTabOverride
+                } else {
+                    HomeView(vm: HomeViewModelImpl(
+                        cryptoStore: core.cryptoStore,
+                        portfolioDataService: core.portfolioDataService
+                    ))
+                }
+            }
                 .tabItem {
                     Label("Home", systemImage: "house")
                 }
             
-            PortfolioView(vm: PortfolioViewModelImpl(
-                cryptoStore: core.cryptoStore,
-                portfolioDataService: core.portfolioDataService
-            ))
+            Group {
+                if let portfolioTabOverride {
+                    portfolioTabOverride
+                } else {
+                    PortfolioView(vm: PortfolioViewModelImpl(
+                        cryptoStore: core.cryptoStore,
+                        portfolioDataService: core.portfolioDataService
+                    ))
+                }
+            }
                 .tabItem {
                     Label("Portfolio", systemImage: "creditcard")
                 }
@@ -41,7 +63,10 @@ struct MainTabView: View {
 
 struct MainTabView_Previews: PreviewProvider {
     static var previews: some View {
-        MainTabView()
+        MainTabView(
+            homeTabOverride: AnyView(HomeView(vm: PreviewHomeViewModel())),
+            portfolioTabOverride: AnyView(PortfolioView(vm: PreviewPortfolioViewModel()))
+        )
             .environmentObject(Core.preview)
     }
 }
