@@ -340,7 +340,6 @@ extension HomeAddHoldingSheet {
                     .stroke(Color.theme.secondaryText.opacity(0.1), lineWidth: 1)
             )
     }
-}
 
     private func saveHolding() {
         vm.saveHolding()
