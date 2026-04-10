@@ -126,7 +126,7 @@ struct PortfolioEditorView: View {
                 coinList
                 Spacer(minLength: 0)
             }
-            .background(Color.theme.background.ignoresSafeArea())
+            .background(Color.theme.surfaceBackground.ignoresSafeArea())
             .navigationTitle(selectedCoin == nil ? "Manage Portfolio" : (vm.currentHoldings(for: selectedCoin!) == nil ? "Add \(selectedCoin?.symbol.uppercased() ?? "")" : "Update \(selectedCoin?.symbol.uppercased() ?? "")"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -194,10 +194,10 @@ extension PortfolioEditorView {
             VStack(alignment: .leading, spacing: 2) {
                 Text(coin.symbol.uppercased())
                     .font(.headline)
-                    .foregroundColor(Color.theme.accent)
+                    .foregroundColor(Color.theme.textPrimary)
                 Text(coin.name)
                     .font(.caption)
-                    .foregroundColor(Color.theme.secondaryText)
+                    .foregroundColor(Color.theme.textSecondary)
             }
 
             Spacer()
@@ -205,24 +205,24 @@ extension PortfolioEditorView {
             VStack(alignment: .trailing, spacing: 2) {
                 Text(coin.currentPrice.asCurrencyWith6Decimals())
                     .font(.system(size: 13, weight: .bold, design: .rounded))
-                    .foregroundColor(Color.theme.accent)
+                    .foregroundColor(Color.theme.textPrimary)
 
                 if holdings > 0 {
                     Text("\(holdings.asNumberString()) held")
                         .font(.caption2)
                         .fontWeight(.bold)
-                        .foregroundColor(Color.theme.green)
+                        .foregroundColor(Color.theme.statusSuccess)
                 }
             }
         }
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(isSelected ? Color.theme.accent.opacity(0.05) : Color.theme.background)
+                .fill(isSelected ? Color.theme.surfaceSecondary : Color.theme.surfaceBackground)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .stroke(isSelected ? Color.theme.accent.opacity(0.3) : Color.theme.secondaryText.opacity(0.1), lineWidth: 1)
+                .stroke(isSelected ? Color.theme.brandPrimary.opacity(0.5) : Color.theme.borderSubtle, lineWidth: 1)
         )
         .scaleEffect(isSelected ? 0.98 : 1.0)
     }
@@ -240,6 +240,7 @@ extension PortfolioEditorView {
                         .clipShape(Circle())
                     Text(coin.name)
                         .font(.headline)
+                        .foregroundColor(Color.theme.textPrimary)
                 }
                 
                 Spacer()
@@ -247,35 +248,37 @@ extension PortfolioEditorView {
                 Text(coin.currentPrice.asCurrencyWith6Decimals())
                     .font(.caption)
                     .monospacedDigit()
-                    .foregroundColor(Color.theme.secondaryText)
+                    .foregroundColor(Color.theme.textSecondary)
             }
 
             Divider()
+                .overlay(Color.theme.borderSubtle)
 
             VStack(alignment: .trailing, spacing: 4) {
                 HStack {
                     Text("Holdings")
                         .font(.subheadline)
-                        .foregroundColor(Color.theme.secondaryText)
+                        .foregroundColor(Color.theme.textSecondary)
                     Spacer()
                     TextField("Enter Amount", text: $quantityText)
                         .keyboardType(.decimalPad)
                         .multilineTextAlignment(.trailing)
                         .font(.system(.title3, design: .rounded))
                         .fontWeight(.bold)
+                        .foregroundColor(Color.theme.textPrimary)
                         .focused($isQuantityFocused)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
                         .background(
                             RoundedRectangle(cornerRadius: 8)
-                                .fill(isQuantityFocused && quantityText.isEmpty ? Color.theme.accent.opacity(0.05) : Color.clear)
+                                .fill(isQuantityFocused && quantityText.isEmpty ? Color.theme.brandPrimary.opacity(0.1) : Color.clear)
                         )
                 }
                 
                 if quantityText.isEmpty {
                     Text("How much \(coin.symbol.uppercased()) do you own?")
                         .font(.caption2)
-                        .foregroundColor(Color.theme.accent)
+                        .foregroundColor(Color.theme.brandPrimary)
                         .transition(.opacity)
                 }
             }
@@ -283,22 +286,22 @@ extension PortfolioEditorView {
             HStack {
                 Text("Total Value")
                     .font(.subheadline)
-                    .foregroundColor(Color.theme.secondaryText)
+                    .foregroundColor(Color.theme.textSecondary)
                 Spacer()
                 Text(currentValue.asCurrencyWith2Decimals())
                     .font(.system(.headline, design: .rounded))
-                    .foregroundColor(currentValue > 0 ? Color.theme.green : Color.theme.accent)
+                    .foregroundColor(currentValue > 0 ? Color.theme.statusSuccess : Color.theme.textPrimary)
             }
         }
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(Color.theme.background)
-                .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
+                .fill(Color.theme.surfaceSecondary)
+                .shadow(color: Color.black.opacity(0.2), radius: 15, x: 0, y: 8)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 16)
-                .stroke(Color.theme.accent.opacity(0.2), lineWidth: 1)
+                .stroke(Color.theme.brandPrimary.opacity(0.3), lineWidth: 1)
         )
     }
 

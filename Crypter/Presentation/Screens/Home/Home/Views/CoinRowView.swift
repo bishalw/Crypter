@@ -60,7 +60,7 @@ extension CoinRowView {
         HStack(spacing: 12) {
             Text("\(coin.rank)")
                 .font(.system(size: 10, weight: .bold, design: .rounded))
-                .foregroundColor(Color.theme.secondaryText)
+                .foregroundColor(Color.theme.textSecondary)
                 .frame(width: 20, alignment: .leading)
 
             CoinImageView(vm: CoinImageViewModelImpl(coinImageRepository: core.coinImageRepository, coin: coin))
@@ -71,10 +71,10 @@ extension CoinRowView {
                 Text(coin.symbol.uppercased())
                     .font(.system(.subheadline, design: .rounded))
                     .fontWeight(.bold)
-                    .foregroundColor(Color.theme.accent)
+                    .foregroundColor(Color.theme.textPrimary)
                 Text(coin.name)
                     .font(.system(size: 11))
-                    .foregroundColor(Color.theme.secondaryText)
+                    .foregroundColor(Color.theme.textSecondary)
                     .lineLimit(1)
             }
         }
@@ -86,10 +86,10 @@ extension CoinRowView {
             Text(holdingsValueText)
                 .font(.system(.subheadline, design: .rounded))
                 .fontWeight(.bold)
-                .foregroundColor(Color.theme.accent)
+                .foregroundColor(Color.theme.textPrimary)
             Text(holdingsAmountText)
                 .font(.system(size: 11, design: .monospaced))
-                .foregroundColor(Color.theme.secondaryText)
+                .foregroundColor(Color.theme.textSecondary)
         }
         .frame(minWidth: 80, alignment: .trailing)
     }
@@ -99,7 +99,7 @@ extension CoinRowView {
             Text(priceText)
                 .font(.system(.subheadline, design: .rounded))
                 .fontWeight(.bold)
-                .foregroundColor(Color.theme.accent)
+                .foregroundColor(Color.theme.textPrimary)
             
             HStack(spacing: 4) {
                 Image(systemName: (coin.priceChangePercentage24H ?? 0) >= 0 ? "arrow.up.right" : "arrow.down.right")
@@ -108,8 +108,8 @@ extension CoinRowView {
             .font(.system(size: 11, weight: .bold, design: .rounded))
             .foregroundColor(
                 (coin.priceChangePercentage24H ?? 0) >= 0 ?
-                Color.theme.green :
-                Color.theme.red
+                Color.theme.statusSuccess :
+                Color.theme.statusDanger
             )
         }
         .frame(minWidth: 90, alignment: .trailing)

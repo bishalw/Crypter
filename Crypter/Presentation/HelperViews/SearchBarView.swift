@@ -16,11 +16,11 @@ struct SearchBarView: View {
         HStack(spacing: 12) {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 18, weight: .semibold))
-                .foregroundColor(searchText.isEmpty ? Color.theme.secondaryText : Color.theme.accent)
+                .foregroundColor(searchText.isEmpty ? Color.theme.textSecondary : Color.theme.brandPrimary)
             
             TextField("Search by name or symbol...", text: $searchText)
                 .font(.system(.body, design: .rounded))
-                .foregroundColor(Color.theme.accent)
+                .foregroundColor(Color.theme.textPrimary)
                 .disableAutocorrection(true)
                 .focused($isFocused)
             
@@ -32,7 +32,7 @@ struct SearchBarView: View {
                     }
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(Color.theme.secondaryText)
+                        .foregroundColor(Color.theme.textSecondary)
                 }
                 .transition(.scale.combined(with: .opacity))
             }
@@ -41,12 +41,12 @@ struct SearchBarView: View {
         .padding(.vertical, 12)
         .background(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color.theme.background)
-                .shadow(color: Color.black.opacity(isFocused ? 0.08 : 0.04), radius: isFocused ? 12 : 8, x: 0, y: 4)
+                .fill(Color.theme.surfaceSecondary)
+                .shadow(color: Color.black.opacity(isFocused ? 0.15 : 0.05), radius: isFocused ? 12 : 8, x: 0, y: 4)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(isFocused ? Color.theme.accent.opacity(0.3) : Color.theme.secondaryText.opacity(0.1), lineWidth: 1)
+                .stroke(isFocused ? Color.theme.brandPrimary.opacity(0.5) : Color.theme.borderSubtle, lineWidth: 1)
         )
         .padding(.horizontal)
         .padding(.vertical, 8)

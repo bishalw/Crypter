@@ -49,7 +49,7 @@ struct PortfolioAllocationChartView: View {
     }
 
     private var totalChangeColor: Color {
-        totalChange > 0 ? Color.theme.green : (totalChange < 0 ? Color.theme.red : Color.theme.secondaryText)
+        totalChange > 0 ? Color.theme.statusSuccess : (totalChange < 0 ? Color.theme.statusDanger : Color.theme.textSecondary)
     }
 
     var body: some View {
@@ -60,14 +60,12 @@ struct PortfolioAllocationChartView: View {
                 .padding(20) // Increased padding for breathing room
                 .background(
                     RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .fill(.ultraThinMaterial)
-                        // Adjusted shadow: lighter for light mode, removed for dark mode (let the material shine)
-                        .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.0 : 0.08), radius: 15, x: 0, y: 8)
+                        .fill(Color.theme.surfaceSecondary)
+                        .shadow(color: Color.black.opacity(0.1), radius: 15, x: 0, y: 8)
                 )
-                // Add a subtle border for dark mode definition
                 .overlay(
                     RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .stroke(Color.white.opacity(colorScheme == .dark ? 0.1 : 0.0), lineWidth: 1)
+                        .stroke(Color.theme.borderSubtle, lineWidth: 1)
                 )
         }
     }
@@ -77,16 +75,16 @@ struct PortfolioAllocationChartView: View {
         VStack(spacing: 12) {
             Image(systemName: "chart.pie.fill")
                 .font(.system(size: 40))
-                .foregroundColor(Color.theme.secondaryText.opacity(0.3))
+                .foregroundColor(Color.theme.textSecondary.opacity(0.3))
             Text("No allocation data")
                 .font(.callout.weight(.medium))
-                .foregroundColor(Color.theme.secondaryText)
+                .foregroundColor(Color.theme.textSecondary)
         }
         .frame(maxWidth: .infinity)
         .frame(height: 160)
         .background(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(.ultraThinMaterial)
+                .fill(Color.theme.surfaceSecondary)
         )
     }
 
@@ -127,14 +125,14 @@ struct PortfolioAllocationChartView: View {
                                 Text(item.symbol)
                                     // Scaled down the font slightly
                                     .font(.subheadline.weight(isSelected ? .bold : .semibold))
-                                    .foregroundColor(Color.theme.accent)
+                                    .foregroundColor(Color.theme.textPrimary)
                                     // CRITICAL: Stop the wrapping
                                     .lineLimit(1)
                                     .minimumScaleFactor(0.6)
                                 
                                 Text(item.value.asCompactCurrency())
                                     .font(.caption2)
-                                    .foregroundColor(Color.theme.secondaryText)
+                                    .foregroundColor(Color.theme.textSecondary)
                                     // CRITICAL: Stop the wrapping
                                     .lineLimit(1)
                                     .minimumScaleFactor(0.6)
@@ -145,7 +143,7 @@ struct PortfolioAllocationChartView: View {
 
                             Text(percentageText(for: item.percentage))
                                 .font(.subheadline.weight(isSelected ? .bold : .semibold))
-                                .foregroundColor(isSelected ? color : Color.theme.secondaryText)
+                                .foregroundColor(isSelected ? color : Color.theme.textSecondary)
                                 // CRITICAL: Stop the wrapping
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.6)
@@ -240,7 +238,7 @@ struct PortfolioAllocationChartView: View {
                 let item = displayItems[index]
                 Text(item.symbol)
                     .font(.system(size: 8, weight: .bold, design: .rounded))
-                    .foregroundColor(Color.theme.secondaryText)
+                    .foregroundColor(Color.theme.textSecondary)
                 
                 Text(percentageText(for: item.percentage))
                     .font(.system(size: 16, weight: .bold, design: .rounded))
@@ -248,15 +246,15 @@ struct PortfolioAllocationChartView: View {
                 
                 Text(item.value.asCompactCurrency())
                     .font(.system(size: 10, weight: .medium, design: .monospaced))
-                    .foregroundColor(Color.theme.accent)
+                    .foregroundColor(Color.theme.textPrimary)
             } else {
                 Text("TOTAL")
                     .font(.system(size: 8, weight: .bold, design: .rounded))
-                    .foregroundColor(Color.theme.secondaryText)
+                    .foregroundColor(Color.theme.textSecondary)
                 
                 Text(totalValue.asCompactCurrency())
                     .font(.system(size: 16, weight: .bold, design: .rounded))
-                    .foregroundColor(Color.theme.accent)
+                    .foregroundColor(Color.theme.textPrimary)
                 
                 HStack(spacing: 2) {
                     Image(systemName: totalChange >= 0 ? "arrow.up" : "arrow.down")
