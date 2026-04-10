@@ -5,6 +5,8 @@
 
 import Foundation
 
+// MARK: - Coin Model
+
 struct CoinModel: Identifiable {
     let id, symbol, name: String
     let image: String
@@ -43,12 +45,6 @@ struct CoinModel: Identifiable {
 
 struct SparklineIn7D: Codable {
     let price: [Double]?
-}
-
-struct ChartPoint: Identifiable, Equatable {
-    let id = UUID()
-    let date: Date
-    let price: Double
 }
 
 extension CoinModel {

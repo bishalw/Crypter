@@ -382,18 +382,6 @@ struct MiniSparklineView: View {
     }
 }
 
-enum SparklineStyle {
-    static func lineColor(for data: [Double]) -> Color {
-        let diff = (data.last ?? 0) - (data.first ?? 0)
-        return diff >= 0 ? Color.theme.statusSuccess : Color.theme.statusDanger
-    }
-    static func yScaleDomain(for data: [Double]) -> ClosedRange<Double> {
-        guard let min = data.min(), let max = data.max() else { return 0...1 }
-        let p = Swift.max((max - min) * 0.1, 0.01)
-        return (min - p)...(max + p)
-    }
-}
-
 struct ChartPlaceholderView: View {
     enum State { case empty }
     let state: State; let rangeLabel: String
