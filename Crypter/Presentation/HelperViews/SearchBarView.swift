@@ -42,7 +42,6 @@ struct SearchBarView: View {
         .background(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .fill(Color.theme.surfaceSecondary)
-                .shadow(color: Color.black.opacity(isFocused ? 0.15 : 0.05), radius: isFocused ? 12 : 8, x: 0, y: 4)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 16, style: .continuous)

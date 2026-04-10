@@ -142,7 +142,6 @@ extension PortfolioView {
     private var cardBackground: some View {
         RoundedRectangle(cornerRadius: 16, style: .continuous)
             .fill(Color.theme.surfaceSecondary)
-            .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 4)
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .stroke(Color.theme.borderSubtle, lineWidth: 1)
@@ -240,7 +239,6 @@ extension PortfolioView {
                 .padding(.vertical, 16)
                 .background(Color.theme.brandPrimary)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                .shadow(color: Color.theme.brandPrimary.opacity(0.3), radius: 10, x: 0, y: 5)
             }
             .padding(.horizontal, 40)
         }

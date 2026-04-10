@@ -110,7 +110,6 @@ struct HomeView<ViewModel>: View where ViewModel: HomeViewModel {
     private var cardBackground: some View {
         RoundedRectangle(cornerRadius: 16, style: .continuous)
             .fill(Color.theme.surfaceSecondary)
-            .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 4)
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .stroke(Color.theme.borderSubtle, lineWidth: 1)
@@ -334,7 +333,6 @@ extension HomeAddHoldingSheet {
     private var cardBackground: some View {
         RoundedRectangle(cornerRadius: 16, style: .continuous)
             .fill(Color.theme.surfaceSecondary)
-            .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 4)
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .stroke(Color.theme.borderSubtle, lineWidth: 1)

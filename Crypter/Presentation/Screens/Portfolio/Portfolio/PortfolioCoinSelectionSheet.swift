@@ -295,7 +295,6 @@ extension PortfolioEditorView {
         .background(
             RoundedRectangle(cornerRadius: 16)
                 .fill(Color.theme.surfaceSecondary)
-                .shadow(color: Color.black.opacity(0.2), radius: 15, x: 0, y: 8)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 16)
