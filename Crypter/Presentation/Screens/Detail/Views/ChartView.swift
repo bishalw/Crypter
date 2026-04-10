@@ -199,11 +199,11 @@ struct ChartView: View {
         .padding(.vertical)
         .background(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color.theme.background)
-                .shadow(color: Color.black.opacity(0.04), radius: 10, x: 0, y: 4)
+                .fill(Color.theme.surfaceSecondary)
+                .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 4)
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(Color.theme.secondaryText.opacity(0.1), lineWidth: 1)
+                        .stroke(Color.theme.borderSubtle, lineWidth: 1)
                 )
         )
     }
@@ -218,7 +218,7 @@ struct ChartView: View {
     }
 
     private var timeframeColor: Color {
-        isPositiveTimeframe ? Color.theme.green : Color.theme.red
+        isPositiveTimeframe ? Color.theme.statusSuccess : Color.theme.statusDanger
     }
 
     private var displayData: [Double] {
@@ -610,16 +610,15 @@ struct ChartSummaryRow: View {
             VStack(spacing: 2) {
                 Text("Change")
                     .font(.caption2)
-                    .foregroundColor(Color.theme.secondaryText)
+                    .foregroundColor(Color.theme.textSecondary)
                 Text(changePercent.asPercentString())
                     .font(.caption)
                     .fontWeight(.semibold)
-                    .foregroundColor(changePercent >= 0 ? Color.theme.green : Color.theme.red)
+                    .foregroundColor(changePercent >= 0 ? Color.theme.statusSuccess : Color.theme.statusDanger)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
                     .monospacedDigit()
-            }
-            .accessibilityElement(children: .combine)
+            }            .accessibilityElement(children: .combine)
             .accessibilityLabel("Change \(changePercent.asPercentString())")
         }
         .padding(.horizontal)
@@ -629,11 +628,11 @@ struct ChartSummaryRow: View {
         VStack(spacing: 2) {
             Text(label)
                 .font(.caption2)
-                .foregroundColor(Color.theme.secondaryText)
+                .foregroundColor(Color.theme.textSecondary)
             Text(value)
                 .font(.caption)
                 .fontWeight(.semibold)
-                .foregroundColor(Color.theme.accent)
+                .foregroundColor(Color.theme.textPrimary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
                 .monospacedDigit()

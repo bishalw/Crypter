@@ -31,7 +31,7 @@ struct HomeView<ViewModel>: View where ViewModel: HomeViewModel {
                 }
                 .padding()
             }
-            .background(Color.theme.background.ignoresSafeArea())
+            .background(Color.theme.surfaceBackground.ignoresSafeArea())
             .navigationTitle("Market")
             .navigationBarTitleDisplayMode(.large)
             .sheet(item: $editorCoin) { coin in
@@ -59,7 +59,7 @@ struct HomeView<ViewModel>: View where ViewModel: HomeViewModel {
             Text("Top Cryptos")
                 .font(.title3)
                 .bold()
-                .foregroundColor(Color.theme.accent)
+                .foregroundColor(Color.theme.textPrimary)
             
             Spacer()
             
@@ -75,10 +75,10 @@ struct HomeView<ViewModel>: View where ViewModel: HomeViewModel {
                 }
                 .font(.caption)
                 .fontWeight(.bold)
-                .foregroundColor(Color.theme.secondaryText)
+                .foregroundColor(Color.theme.textSecondary)
                 .padding(.vertical, 6)
                 .padding(.horizontal, 10)
-                .background(Color.theme.secondaryText.opacity(0.1))
+                .background(Color.theme.textSecondary.opacity(0.1))
                 .clipShape(Capsule())
             }
         }
@@ -109,11 +109,11 @@ struct HomeView<ViewModel>: View where ViewModel: HomeViewModel {
     
     private var cardBackground: some View {
         RoundedRectangle(cornerRadius: 16, style: .continuous)
-            .fill(Color.theme.background)
-            .shadow(color: Color.black.opacity(0.04), radius: 10, x: 0, y: 4)
+            .fill(Color.theme.surfaceSecondary)
+            .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 4)
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(Color.theme.secondaryText.opacity(0.1), lineWidth: 1)
+                    .stroke(Color.theme.borderSubtle, lineWidth: 1)
             )
     }
 }
@@ -333,11 +333,11 @@ extension HomeAddHoldingSheet {
 
     private var cardBackground: some View {
         RoundedRectangle(cornerRadius: 16, style: .continuous)
-            .fill(Color.theme.background)
-            .shadow(color: Color.black.opacity(0.04), radius: 10, x: 0, y: 4)
+            .fill(Color.theme.surfaceSecondary)
+            .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 4)
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(Color.theme.secondaryText.opacity(0.1), lineWidth: 1)
+                    .stroke(Color.theme.borderSubtle, lineWidth: 1)
             )
     }
 

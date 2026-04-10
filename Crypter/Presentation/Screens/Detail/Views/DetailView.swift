@@ -50,6 +50,7 @@ struct DetailView<ViewModel>: View where ViewModel: DetailViewModel {
             }
             .padding()
         }
+        .background(Color.theme.surfaceBackground.ignoresSafeArea())
         .navigationTitle(vm.coin.name)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -73,16 +74,16 @@ extension DetailView {
                         .font(.system(size: 34, weight: .bold, design: .rounded))
                     Text("\(vm.coin.currentPrice.asCurrencyWith6Decimals()) per \(vm.coin.symbol.uppercased())")
                         .font(.caption)
-                        .foregroundColor(Color.theme.secondaryText)
+                        .foregroundColor(Color.theme.textSecondary)
                 } else {
                     Text(vm.coin.currentPrice.asCurrencyWith6Decimals())
                         .font(.system(size: 34, weight: .bold, design: .rounded))
                     Text("Market Price")
                         .font(.caption)
-                        .foregroundColor(Color.theme.secondaryText)
+                        .foregroundColor(Color.theme.textSecondary)
                 }
             }
-            .foregroundColor(Color.theme.accent)
+            .foregroundColor(Color.theme.textPrimary)
             .contentTransition(.numericText())
             .onTapGesture {
                 if hasHoldings {
@@ -104,9 +105,9 @@ extension DetailView {
                 
                 Text("24h")
                     .font(.caption)
-                    .foregroundColor(Color.theme.secondaryText)
+                    .foregroundColor(Color.theme.textSecondary)
             }
-            .foregroundColor((vm.coin.priceChangePercentage24H ?? 0) >= 0 ? Color.theme.green : Color.theme.red)
+            .foregroundColor((vm.coin.priceChangePercentage24H ?? 0) >= 0 ? Color.theme.statusSuccess : Color.theme.statusDanger)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -115,7 +116,7 @@ extension DetailView {
         Text(title)
             .font(.title3)
             .bold()
-            .foregroundColor(Color.theme.accent)
+            .foregroundColor(Color.theme.textPrimary)
     }
     
     private var overviewCard: some View {
@@ -201,11 +202,11 @@ extension DetailView {
     
     private var cardBackground: some View {
         RoundedRectangle(cornerRadius: 16, style: .continuous)
-            .fill(Color.theme.background)
-            .shadow(color: Color.black.opacity(0.04), radius: 10, x: 0, y: 4)
+            .fill(Color.theme.surfaceSecondary)
+            .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 4)
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(Color.theme.secondaryText.opacity(0.1), lineWidth: 1)
+                    .stroke(Color.theme.borderSubtle, lineWidth: 1)
             )
     }
     

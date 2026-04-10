@@ -39,11 +39,11 @@ struct StatisticView: View {
                 Text(stat.title)
                     .font(.caption)
             }
-            .foregroundColor(Color.theme.secondaryText)
+            .foregroundColor(Color.theme.textSecondary)
             
             Text(stat.value)
                 .font(.system(.headline, design: .rounded))
-                .foregroundColor(Color.theme.accent)
+                .foregroundColor(Color.theme.textPrimary)
                 .minimumScaleFactor(0.8)
                 .lineLimit(1)
             
@@ -57,7 +57,7 @@ struct StatisticView: View {
                         .font(.caption2)
                         .bold()
                 }
-                .foregroundColor(percentageChange >= 0 ? Color.theme.green : Color.theme.red)
+                .foregroundColor(percentageChange >= 0 ? Color.theme.statusSuccess : Color.theme.statusDanger)
             }
         }
     }
