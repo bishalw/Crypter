@@ -20,11 +20,11 @@ struct HomeStatsView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color.theme.background)
+                .fill(Color.theme.surfaceSecondary)
                 .shadow(color: Color.black.opacity(0.04), radius: 10, x: 0, y: 4)
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(Color.theme.secondaryText.opacity(0.1), lineWidth: 1)
+                        .stroke(Color.theme.borderSubtle, lineWidth: 1)
                 )
         )
     }

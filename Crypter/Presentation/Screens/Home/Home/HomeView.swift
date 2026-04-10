@@ -188,7 +188,7 @@ struct HomeAddHoldingSheet: View {
     @StateObject var vm: HomeAddHoldingViewModel
 
     private var priceChangeColor: Color {
-        (vm.coin.priceChangePercentage24H ?? 0) >= 0 ? Color.theme.green : Color.theme.red
+        (vm.coin.priceChangePercentage24H ?? 0) >= 0 ? Color.theme.statusSuccess : Color.theme.statusDanger
     }
 
     var body: some View {
@@ -201,7 +201,7 @@ struct HomeAddHoldingSheet: View {
                         Text("7D Price Trend")
                             .font(.caption)
                             .fontWeight(.bold)
-                            .foregroundColor(Color.theme.secondaryText)
+                            .foregroundColor(Color.theme.textSecondary)
                         
                         MiniSparklineView(data: vm.coin.price ?? [])
                             .frame(height: 120)
@@ -216,7 +216,7 @@ struct HomeAddHoldingSheet: View {
                 }
                 .padding()
             }
-            .background(Color.theme.background.ignoresSafeArea())
+            .background(Color.theme.surfaceBackground.ignoresSafeArea())
             .navigationTitle(vm.currentHoldings == nil ? "Add Holding" : "Update Holding")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -257,7 +257,7 @@ extension HomeAddHoldingSheet {
                     .font(.headline)
                 Text(vm.coin.symbol.uppercased())
                     .font(.caption)
-                    .foregroundColor(Color.theme.secondaryText)
+                    .foregroundColor(Color.theme.textSecondary)
             }
 
             Spacer()
@@ -285,7 +285,7 @@ extension HomeAddHoldingSheet {
             HStack {
                 Text("How much do you own?")
                     .font(.subheadline)
-                    .foregroundColor(Color.theme.secondaryText)
+                    .foregroundColor(Color.theme.textSecondary)
                 
                 Spacer()
                 
@@ -299,14 +299,14 @@ extension HomeAddHoldingSheet {
                     .padding(.vertical, 4)
                     .background(
                         RoundedRectangle(cornerRadius: 8)
-                            .fill(isQuantityFocused && vm.quantityText.isEmpty ? Color.theme.accent.opacity(0.05) : Color.clear)
+                            .fill(isQuantityFocused && vm.quantityText.isEmpty ? Color.theme.brandPrimary.opacity(0.05) : Color.clear)
                     )
             }
             
             if let currentHoldingsText = vm.currentHoldingsText {
                 Text(currentHoldingsText)
                     .font(.caption2)
-                    .foregroundColor(Color.theme.green)
+                    .foregroundColor(Color.theme.statusSuccess)
                     .fontWeight(.bold)
             }
         }
@@ -319,11 +319,11 @@ extension HomeAddHoldingSheet {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Current Position Value")
                     .font(.caption)
-                    .foregroundColor(Color.theme.secondaryText)
+                    .foregroundColor(Color.theme.textSecondary)
                 Text(vm.liveValue.asCurrencyWith2Decimals())
                     .font(.system(.title2, design: .rounded))
                     .fontWeight(.bold)
-                    .foregroundColor(Color.theme.green)
+                    .foregroundColor(Color.theme.statusSuccess)
             }
             Spacer()
         }

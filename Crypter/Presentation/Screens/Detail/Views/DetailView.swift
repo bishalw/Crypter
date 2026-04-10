@@ -152,7 +152,7 @@ extension DetailView {
             Text(description)
                 .lineLimit(showFullDescription ? nil : 4)
                 .font(.subheadline)
-                .foregroundColor(Color.theme.secondaryText)
+                .foregroundColor(Color.theme.textSecondary)
             
             Button {
                 withAnimation(.spring()) {
@@ -214,7 +214,7 @@ extension DetailView {
         HStack(spacing: 8) {
             Text(vm.coin.symbol.uppercased())
                 .font(.headline)
-                .foregroundColor(Color.theme.secondaryText)
+                .foregroundColor(Color.theme.textSecondary)
             
             CoinImageView(vm: CoinImageViewModelImpl(coinImageRepository: core.coinImageRepository, coin: vm.coin))
                 .frame(width: 28, height: 28)

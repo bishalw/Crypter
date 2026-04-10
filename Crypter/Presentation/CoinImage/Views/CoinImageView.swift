@@ -23,7 +23,7 @@ struct CoinImageView<ViewModel>: View where ViewModel: CoinImageViewModel {
                 ProgressView()
             } else {
                 Image(systemName: "questionmark")
-                    .foregroundColor(Color.theme.secondaryText)
+                    .foregroundColor(Color.theme.textSecondary)
             }
         }
         .task {

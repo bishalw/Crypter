@@ -26,7 +26,7 @@ struct HomeHeaderView: View {
             Text(isPortfolioShown ? "Portfolio" : "Live Prices")
                 .font(.headline)
                 .fontWeight(.heavy)
-                .foregroundColor(Color.theme.accent)
+                .foregroundColor(Color.theme.brandPrimary)
                 .animation(.none)
             Spacer()
             CircleButtonView(iconName: "chevron.right")

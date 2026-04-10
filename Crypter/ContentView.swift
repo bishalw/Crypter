@@ -8,19 +8,24 @@ import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        ZStack{
-            Color.theme.background
+        ZStack {
+            Color.theme.surfaceBackground
                 .ignoresSafeArea()
-            VStack(spacing: 40){
-                Text ("Accent Color")
-                    .foregroundColor(Color.theme.accent)
-                
-                Text ("Secondary Text Color")
-                    .foregroundColor(Color.theme.secondaryText)
-                Text ("Red Color")
-                    .foregroundColor(Color.theme.red)
+
+            VStack(spacing: 40) {
+
+                Text("Accent Color")
+                    .foregroundColor(Color.theme.brandPrimary)
+
+                Text("Secondary Text Color")
+                    .foregroundColor(Color.theme.textSecondary)
+
+                Text("Red Color")
+                    .foregroundColor(Color.theme.statusDanger)
+
                 Text("Green Color")
-                    .foregroundColor(Color.theme.green)
+                    .foregroundColor(Color.theme.statusSuccess)
+
             }
             .font(.headline)
         }

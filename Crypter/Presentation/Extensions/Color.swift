@@ -38,14 +38,12 @@ extension Color {
 
 struct ColorTheme {
     
-    // MARK: - Legacy Support (Kept for compatibility)
-    let accent = Color("AccentColor")
-    let background = Color("BackgroundColor")
-    let green = Color("GreenColor")
-    let red = Color("RedColor")
-    let secondaryText = Color("SecondaryTextColor")
+    // MARK: - Brand Colors
     
-    // MARK: - Modern "Midnight Pro" Palette
+    /// Primary brand color (Electric Indigo)
+    let brandPrimary = Color(hex: "#5271FF")
+    
+    // MARK: - Surface Colors
     
     /// Main background for the app (Deep Charcoal)
     let surfaceBackground = Color(hex: "#0B0E11")
@@ -53,14 +51,10 @@ struct ColorTheme {
     /// Secondary background for cards and interactive elements
     let surfaceSecondary = Color(hex: "#1E2329")
     
-    /// Primary brand color (Electric Indigo)
-    let brandPrimary = Color(hex: "#5271FF")
+    /// Subtle divider and border color
+    let borderSubtle = Color.white.opacity(0.1)
     
-    /// Success / Positive Trend (Emerald Green)
-    let statusSuccess = Color(hex: "#0ECB81")
-    
-    /// Danger / Negative Trend (Rose Red)
-    let statusDanger = Color(hex: "#F6465D")
+    // MARK: - Text Colors
     
     /// Standard high-contrast text
     let textPrimary = Color.white
@@ -68,9 +62,11 @@ struct ColorTheme {
     /// Muted text for labels and captions
     let textSecondary = Color(hex: "#848E9C")
     
-    /// Subtle divider and border color
-    let borderSubtle = Color.white.opacity(0.1)
+    // MARK: - Status Colors
+    
+    /// Success / Positive Trend (Mint Emerald)
+    let statusSuccess = Color(hex: "#00FFA3")
+    
+    /// Danger / Negative Trend (Vibrant Coral)
+    let statusDanger = Color(hex: "#FF5C5C")
 }
-
-
-

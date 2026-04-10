@@ -40,7 +40,7 @@ struct CoinRowView: View {
             
             rightColumn
         }
-        .background(Color.theme.background.opacity(0.001))
+        .background(Color.theme.surfaceBackground.opacity(0.001))
     }
 }
 

@@ -57,7 +57,7 @@ struct PortfolioView<ViewModel>: View where ViewModel: PortfolioViewModel {
                     } label: {
                         Image(systemName: "plus.circle.fill")
                             .font(.title3)
-                            .foregroundColor(Color.theme.accent)
+                            .foregroundColor(Color.theme.brandPrimary)
                     }
                 }
             }
@@ -101,13 +101,13 @@ extension PortfolioView {
                     .font(.system(size: 10, weight: .bold))
                     .textCase(.uppercase)
             }
-            .foregroundColor(Color.theme.secondaryText)
+            .foregroundColor(Color.theme.textSecondary)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(value)
                     .font(.system(.title3, design: .rounded))
                     .fontWeight(.bold)
-                    .foregroundColor(Color.theme.accent)
+                    .foregroundColor(Color.theme.textPrimary)
                     .minimumScaleFactor(0.7)
                     .lineLimit(1)
 
@@ -120,7 +120,7 @@ extension PortfolioView {
                             .font(.caption2)
                             .bold()
                     }
-                    .foregroundColor(change >= 0 ? Color.theme.green : Color.theme.red)
+                    .foregroundColor(change >= 0 ? Color.theme.statusSuccess : Color.theme.statusDanger)
                 }
             }
         }
@@ -144,7 +144,7 @@ extension PortfolioView {
             Text("Your Assets")
                 .font(.title3)
                 .bold()
-                .foregroundColor(Color.theme.accent)
+                .foregroundColor(Color.theme.textPrimary)
             
             Spacer()
             
@@ -160,10 +160,10 @@ extension PortfolioView {
                 }
                 .font(.caption)
                 .fontWeight(.bold)
-                .foregroundColor(Color.theme.secondaryText)
+                .foregroundColor(Color.theme.textSecondary)
                 .padding(.vertical, 6)
                 .padding(.horizontal, 10)
-                .background(Color.theme.secondaryText.opacity(0.1))
+                .background(Color.theme.textSecondary.opacity(0.1))
                 .clipShape(Capsule())
             }
         }
@@ -196,23 +196,23 @@ extension PortfolioView {
         VStack(spacing: 24) {
             ZStack {
                 Circle()
-                    .fill(Color.theme.accent.opacity(0.1))
+                    .fill(Color.theme.brandPrimary.opacity(0.1))
                     .frame(width: 140, height: 140)
                 
                 Image(systemName: "chart.pie.fill")
                     .font(.system(size: 60))
-                    .foregroundColor(Color.theme.accent)
+                    .foregroundColor(Color.theme.brandPrimary)
             }
 
             VStack(spacing: 8) {
                 Text("Build Your Portfolio")
                     .font(.title2)
                     .bold()
-                    .foregroundColor(Color.theme.accent)
+                    .foregroundColor(Color.theme.textPrimary)
 
                 Text("Start tracking your crypto assets by adding your first coin.")
                     .font(.callout)
-                    .foregroundColor(Color.theme.secondaryText)
+                    .foregroundColor(Color.theme.textSecondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 40)
             }
@@ -228,9 +228,9 @@ extension PortfolioView {
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
-                .background(Color.theme.accent)
+                .background(Color.theme.brandPrimary)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                .shadow(color: Color.theme.accent.opacity(0.3), radius: 10, x: 0, y: 5)
+                .shadow(color: Color.theme.brandPrimary.opacity(0.3), radius: 10, x: 0, y: 5)
             }
             .padding(.horizontal, 40)
         }

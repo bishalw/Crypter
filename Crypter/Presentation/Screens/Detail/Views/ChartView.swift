@@ -46,7 +46,7 @@ enum ChartDataState {
 enum SparklineStyle {
     static func lineColor(for data: [Double]) -> Color {
         let priceChange = (data.last ?? 0) - (data.first ?? 0)
-        return priceChange >= 0 ? Color.theme.green : Color.theme.red
+        return priceChange >= 0 ? Color.theme.statusSuccess : Color.theme.statusDanger
     }
 
     static func yScaleDomain(for data: [Double]) -> ClosedRange<Double> {
@@ -89,15 +89,15 @@ struct MiniSparklineView: View {
 
     private var placeholder: some View {
         RoundedRectangle(cornerRadius: 14, style: .continuous)
-            .fill(Color.theme.background)
+            .fill(Color.theme.surfaceSecondary)
             .overlay {
                 VStack(spacing: 8) {
                     Image(systemName: "chart.line.uptrend.xyaxis")
                         .font(.title3)
-                        .foregroundColor(Color.theme.secondaryText.opacity(0.6))
+                        .foregroundColor(Color.theme.textSecondary.opacity(0.6))
                     Text("7D chart unavailable")
                         .font(.caption)
-                        .foregroundColor(Color.theme.secondaryText)
+                        .foregroundColor(Color.theme.textSecondary)
                 }
             }
             .frame(height: 120)
@@ -137,10 +137,10 @@ struct MiniSparklineView: View {
         .padding(.horizontal, 8)
         .background(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Color.theme.background)
+                .fill(Color.theme.surfaceSecondary)
                 .overlay(
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(Color.theme.secondaryText.opacity(0.08), lineWidth: 1)
+                        .stroke(Color.theme.textSecondary.opacity(0.08), lineWidth: 1)
                 )
         )
         .accessibilityElement(children: .ignore)
@@ -185,7 +185,7 @@ struct ChartView: View {
                         Text("Reference Lines")
                             .font(.caption)
                             .fontWeight(.bold)
-                            .foregroundColor(Color.theme.secondaryText)
+                            .foregroundColor(Color.theme.textSecondary)
                             .padding(.horizontal)
                         
                         ReferenceLinePicker(
@@ -288,7 +288,7 @@ struct ChartView: View {
             } else {
                 Text("Charts require iOS 16.0+")
                     .font(.callout)
-                    .foregroundColor(Color.theme.secondaryText)
+                    .foregroundColor(Color.theme.textSecondary)
                     .frame(height: 250)
             }
         }
@@ -321,14 +321,14 @@ struct ChartView: View {
 
             if let value = referenceLineValue {
                 RuleMark(y: .value("Reference", value))
-                    .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 3]))
-                    .foregroundStyle(timeframeColor.opacity(0.6))
+                    .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [5, 5]))
+                    .foregroundStyle(timeframeColor.opacity(0.4))
             }
 
             if let selectedIndex, displayData.indices.contains(selectedIndex) {
                 RuleMark(x: .value("Selected", selectedIndex))
                     .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 2]))
-                    .foregroundStyle(Color.theme.secondaryText.opacity(0.45))
+                    .foregroundStyle(Color.theme.textSecondary.opacity(0.45))
 
                 PointMark(
                     x: .value("Selected Index", selectedIndex),
@@ -353,12 +353,12 @@ struct ChartView: View {
         .chartYAxis {
             AxisMarks(position: .leading, values: .automatic(desiredCount: 4)) { value in
                 AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [4]))
-                    .foregroundStyle(Color.theme.secondaryText.opacity(0.18))
+                    .foregroundStyle(Color.theme.textSecondary.opacity(0.18))
                 AxisValueLabel {
                     if let doubleValue = value.as(Double.self) {
                         Text(doubleValue.asCurrencyWith2Decimals())
                             .font(.system(size: 8, design: .monospaced))
-                            .foregroundColor(Color.theme.secondaryText)
+                            .foregroundColor(Color.theme.textSecondary)
                     }
                 }
             }
@@ -387,11 +387,18 @@ struct ChartView: View {
                         Text(selectedReferenceLine.rawValue)
                             .font(.system(size: 10, weight: .bold, design: .rounded))
                             .foregroundColor(.white)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(timeframeColor)
-                            .clipShape(Capsule())
-                            .offset(y: yPosition - 10)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(
+                                Capsule()
+                                    .fill(timeframeColor)
+                                    .shadow(color: timeframeColor.opacity(0.3), radius: 4, x: 0, y: 2)
+                            )
+                            .overlay(
+                                Capsule()
+                                    .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                            )
+                            .offset(y: yPosition - 12)
                             .transition(.opacity.combined(with: .move(edge: .leading)))
                     }
                 }
@@ -404,11 +411,11 @@ struct ChartView: View {
 
     private var chartSurface: some View {
         RoundedRectangle(cornerRadius: 16)
-            .fill(Color.theme.background)
+            .fill(Color.theme.surfaceSecondary)
             .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 4)
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
-                    .stroke(Color.theme.secondaryText.opacity(0.08), lineWidth: 1)
+                    .stroke(Color.theme.textSecondary.opacity(0.08), lineWidth: 1)
             )
     }
 
@@ -485,14 +492,14 @@ struct TimeRangePicker: View {
                     Text(range.rawValue)
                         .font(.system(.caption, design: .rounded))
                         .fontWeight(selected == range ? .bold : .medium)
-                        .foregroundColor(selected == range ? Color.theme.accent : Color.theme.secondaryText)
+                        .foregroundColor(selected == range ? Color.theme.brandPrimary : Color.theme.textSecondary)
                         .padding(.vertical, 8)
                         .frame(maxWidth: .infinity)
                         .background(
                             ZStack {
                                 if selected == range {
                                     RoundedRectangle(cornerRadius: 8)
-                                        .fill(Color.theme.accent.opacity(0.15))
+                                        .fill(Color.theme.brandPrimary.opacity(0.15))
                                         .matchedGeometryEffect(id: "range_background", in: rangeNamespace)
                                 }
                             }
@@ -501,7 +508,7 @@ struct TimeRangePicker: View {
             }
         }
         .padding(4)
-        .background(Color.theme.secondaryText.opacity(0.05))
+        .background(Color.theme.textSecondary.opacity(0.05))
         .clipShape(RoundedRectangle(cornerRadius: 10))
         .padding(.horizontal)
     }
@@ -530,16 +537,16 @@ struct ReferenceLinePicker: View {
                     } label: {
                         Text(line.rawValue)
                             .font(.system(size: 11, weight: .semibold, design: .rounded))
-                            .foregroundColor(selected == line ? Color.theme.accent : Color.theme.secondaryText)
+                            .foregroundColor(selected == line ? Color.theme.brandPrimary : Color.theme.textSecondary)
                             .padding(.vertical, 6)
                             .padding(.horizontal, 12)
                             .background(
                                 RoundedRectangle(cornerRadius: 8)
-                                    .fill(selected == line ? Color.theme.accent.opacity(0.12) : Color.theme.background)
+                                    .fill(selected == line ? Color.theme.brandPrimary.opacity(0.12) : Color.theme.surfaceSecondary)
                             )
                             .overlay(
                                 RoundedRectangle(cornerRadius: 8)
-                                    .stroke(selected == line ? Color.theme.accent : Color.theme.secondaryText.opacity(0.2), lineWidth: 1)
+                                    .stroke(selected == line ? Color.theme.brandPrimary : Color.theme.textSecondary.opacity(0.2), lineWidth: 1)
                             )
                     }
                 }
@@ -560,18 +567,18 @@ struct ChartTooltip: View {
         VStack(alignment: .leading, spacing: 2) {
             Text("Price")
                 .font(.caption2)
-                .foregroundColor(Color.theme.secondaryText)
+                .foregroundColor(Color.theme.textSecondary)
             Text(price.asCurrencyWith2Decimals())
                 .font(.subheadline)
                 .fontWeight(.semibold)
-                .foregroundColor(Color.theme.accent)
+                .foregroundColor(Color.theme.brandPrimary)
                 .minimumScaleFactor(0.8)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(Color.theme.background)
+                .fill(Color.theme.surfaceSecondary)
                 .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
         )
         .overlay(
@@ -662,13 +669,13 @@ struct ChartPlaceholderView: View {
             case .empty:
                 Image(systemName: "chart.line.downtrend.xyaxis")
                     .font(.system(size: 36))
-                    .foregroundColor(Color.theme.secondaryText.opacity(0.5))
+                    .foregroundColor(Color.theme.textSecondary.opacity(0.5))
                 Text("No price data available")
                     .font(.callout)
-                    .foregroundColor(Color.theme.secondaryText)
+                    .foregroundColor(Color.theme.textSecondary)
                 Text("No \(rangeLabel) chart data is available for this coin yet.")
                     .font(.caption)
-                    .foregroundColor(Color.theme.secondaryText.opacity(0.7))
+                    .foregroundColor(Color.theme.textSecondary.opacity(0.7))
                     .multilineTextAlignment(.center)
             }
         }
@@ -676,7 +683,7 @@ struct ChartPlaceholderView: View {
         .frame(maxWidth: .infinity)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color.theme.secondaryText.opacity(0.03))
+                .fill(Color.theme.textSecondary.opacity(0.03))
         )
         .padding(.horizontal)
         .accessibilityElement(children: .combine)

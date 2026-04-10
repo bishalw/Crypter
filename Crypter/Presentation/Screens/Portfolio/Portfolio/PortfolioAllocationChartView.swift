@@ -168,7 +168,7 @@ struct PortfolioAllocationChartView: View {
         ZStack {
             // Subtle inner background to define the "hole" better
             Circle()
-                .fill(Color.theme.accent.opacity(0.03))
+                .fill(Color.theme.brandPrimary.opacity(0.03))
                 .frame(width: size * 0.7)
                 .blur(radius: 5)
 
@@ -190,7 +190,7 @@ struct PortfolioAllocationChartView: View {
                 )
                 .overlay(
                      DonutSlice(startDegrees: min(slice.start, drawProgress * 360), endDegrees: min(slice.end, drawProgress * 360), angularInset: 0.8)
-                        .stroke(Color.theme.background, lineWidth: 2)
+                        .stroke(Color.theme.surfaceBackground, lineWidth: 2)
                 )
                 .scaleEffect(isSelected ? 1.08 : 1.0)
                 .opacity(selectedIndex == nil || isSelected ? 1.0 : 0.4)
