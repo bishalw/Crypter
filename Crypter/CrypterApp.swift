@@ -18,13 +18,21 @@ struct CrypterApp: App {
         appearance.backgroundColor = .clear
         
         let uiColor = UIColor(Color.theme.brandPrimary)
+        
+        let largeTitleFont = UIFont.systemFont(ofSize: 34, weight: .bold)
+        let titleFont = UIFont.systemFont(ofSize: 18, weight: .bold)
+        
+        // Safely apply rounded design if available
+        let roundedLargeTitleFont = largeTitleFont.fontDescriptor.withDesign(.rounded).map { UIFont(descriptor: $0, size: 0) } ?? largeTitleFont
+        let roundedTitleFont = titleFont.fontDescriptor.withDesign(.rounded).map { UIFont(descriptor: $0, size: 0) } ?? titleFont
+
         appearance.largeTitleTextAttributes = [
             .foregroundColor: uiColor,
-            .font: UIFont.systemFont(ofSize: 34, weight: .bold).withDesign(.rounded)!
+            .font: roundedLargeTitleFont
         ]
         appearance.titleTextAttributes = [
             .foregroundColor: uiColor,
-            .font: UIFont.systemFont(ofSize: 18, weight: .bold).withDesign(.rounded)!
+            .font: roundedTitleFont
         ]
         
         UINavigationBar.appearance().standardAppearance = appearance
