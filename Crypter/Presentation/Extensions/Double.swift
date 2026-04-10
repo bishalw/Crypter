@@ -13,6 +13,10 @@ extension Date {
            let weekDay = dateFormatter.string(from: Date())
            return weekDay
      }
+
+    func asShortDateString() -> String {
+        formatted(.dateTime.month(.abbreviated).day())
+    }
 }
 
 extension Double {

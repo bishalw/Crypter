@@ -30,6 +30,7 @@ struct DetailView<ViewModel>: View where ViewModel: DetailViewModel {
                     coin: vm.coin,
                     points: vm.chartPoints,
                     isLoading: vm.isLoadingChart,
+                    errorMessage: vm.chartErrorMessage,
                     onRangeChange: { range in
                         vm.fetchMarketChart(range: range)
                     }

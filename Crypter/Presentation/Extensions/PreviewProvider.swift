@@ -46,7 +46,7 @@ class DeveloperPreview {
        atlChangePercentage: 90020.24075,
        atlDate: "2013-07-06T00:00:00.000Z",
        lastUpdated: "2021-03-13T23:18:10.268Z",
-       price: [
+       sparklineIn7D: SparklineIn7D(price: [
         54812.44719358261,
         55104.88273194627,
         54367.11842035794,
@@ -144,8 +144,7 @@ class DeveloperPreview {
         55287.55018364941,
         54201.33857492863,
         53741.66492830592
-
-       ],
+       ]),
        priceChangePercentage24HInCurrency: 3952.64,
        currentHoldings: 1.5)
 
@@ -175,11 +174,11 @@ class DeveloperPreview {
        atlChangePercentage: 418270.93,
        atlDate: "2015-10-20T00:00:00.000Z",
        lastUpdated: "2021-03-13T23:18:10.268Z",
-       price: [
+       sparklineIn7D: SparklineIn7D(price: [
            1750.12, 1762.34, 1758.90, 1771.23, 1780.45,
            1775.68, 1790.12, 1795.34, 1801.56, 1798.78,
            1805.90, 1810.12, 1808.34, 1811.56, 1809.78,
-       ],
+       ]),
        priceChangePercentage24HInCurrency: 68.77,
        currentHoldings: 10.0)
 
@@ -197,6 +196,8 @@ class MockCryptoStore: CryptoStore {
     var coins: CurrentValueSubject<[CoinModel]?, Never>
     var coinDetails: CurrentValueSubject<CoinDetailModel?, Never>
     var globalDetails: CurrentValueSubject<MarketDataModel?, Never>
+    var chartPoints: CurrentValueSubject<[ChartPoint], Never>
+    var chartErrorMessage: CurrentValueSubject<String?, Never>
 
     init(
         coins: [CoinModel]? = CoinModel.mockCoins(),
@@ -206,11 +207,16 @@ class MockCryptoStore: CryptoStore {
         self.coins = CurrentValueSubject(coins)
         self.coinDetails = CurrentValueSubject(coinDetails)
         self.globalDetails = CurrentValueSubject(globalDetails)
+        self.chartPoints = CurrentValueSubject(coins?.first?.price?.enumerated().map { index, price in
+            ChartPoint(date: Date().addingTimeInterval(Double(index) * 3600), price: price)
+        } ?? [])
+        self.chartErrorMessage = CurrentValueSubject(nil)
     }
 
     func fetchAllCoins() {}
     func fetchCoinDetails(coin: CoinModel) {}
     func fetchGlobalData() {}
+    func fetchMarketChart(coin: CoinModel, range: ChartTimeRange) {}
 }
 
 // MARK: - Preview ViewModels
@@ -287,6 +293,9 @@ class PreviewDetailViewModel: DetailViewModel {
     @Published var coinDescription: String?
     @Published var websiteURL: String?
     @Published var redditURL: String?
+    @Published var chartPoints: [ChartPoint]
+    @Published var isLoadingChart: Bool
+    @Published var chartErrorMessage: String?
 
     init(coin: CoinModel = DeveloperPreview.instance.coin) {
         self.coin = coin
@@ -306,7 +315,14 @@ class PreviewDetailViewModel: DetailViewModel {
         self.coinDescription = "Bitcoin is the first successful internet money based on peer-to-peer technology. No central bank or authority controls the supply of bitcoins."
         self.websiteURL = "https://bitcoin.org"
         self.redditURL = "https://reddit.com/r/bitcoin"
+        self.chartPoints = coin.price?.enumerated().map { index, price in
+            ChartPoint(date: Date().addingTimeInterval(Double(index) * 3600), price: price)
+        } ?? []
+        self.isLoadingChart = false
+        self.chartErrorMessage = nil
     }
+
+    func fetchMarketChart(range: ChartTimeRange) {}
 }
 
 // MARK: - Preview Core

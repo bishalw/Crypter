@@ -15,6 +15,7 @@ protocol DetailViewModel: ObservableObject {
     var redditURL: String? { get set }
     var chartPoints: [ChartPoint] { get set }
     var isLoadingChart: Bool { get set }
+    var chartErrorMessage: String? { get set }
     
     func fetchMarketChart(range: ChartTimeRange)
 }
@@ -28,6 +29,7 @@ class DetailViewModelImpl: ObservableObject, DetailViewModel {
     @Published var redditURL: String? = nil
     @Published var chartPoints: [ChartPoint] = []
     @Published var isLoadingChart: Bool = false
+    @Published var chartErrorMessage: String? = nil
     
     @Published var coin: CoinModel
     private let cryptoStore: CryptoStore
@@ -45,6 +47,7 @@ class DetailViewModelImpl: ObservableObject, DetailViewModel {
     
     func fetchMarketChart(range: ChartTimeRange) {
         isLoadingChart = true
+        chartErrorMessage = nil
         cryptoStore.fetchMarketChart(coin: coin, range: range)
     }
     
@@ -61,6 +64,17 @@ class DetailViewModelImpl: ObservableObject, DetailViewModel {
             .sink { [weak self] returnedPoints in
                 self?.chartPoints = returnedPoints
                 self?.isLoadingChart = false
+            }
+            .store(in: &cancellables)
+
+        cryptoStore.chartErrorMessage
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] message in
+                guard let self = self else { return }
+                self.chartErrorMessage = message
+                if message != nil {
+                    self.isLoadingChart = false
+                }
             }
             .store(in: &cancellables)
             

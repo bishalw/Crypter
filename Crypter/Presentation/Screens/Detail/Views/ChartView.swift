@@ -10,15 +10,31 @@ import Charts
 // MARK: - ChartView
 
 struct ChartView: View {
-
     let coin: CoinModel
     let points: [ChartPoint]
     let isLoading: Bool
+    let errorMessage: String?
     var onRangeChange: (ChartTimeRange) -> Void
 
+    @State private var metrics: ChartMetrics
     @State private var selectedIndex: Int? = nil
     @State private var selectedTimeRange: ChartTimeRange = .week
     @State private var selectedReferenceLine: ChartReferenceLine = .none
+
+    init(
+        coin: CoinModel,
+        points: [ChartPoint],
+        isLoading: Bool,
+        errorMessage: String?,
+        onRangeChange: @escaping (ChartTimeRange) -> Void
+    ) {
+        self.coin = coin
+        self.points = points
+        self.isLoading = isLoading
+        self.errorMessage = errorMessage
+        self.onRangeChange = onRangeChange
+        _metrics = State(initialValue: ChartMetrics(points: points))
+    }
 
     var body: some View {
         VStack(spacing: 16) {
@@ -32,15 +48,15 @@ struct ChartView: View {
                 .padding(.top, 4)
                 .opacity(isLoading ? 0.6 : 1.0)
                 .overlay {
-                    if isLoading && points.isEmpty {
+                    if isLoading && metrics.points.isEmpty {
                         ProgressView()
                             .tint(Color.theme.brandPrimary)
                     }
                 }
 
-            if !points.isEmpty {
+            if !metrics.points.isEmpty {
                 VStack(spacing: 16) {
-                    ChartSummaryRow(points: points)
+                    ChartSummaryRow(metrics: metrics)
                     
                     Divider()
                         .overlay(Color.theme.borderSubtle)
@@ -61,6 +77,10 @@ struct ChartView: View {
                 }
             }
         }
+        .onChange(of: points) { newPoints in
+            metrics = ChartMetrics(points: newPoints)
+            resetSelection()
+        }
         .padding(.vertical)
         .background(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -73,8 +93,7 @@ struct ChartView: View {
     }
 
     private var isPositiveTimeframe: Bool {
-        guard let first = points.first?.price, let last = points.last?.price else { return true }
-        return last >= first
+        metrics.isPositiveTimeframe
     }
 
     private var timeframeColor: Color {
@@ -82,14 +101,13 @@ struct ChartView: View {
     }
 
     private var yScaleDomain: ClosedRange<Double> {
-        let prices = points.map { $0.price }
-        return SparklineStyle.yScaleDomain(for: prices)
+        metrics.yScaleDomain
     }
 
     private var availableReferenceLines: [ChartReferenceLine] {
         var options: [ChartReferenceLine] = [.none]
-        if points.first != nil { options.append(.startPrice) }
-        if points.last != nil { options.append(.currentPrice) }
+        if metrics.startPrice != nil { options.append(.startPrice) }
+        if metrics.currentPrice != nil { options.append(.currentPrice) }
         if let ath = coin.ath, yScaleDomain.contains(ath) { options.append(.ath) }
         if let high24H = coin.high24H, yScaleDomain.contains(high24H) { options.append(.high24h) }
         if let low24H = coin.low24H, yScaleDomain.contains(low24H) { options.append(.low24h) }
@@ -97,16 +115,18 @@ struct ChartView: View {
     }
 
     private var selectedPoint: ChartPoint? {
-        guard let selectedIndex, points.indices.contains(selectedIndex) else { return nil }
-        return points[selectedIndex]
+        guard let selectedIndex, metrics.points.indices.contains(selectedIndex) else { return nil }
+        return metrics.points[selectedIndex]
     }
 
     @ViewBuilder
     private var chartContent: some View {
-        if points.isEmpty && !isLoading {
+        if let errorMessage, metrics.points.isEmpty && !isLoading {
+            ChartPlaceholderView(state: .error(errorMessage), rangeLabel: selectedTimeRange.rawValue)
+        } else if metrics.points.isEmpty && !isLoading {
             ChartPlaceholderView(state: .empty, rangeLabel: selectedTimeRange.rawValue)
         } else if #available(iOS 16, *) {
-            chartBody(data: points)
+            chartBody(data: metrics.points)
         } else {
             Text("Charts require iOS 16.0+")
                 .foregroundColor(Color.theme.textSecondary)
@@ -142,11 +162,10 @@ struct ChartView: View {
             if let value = referenceLineValue {
                 RuleMark(y: .value("Reference", value))
                     .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [5, 5]))
-                    .foregroundStyle(timeframeColor.opacity(0.4))
+                .foregroundStyle(timeframeColor.opacity(0.4))
             }
 
-            if let selectedIndex, data.indices.contains(selectedIndex) {
-                let point = data[selectedIndex]
+            if let point = selectedPoint {
                 RuleMark(x: .value("Selected", point.date))
                     .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 2]))
                     .foregroundStyle(Color.theme.textSecondary.opacity(0.45))
@@ -225,8 +244,7 @@ struct ChartView: View {
         
         guard let date: Date = proxy.value(atX: xPosition) else { return }
         
-        // Find closest index by date
-        let closestIndex = points.enumerated().min(by: { abs($0.element.date.timeIntervalSince(date)) < abs($1.element.date.timeIntervalSince(date)) })?.offset
+        let closestIndex = metrics.closestIndex(to: date)
         
         if let index = closestIndex, selectedIndex != index {
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
@@ -242,12 +260,71 @@ struct ChartView: View {
         guard availableReferenceLines.contains(selectedReferenceLine) else { return nil }
         switch selectedReferenceLine {
         case .none: return nil
-        case .startPrice: return points.first?.price
-        case .currentPrice: return points.last?.price
+        case .startPrice: return metrics.startPrice
+        case .currentPrice: return metrics.currentPrice
         case .ath: return coin.ath
         case .high24h: return coin.high24H
         case .low24h: return coin.low24H
         }
+    }
+}
+
+private struct ChartMetrics {
+    let points: [ChartPoint]
+    let dates: [Date]
+    let yScaleDomain: ClosedRange<Double>
+    let startPrice: Double?
+    let currentPrice: Double?
+    let highPrice: Double?
+    let lowPrice: Double?
+    let changePercent: Double
+    let isPositiveTimeframe: Bool
+
+    init(points: [ChartPoint]) {
+        self.points = points
+        self.dates = points.map(\.date)
+        self.startPrice = points.first?.price
+        self.currentPrice = points.last?.price
+        self.highPrice = points.map(\.price).max()
+        self.lowPrice = points.map(\.price).min()
+
+        if let startPrice, let currentPrice, startPrice > 0 {
+            self.changePercent = ((currentPrice - startPrice) / startPrice) * 100
+        } else {
+            self.changePercent = 0
+        }
+
+        if let startPrice, let currentPrice {
+            self.isPositiveTimeframe = currentPrice >= startPrice
+        } else {
+            self.isPositiveTimeframe = true
+        }
+
+        self.yScaleDomain = SparklineStyle.yScaleDomain(for: points.map(\.price))
+    }
+
+    func closestIndex(to date: Date) -> Int? {
+        guard !dates.isEmpty else { return nil }
+        var low = 0
+        var high = dates.count
+
+        while low < high {
+            let mid = (low + high) / 2
+            if dates[mid] < date {
+                low = mid + 1
+            } else {
+                high = mid
+            }
+        }
+
+        if low == 0 { return 0 }
+        if low == dates.count { return dates.count - 1 }
+
+        let previousIndex = low - 1
+        let nextIndex = low
+        let previousDistance = abs(dates[previousIndex].timeIntervalSince(date))
+        let nextDistance = abs(dates[nextIndex].timeIntervalSince(date))
+        return previousDistance <= nextDistance ? previousIndex : nextIndex
     }
 }
 
@@ -258,7 +335,7 @@ struct TimeRangePicker: View {
     @Namespace private var rangeNamespace
     var body: some View {
         HStack(spacing: 0) {
-            ForEach(ChartTimeRange.allCases) { range in
+            ForEach(ChartTimeRange.availableCases) { range in
                 Button {
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { selected = range }
                 } label: {
@@ -333,21 +410,16 @@ struct ChartTooltip: View {
     }
 }
 
-struct ChartSummaryRow: View {
-    let points: [ChartPoint]
-    private var start: Double { points.first?.price ?? 0 }
-    private var current: Double { points.last?.price ?? 0 }
-    private var high: Double { points.map { $0.price }.max() ?? 0 }
-    private var low: Double { points.map { $0.price }.min() ?? 0 }
-    private var change: Double { start > 0 ? ((current - start) / start) * 100 : 0 }
+private struct ChartSummaryRow: View {
+    let metrics: ChartMetrics
     var body: some View {
         HStack {
-            summaryItem(label: "Start", value: format(start))
-            Spacer(); summaryItem(label: "High", value: format(high))
-            Spacer(); summaryItem(label: "Low", value: format(low))
+            summaryItem(label: "Start", value: format(metrics.startPrice ?? 0))
+            Spacer(); summaryItem(label: "High", value: format(metrics.highPrice ?? 0))
+            Spacer(); summaryItem(label: "Low", value: format(metrics.lowPrice ?? 0))
             Spacer(); VStack(spacing: 2) {
                 Text("Change").font(.caption2).foregroundColor(Color.theme.textSecondary)
-                Text(change.asPercentString()).font(.caption).fontWeight(.semibold).foregroundColor(change >= 0 ? Color.theme.statusSuccess : Color.theme.statusDanger)
+                Text(metrics.changePercent.asPercentString()).font(.caption).fontWeight(.semibold).foregroundColor(metrics.changePercent >= 0 ? Color.theme.statusSuccess : Color.theme.statusDanger)
             }
         }.padding(.horizontal)
     }
@@ -383,14 +455,27 @@ struct MiniSparklineView: View {
 }
 
 struct ChartPlaceholderView: View {
-    enum State { case empty }
+    enum State {
+        case empty
+        case error(String)
+    }
+
     let state: State; let rangeLabel: String
     var body: some View {
         VStack(spacing: 12) {
             Image(systemName: "chart.line.downtrend.xyaxis").font(.system(size: 36)).foregroundColor(Color.theme.textSecondary.opacity(0.5))
-            Text("No price data available").font(.callout).foregroundColor(Color.theme.textSecondary)
+            Text(title).font(.callout).foregroundColor(Color.theme.textSecondary)
         }
         .frame(height: 250).frame(maxWidth: .infinity)
         .background(RoundedRectangle(cornerRadius: 12).fill(Color.theme.textSecondary.opacity(0.03)))
+    }
+
+    private var title: String {
+        switch state {
+        case .empty:
+            return "No price data available"
+        case .error(let message):
+            return message
+        }
     }
 }

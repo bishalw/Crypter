@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 // MARK: - Coin Model
 
@@ -40,6 +41,65 @@ struct CoinModel: Identifiable {
     
     var rank: Int {
         return Int(marketCapRank ?? 0)
+    }
+}
+
+// MARK: - Chart Models
+
+enum ChartTimeRange: String, CaseIterable, Identifiable {
+    case day = "24H"
+    case week = "7D"
+    case month = "30D"
+    case sixMonths = "6M"
+    case year = "1Y"
+    case all = "ALL"
+
+    var id: String { rawValue }
+
+    static var availableCases: [ChartTimeRange] {
+        #if DEBUG
+        return [.day, .week, .month, .sixMonths, .year, .all]
+        #else
+        return [.day, .week, .month, .sixMonths, .year]
+        #endif
+    }
+}
+
+enum ChartReferenceLine: String, CaseIterable, Identifiable {
+    case none = "None"
+    case startPrice = "Start"
+    case currentPrice = "Current"
+    case ath = "ATH"
+    case high24h = "24h High"
+    case low24h = "24h Low"
+
+    var id: String { rawValue }
+}
+
+struct ChartPoint: Identifiable, Equatable {
+    let id = UUID()
+    let date: Date
+    let price: Double
+}
+
+enum SparklineStyle {
+    static func lineColor(for data: [Double]) -> Color {
+        let priceChange = (data.last ?? 0) - (data.first ?? 0)
+        return priceChange >= 0 ? Color.theme.statusSuccess : Color.theme.statusDanger
+    }
+
+    static func yScaleDomain(for data: [Double]) -> ClosedRange<Double> {
+        guard let minValue = data.min(), let maxValue = data.max() else {
+            return 0...1
+        }
+
+        if minValue == maxValue {
+            let inset = Swift.max(1, abs(maxValue) * 0.02)
+            return (minValue - inset)...(maxValue + inset)
+        }
+
+        let padding = Swift.max((maxValue - minValue) * 0.12, 1)
+        return (minValue - padding)...(maxValue + padding)
     }
 }
 
