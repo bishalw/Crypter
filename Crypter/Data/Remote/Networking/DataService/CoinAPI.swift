@@ -11,6 +11,7 @@ enum CoinAPI {
     case coinDetails(coin: CoinModel)
     case coinImageURL(coin: CoinModel)
     case globalData
+    case marketChart(coinID: String, days: String)
 
     var url: URL? {
         switch self {
@@ -22,6 +23,8 @@ enum CoinAPI {
             return URL(string: coin.image)
         case .globalData:
             return URL(string: "https://api.coingecko.com/api/v3/global")
+        case .marketChart(let coinID, let days):
+            return URL(string: "https://api.coingecko.com/api/v3/coins/\(coinID)/market_chart?vs_currency=usd&days=\(days)")
         }
     }
 }

@@ -64,3 +64,8 @@ extension CoinDTO {
         let price: [Double]?
     }
 }
+
+// MARK: - MarketChartDTO
+struct MarketChartDTO: Codable {
+    let prices: [[Double]] // Each element is [Timestamp, Price]
+}

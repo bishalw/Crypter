@@ -26,8 +26,15 @@ struct DetailView<ViewModel>: View where ViewModel: DetailViewModel {
             VStack(spacing: 24) {
                 priceHeader
                 
-                ChartView(coin: vm.coin)
-                    .padding(.top, -8)
+                ChartView(
+                    coin: vm.coin,
+                    points: vm.chartPoints,
+                    isLoading: vm.isLoadingChart,
+                    onRangeChange: { range in
+                        vm.fetchMarketChart(range: range)
+                    }
+                )
+                .padding(.top, -8)
                 
                 VStack(alignment: .leading, spacing: 16) {
                     sectionTitle("Overview")

@@ -11,8 +11,9 @@ protocol CryptoRepository {
     func fetchAllCoins() -> AnyPublisher<[CoinModel], Error>
     func fetchCoinDetail(coin: CoinModel) -> AnyPublisher<CoinDetailModel, Error>
     func fetchGlobalData() -> AnyPublisher<MarketDataModel, Error>
-
+    func fetchMarketChart(coinID: String, days: String) -> AnyPublisher<[ChartPoint], Error>
 }
+
 class CryptoRepositoryImpl: CryptoRepository{
     
     private let globalAPIService: GlobalAPIService
@@ -46,7 +47,20 @@ class CryptoRepositoryImpl: CryptoRepository{
             }
             .eraseToAnyPublisher()
     }
-    
+
+    func fetchMarketChart(coinID: String, days: String) -> AnyPublisher<[ChartPoint], Error> {
+        return coinAPIService.fetchMarketChart(coinID: coinID, days: days)
+            .map { dto in
+                dto.prices.compactMap { priceEntry in
+                    guard priceEntry.count == 2 else { return nil }
+                    return ChartPoint(
+                        date: Date(timeIntervalSince1970: priceEntry[0] / 1000),
+                        price: priceEntry[1]
+                    )
+                }
+            }
+            .eraseToAnyPublisher()
+    }
 }
 
     

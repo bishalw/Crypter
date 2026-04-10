@@ -2,27 +2,32 @@
 //  DetailViewModel.swift
 //  Crypter
 //
-//
 
 import Foundation
 import Combine
 
-protocol DetailViewModel: ObservableObject{
+protocol DetailViewModel: ObservableObject {
     var overViewStatistics: [StatisticModel] { get set }
     var additionalStatistics: [StatisticModel] { get set }
     var coin: CoinModel { get set }
     var coinDescription: String? { get set }
     var websiteURL: String? { get set }
     var redditURL: String? { get set }
+    var chartPoints: [ChartPoint] { get set }
+    var isLoadingChart: Bool { get set }
+    
+    func fetchMarketChart(range: ChartTimeRange)
 }
 
-class DetailViewModelImpl: ObservableObject, DetailViewModel{
+class DetailViewModelImpl: ObservableObject, DetailViewModel {
   
     @Published var overViewStatistics: [StatisticModel] = []
     @Published var additionalStatistics: [StatisticModel] = []
     @Published var coinDescription: String? = nil
     @Published var websiteURL: String? = nil
     @Published var redditURL: String? = nil
+    @Published var chartPoints: [ChartPoint] = []
+    @Published var isLoadingChart: Bool = false
     
     @Published var coin: CoinModel
     private let cryptoStore: CryptoStore
@@ -32,14 +37,37 @@ class DetailViewModelImpl: ObservableObject, DetailViewModel{
         self.coin = coin
         self.cryptoStore = cryptoStore
         self.addSubscribers()
+        
+        // Initial fetches
+        cryptoStore.fetchCoinDetails(coin: coin)
+        fetchMarketChart(range: .week)
+    }
+    
+    func fetchMarketChart(range: ChartTimeRange) {
+        isLoadingChart = true
+        cryptoStore.fetchMarketChart(coin: coin, range: range)
     }
     
     private func addSubscribers() {
         cryptoStore.coinDetails
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] (returnedCoinDetails) in
                 self?.updateDetails(returnedCoinDetails: returnedCoinDetails)
             }
             .store(in: &cancellables)
+            
+        cryptoStore.chartPoints
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] returnedPoints in
+                self?.chartPoints = returnedPoints
+                self?.isLoadingChart = false
+            }
+            .store(in: &cancellables)
+            
+        // Setup initial overview
+        let statisticsData = mapDataToStatistics(coinDetailModel: nil, coinModel: coin)
+        overViewStatistics = statisticsData.overview
+        additionalStatistics = statisticsData.additional
     }
     
     private func updateDetails(returnedCoinDetails: CoinDetailModel?) {
@@ -52,17 +80,12 @@ class DetailViewModelImpl: ObservableObject, DetailViewModel{
         additionalStatistics = statisticsData.additional
     }
         
-
     private func mapDataToStatistics(coinDetailModel: CoinDetailModel?, coinModel: CoinModel) -> (overview: [StatisticModel], additional:[StatisticModel]) {
-        //OverViewArray
         let overviewArray = createOverViewArray(coinModel: coinModel)
-        //Additional Arra
         let additionalArray = createAdditionalArray(coinModel: coinModel, coinDetailModel: coinDetailModel)
-        
-        return(overviewArray,additionalArray)
+        return (overviewArray, additionalArray)
     }
     
-
     private func createOverViewArray(coinModel: CoinModel) -> [StatisticModel] {
         let statistics = [
             ("Current Price", coinModel.currentPrice.asCurrencyWith6Decimals(), coinModel.priceChangePercentage24H),

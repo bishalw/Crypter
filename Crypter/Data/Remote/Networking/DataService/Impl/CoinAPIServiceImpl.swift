@@ -9,6 +9,7 @@ import Combine
 protocol CoinAPIService {
     func fetchAllCoins() -> AnyPublisher<[CoinDTO], Error>
     func fetchCoinDetail(coin: CoinModel) -> AnyPublisher<CoinDetailDTO, Error>
+    func fetchMarketChart(coinID: String, days: String) -> AnyPublisher<MarketChartDTO, Error>
 }
 
 class CoinAPIServiceImpl: CoinAPIService {
@@ -33,6 +34,13 @@ class CoinAPIServiceImpl: CoinAPIService {
             return Fail(error: NetworkingError.invalidURL).eraseToAnyPublisher()
         }
         return networkingManager.download(url: coinDetailURL, decodingType: CoinDetailDTO.self)
+    }
+    
+    func fetchMarketChart(coinID: String, days: String) -> AnyPublisher<MarketChartDTO, Error> {
+        guard let marketChartURL = CoinAPI.marketChart(coinID: coinID, days: days).url else {
+            return Fail(error: NetworkingError.invalidURL).eraseToAnyPublisher()
+        }
+        return networkingManager.download(url: marketChartURL, decodingType: MarketChartDTO.self)
     }
     
 }
