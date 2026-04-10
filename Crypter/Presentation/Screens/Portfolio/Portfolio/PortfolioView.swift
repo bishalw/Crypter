@@ -105,10 +105,9 @@ extension PortfolioView {
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(value)
-                    .font(.system(.title3, design: .rounded))
+                    .font(.system(.title2, design: .rounded))
                     .fontWeight(.bold)
                     .foregroundColor(Color.theme.textPrimary)
-                    .minimumScaleFactor(0.7)
                     .lineLimit(1)
 
                 if let change = percentageChange {
@@ -121,6 +120,17 @@ extension PortfolioView {
                             .bold()
                     }
                     .foregroundColor(change >= 0 ? Color.theme.statusSuccess : Color.theme.statusDanger)
+                } else {
+                    // Placeholder to maintain consistent card height
+                    HStack(spacing: 4) {
+                        Image(systemName: "triangle.fill")
+                            .font(.system(size: 8))
+                            .opacity(0)
+                        Text("0.00%")
+                            .font(.caption2)
+                            .bold()
+                            .opacity(0)
+                    }
                 }
             }
         }

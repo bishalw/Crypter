@@ -217,11 +217,12 @@ extension PortfolioEditorView {
         }
         .padding()
         .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(isSelected ? Color.theme.surfaceSecondary : Color.theme.surfaceBackground)
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color.theme.surfaceSecondary)
+                .shadow(color: Color.black.opacity(isSelected ? 0.15 : 0.05), radius: 10, x: 0, y: 4)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .stroke(isSelected ? Color.theme.brandPrimary.opacity(0.5) : Color.theme.borderSubtle, lineWidth: 1)
         )
         .scaleEffect(isSelected ? 0.98 : 1.0)
