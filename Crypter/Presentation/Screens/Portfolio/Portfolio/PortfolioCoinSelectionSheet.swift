@@ -111,12 +111,11 @@ struct PortfolioEditorView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
+            VStack(spacing: 24) {
                 SearchBarView(searchText: $vm.searchText)
 
                 if let coin = selectedCoin {
                     selectedCoinDetail(coin: coin)
-                        .padding()
                         .transition(.asymmetric(
                             insertion: .move(edge: .top).combined(with: .opacity),
                             removal: .move(edge: .top).combined(with: .opacity)
@@ -124,8 +123,8 @@ struct PortfolioEditorView: View {
                 }
 
                 coinList
-                Spacer(minLength: 0)
             }
+            .padding()
             .background(Color.theme.surfaceBackground.ignoresSafeArea())
             .navigationTitle(selectedCoin == nil ? "Manage Portfolio" : (vm.currentHoldings(for: selectedCoin!) == nil ? "Add \(selectedCoin?.symbol.uppercased() ?? "")" : "Update \(selectedCoin?.symbol.uppercased() ?? "")"))
             .navigationBarTitleDisplayMode(.inline)
@@ -170,7 +169,6 @@ extension PortfolioEditorView {
             LazyVStack(spacing: 12) {
                 ForEach(vm.allCoins) { coin in
                     coinRow(coin: coin)
-                        .padding(.horizontal)
                         .onTapGesture {
                             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                                 selectCoin(coin)
@@ -178,7 +176,6 @@ extension PortfolioEditorView {
                         }
                 }
             }
-            .padding(.top)
         }
     }
 
