@@ -11,7 +11,7 @@ struct HomeStatsView: View {
     var statistics: [StatisticModel]
     
     var body: some View {
-        HStack(spacing: 0) {
+        HStack(alignment: .top, spacing: 0) {
             ForEach(statistics) { stat in
                 StatisticView(stat: stat)
                     .frame(maxWidth: .infinity)

@@ -39,6 +39,7 @@ struct StatisticView: View {
                 Text(stat.title)
                     .font(.caption)
             }
+            .frame(height: 18) // Fixed height for alignment
             .foregroundColor(Color.theme.textSecondary)
             
             Text(stat.value)

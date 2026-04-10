@@ -48,7 +48,6 @@ struct SearchBarView: View {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .stroke(isFocused ? Color.theme.brandPrimary.opacity(0.5) : Color.theme.borderSubtle, lineWidth: 1)
         )
-        .padding(.horizontal)
         .padding(.vertical, 8)
     }
 }
