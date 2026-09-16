@@ -20,7 +20,7 @@ struct HomeView<ViewModel>: View where ViewModel: HomeViewModel {
     @State private var showSettings: Bool = false
 
     private var isShowingSearchResults: Bool {
-        isSearchPresented || !vm.searchText.isEmpty
+        !vm.searchText.isEmpty
     }
 
     var body: some View {
@@ -68,12 +68,10 @@ struct HomeView<ViewModel>: View where ViewModel: HomeViewModel {
             .background(Color.theme.surfaceBackground.ignoresSafeArea())
             .navigationTitle("Markets")
             .navigationBarTitleDisplayMode(.large)
-            .navigationSubtitleIfAvailable(Date().asHeaderDateString())
             .searchable(
                 text: $vm.searchText,
-                isPresented: $isSearchPresented,
                 placement: .navigationBarDrawer(displayMode: .automatic),
-                prompt: "Search coins"
+                prompt: Text("Search coins")
             )
             .autocorrectionDisabled()
             .toolbar {
