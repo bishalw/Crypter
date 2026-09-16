@@ -198,11 +198,13 @@ class MockCryptoStore: CryptoStore {
     var globalDetails: CurrentValueSubject<MarketDataModel?, Never>
     var chartPoints: CurrentValueSubject<[ChartPoint], Never>
     var chartErrorMessage: CurrentValueSubject<String?, Never>
+    var trendingCoins: CurrentValueSubject<[TrendingCoinModel], Never>
 
     init(
         coins: [CoinModel]? = CoinModel.mockCoins(),
         coinDetails: CoinDetailModel? = nil,
-        globalDetails: MarketDataModel? = MarketDataModel.mockMarketDataModel()
+        globalDetails: MarketDataModel? = MarketDataModel.mockMarketDataModel(),
+        trendingCoins: [TrendingCoinModel] = TrendingCoinModel.mockTrendingCoins()
     ) {
         self.coins = CurrentValueSubject(coins)
         self.coinDetails = CurrentValueSubject(coinDetails)
@@ -211,12 +213,14 @@ class MockCryptoStore: CryptoStore {
             ChartPoint(date: Date().addingTimeInterval(Double(index) * 3600), price: price)
         } ?? [])
         self.chartErrorMessage = CurrentValueSubject(nil)
+        self.trendingCoins = CurrentValueSubject(trendingCoins)
     }
 
     func fetchAllCoins() {}
     func fetchCoinDetails(coin: CoinModel) {}
     func fetchGlobalData() {}
     func fetchMarketChart(coin: CoinModel, range: ChartTimeRange) {}
+    func fetchTrendingCoins() {}
 }
 
 // MARK: - Preview ViewModels
@@ -225,14 +229,16 @@ class PreviewHomeViewModel: HomeViewModel {
     @Published var statistics: [StatisticModel]
     @Published var allCoins: [CoinModel]
     @Published var portfolioCoins: [CoinModel]
+    @Published var trendingCoins: [TrendingCoinModel]
     @Published var searchText: String = ""
     @Published var sortOption: SortOption = .rank
 
     init() {
         let dev = DeveloperPreview.instance
-        self.statistics = [dev.stat1, dev.stat2, dev.stat3]
+        self.statistics = MarketDataModel.mockMarketDataModel().asHomeStatistics()
         self.allCoins = [dev.coin, dev.coin2]
         self.portfolioCoins = [dev.coin.updateHoldings(amount: 1.5)]
+        self.trendingCoins = TrendingCoinModel.mockTrendingCoins()
     }
 
     var myTotalHoldingDisplayString: String {
@@ -240,7 +246,7 @@ class PreviewHomeViewModel: HomeViewModel {
         return "$\(total.formattedWithAbbreviations())"
     }
 
-    func updatePortfolio(coin: CoinModel, amount: Double) {}
+    func addTransaction(coin: CoinModel, kind: TransactionKind, amount: Double, pricePerCoin: Double, date: Date) {}
     func reloadData() {}
 }
 
@@ -277,10 +283,8 @@ class PreviewPortfolioViewModel: PortfolioViewModel {
         return (totalPortfolio24hChange / previousValue) * 100
     }
 
-    func updatePortfolio(coin: CoinModel, amount: Double) {
-        if amount <= 0 {
-            portfolioCoins.removeAll { $0.id == coin.id }
-        }
+    func removeFromPortfolio(coin: CoinModel) {
+        portfolioCoins.removeAll { $0.id == coin.id }
     }
     
     func reloadData() {}

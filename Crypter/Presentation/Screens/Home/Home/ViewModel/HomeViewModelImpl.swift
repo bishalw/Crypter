@@ -13,10 +13,11 @@ protocol HomeViewModel: ObservableObject {
     var statistics: [StatisticModel] { get }
     var allCoins: [CoinModel] { get  }
     var portfolioCoins: [CoinModel] { get }
+    var trendingCoins: [TrendingCoinModel] { get }
     var searchText: String { get set  }
     var sortOption: SortOption { get set  }
     var myTotalHoldingDisplayString: String { get }
-    func updatePortfolio(coin: CoinModel, amount: Double)
+    func addTransaction(coin: CoinModel, kind: TransactionKind, amount: Double, pricePerCoin: Double, date: Date)
     func reloadData()
 }
 
@@ -25,6 +26,7 @@ class HomeViewModelImpl: HomeViewModel {
     @Published var statistics: [StatisticModel] = []
     @Published var allCoins: [CoinModel] = []
     @Published var portfolioCoins: [CoinModel] = []
+    @Published var trendingCoins: [TrendingCoinModel] = []
     @Published var sortOption: SortOption = .rank
     @Published var searchText: String = ""
     
@@ -38,6 +40,7 @@ class HomeViewModelImpl: HomeViewModel {
         self.portfolioDataService = portfolioDataService
         cryptoStore.fetchAllCoins()
         cryptoStore.fetchGlobalData()
+        cryptoStore.fetchTrendingCoins()
         addSubscribers()
     }
 
@@ -66,11 +69,17 @@ class HomeViewModelImpl: HomeViewModel {
 
         cryptoStore.coins
             .combineLatest(portfolioDataService.savedEntitiesPublisher)
-            .map { [weak self] allCoins, portfolioEntities in
-                self?.mapAllCoinsToPortfolioCoins(allCoins: allCoins ?? [], portfolioEntities: portfolioEntities) ?? []
+            .map { [weak self] allCoins, holdings in
+                self?.mapAllCoinsToPortfolioCoins(allCoins: allCoins ?? [], holdings: holdings) ?? []
             }
             .sink { [weak self] returnedCoins in
                 self?.portfolioCoins = returnedCoins
+            }
+            .store(in: &cancellables)
+
+        cryptoStore.trendingCoins
+            .sink { [weak self] returnedCoins in
+                self?.trendingCoins = returnedCoins
             }
             .store(in: &cancellables)
         
@@ -79,10 +88,10 @@ class HomeViewModelImpl: HomeViewModel {
     func reloadData(){
         cryptoStore.fetchAllCoins()
         cryptoStore.fetchGlobalData()
+        cryptoStore.fetchTrendingCoins()
     }
-    func updatePortfolio(coin: CoinModel, amount: Double) {
-        portfolioDataService.updatePortfolio(coin: coin, amount: amount)
-        
+    func addTransaction(coin: CoinModel, kind: TransactionKind, amount: Double, pricePerCoin: Double, date: Date) {
+        portfolioDataService.addTransaction(coin: coin, kind: kind, amount: amount, pricePerCoin: pricePerCoin, date: date)
     }
     
     private func filterAndSortCoins(text: String, coins: [CoinModel]?, sort: SortOption) -> [CoinModel] {
@@ -136,21 +145,16 @@ class HomeViewModelImpl: HomeViewModel {
         guard let data = marketDataModel else {
             return []
         }
-        
-        return [
-            StatisticModel(title: "Market Cap", value: data.marketCap, percentageChange: data.marketCapChangePercentage24HUsd),
-            StatisticModel(title: "24h Volume", value: data.volume),
-            StatisticModel(title: "BTC Dominance", value: data.btcDominance)
-        ]
+        return data.asHomeStatistics()
     }
 
-    private func mapAllCoinsToPortfolioCoins(allCoins: [CoinModel], portfolioEntities: [PortfolioEntity]) -> [CoinModel] {
+    private func mapAllCoinsToPortfolioCoins(allCoins: [CoinModel], holdings: [PortfolioHolding]) -> [CoinModel] {
         allCoins.compactMap { coin -> CoinModel? in
-            guard let entity = portfolioEntities.first(where: { $0.coinID == coin.id }) else {
+            guard let holding = holdings.first(where: { $0.coinID == coin.id }) else {
                 return nil
             }
 
-            return coin.updateHoldings(amount: entity.amount)
+            return coin.updatePosition(amount: holding.amount, averageCost: holding.averageCost)
         }
     }
     

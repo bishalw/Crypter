@@ -15,15 +15,51 @@ protocol PortfolioViewModel: ObservableObject {
     var totalPortfolio24hChange: Double { get }
     var totalPortfolio24hChangePercent: Double { get }
     var sortOption: SortOption { get set }
-    func updatePortfolio(coin: CoinModel, amount: Double)
+    var recentTransactions: [PortfolioTransaction] { get }
+    func removeFromPortfolio(coin: CoinModel)
+    func deleteTransaction(id: UUID)
+    func setCostBasis(for coin: CoinModel, pricePerCoin: Double)
     func reloadData()
 }
 
 extension PortfolioViewModel {
-    // Default so lightweight preview VMs can conform without storing this.
+    // Defaults so lightweight preview VMs can conform without storing these.
     var sortOption: SortOption {
         get { .holdings }
         set { }
+    }
+
+    var recentTransactions: [PortfolioTransaction] { [] }
+
+    func deleteTransaction(id: UUID) { }
+
+    func setCostBasis(for coin: CoinModel, pricePerCoin: Double) { }
+
+    /// Coins whose cost basis is known, i.e. everything bought through a transaction.
+    private var coinsWithKnownCost: [CoinModel] {
+        portfolioCoins.filter { $0.averageCost != nil }
+    }
+
+    /// True when some holdings predate transaction tracking, so P/L is partial.
+    var hasUnknownCostBasis: Bool {
+        portfolioCoins.contains { $0.averageCost == nil }
+    }
+
+    var totalCostBasis: Double? {
+        let coins = coinsWithKnownCost
+        guard !coins.isEmpty else { return nil }
+        return coins.compactMap { $0.costBasisValue }.reduce(0, +)
+    }
+
+    var allTimeProfit: Double? {
+        let coins = coinsWithKnownCost
+        guard !coins.isEmpty else { return nil }
+        return coins.compactMap { $0.totalProfit }.reduce(0, +)
+    }
+
+    var allTimeProfitPercent: Double? {
+        guard let totalCostBasis, totalCostBasis > 0, let allTimeProfit else { return nil }
+        return (allTimeProfit / totalCostBasis) * 100
     }
 }
 
@@ -32,6 +68,7 @@ class PortfolioViewModelImpl: PortfolioViewModel {
     @Published var portfolioCoins: [CoinModel] = []
     @Published var searchText: String = ""
     @Published var sortOption: SortOption = .holdings
+    @Published var recentTransactions: [PortfolioTransaction] = []
     
     private let cryptoStore: CryptoStore
     private let portfolioDataService: PortfolioDataService
@@ -48,18 +85,33 @@ class PortfolioViewModelImpl: PortfolioViewModel {
         $searchText
             .combineLatest(cryptoStore.coins, portfolioDataService.savedEntitiesPublisher, $sortOption)
             .debounce(for: .seconds(0.5), scheduler: DispatchQueue.main)
-            .map { [weak self] (searchText, allCoins, portfolioEntities, sortOption) in
-                let portfolioCoins = self?.mapAllCoinsToPortfolioCoins(allCoins: allCoins ?? [], portfolioEntities: portfolioEntities) ?? []
+            .map { [weak self] (searchText, allCoins, holdings, sortOption) in
+                let portfolioCoins = self?.mapAllCoinsToPortfolioCoins(allCoins: allCoins ?? [], holdings: holdings) ?? []
                 return self?.filterAndSortCoins(searchText: searchText, coins: portfolioCoins, sort: sortOption) ?? []
             }
             .sink { [weak self] returnedCoins in
                 self?.portfolioCoins = returnedCoins
             }
             .store(in: &cancellables)
+
+        portfolioDataService.transactionsPublisher
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] transactions in
+                self?.recentTransactions = transactions
+            }
+            .store(in: &cancellables)
     }
-    
-    func updatePortfolio(coin: CoinModel, amount: Double) {
-        portfolioDataService.updatePortfolio(coin: coin, amount: amount)
+
+    func deleteTransaction(id: UUID) {
+        portfolioDataService.deleteTransaction(id: id)
+    }
+
+    func setCostBasis(for coin: CoinModel, pricePerCoin: Double) {
+        portfolioDataService.setCostBasis(forCoinID: coin.id, pricePerCoin: pricePerCoin)
+    }
+
+    func removeFromPortfolio(coin: CoinModel) {
+        portfolioDataService.deleteAllTransactions(forCoinID: coin.id)
     }
     
     func reloadData() {
@@ -101,12 +153,12 @@ class PortfolioViewModelImpl: PortfolioViewModel {
         }
     }
     
-    private func mapAllCoinsToPortfolioCoins(allCoins: [CoinModel], portfolioEntities: [PortfolioEntity]) -> [CoinModel] {
+    private func mapAllCoinsToPortfolioCoins(allCoins: [CoinModel], holdings: [PortfolioHolding]) -> [CoinModel] {
         allCoins.compactMap { coin -> CoinModel? in
-            guard let entity = portfolioEntities.first(where: { $0.coinID == coin.id }) else {
+            guard let holding = holdings.first(where: { $0.coinID == coin.id }) else {
                 return nil
             }
-            return coin.updateHoldings(amount: entity.amount)
+            return coin.updatePosition(amount: holding.amount, averageCost: holding.averageCost)
         }
     }
 }

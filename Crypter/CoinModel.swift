@@ -26,6 +26,10 @@ struct CoinModel: Identifiable {
     let sparklineIn7D: SparklineIn7D?
     let priceChangePercentage24HInCurrency: Double?
     let currentHoldings: Double?
+
+    /// Average price paid per coin. `nil` when the basis is unknown, e.g. for
+    /// holdings that predate transaction tracking.
+    var averageCost: Double? = nil
     
     var price: [Double]? {
         sparklineIn7D?.price
@@ -37,6 +41,30 @@ struct CoinModel: Identifiable {
     
     var currentHoldingsValue: Double {
         return (currentHoldings ?? 0) * currentPrice
+    }
+
+    /// What the current holdings cost, when the basis is known.
+    var costBasisValue: Double? {
+        guard let averageCost, let currentHoldings else { return nil }
+        return averageCost * currentHoldings
+    }
+
+    /// All-time gain or loss in currency, when the basis is known.
+    var totalProfit: Double? {
+        guard let costBasisValue else { return nil }
+        return currentHoldingsValue - costBasisValue
+    }
+
+    /// All-time gain or loss as a percentage, when the basis is known.
+    var totalProfitPercentage: Double? {
+        guard let costBasisValue, costBasisValue > 0, let totalProfit else { return nil }
+        return (totalProfit / costBasisValue) * 100
+    }
+
+    func updatePosition(amount: Double, averageCost: Double?) -> CoinModel {
+        var updated = updateHoldings(amount: amount)
+        updated.averageCost = averageCost
+        return updated
     }
     
     var rank: Int {
