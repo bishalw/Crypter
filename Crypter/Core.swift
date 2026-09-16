@@ -40,4 +40,8 @@ class Core: ObservableObject {
     private(set) lazy var portfolioDataService: PortfolioDataService = {
         return PortfolioDataServiceImpl()
     }()
+
+    private(set) lazy var watchlistStore: WatchlistStore = {
+        return WatchlistStore()
+    }()
 }
