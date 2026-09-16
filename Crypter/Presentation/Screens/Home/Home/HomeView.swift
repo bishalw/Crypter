@@ -27,6 +27,10 @@ struct HomeView<ViewModel>: View where ViewModel: HomeViewModel {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
+                    if let errorMessage = vm.errorMessage {
+                        refreshBanner(errorMessage)
+                    }
+
                     if !isShowingSearchResults {
                         HomeStatsView(statistics: vm.statistics)
 
@@ -43,6 +47,8 @@ struct HomeView<ViewModel>: View where ViewModel: HomeViewModel {
 
                         if vm.allCoins.isEmpty && !vm.searchText.isEmpty {
                             noResults
+                        } else if vm.allCoins.isEmpty {
+                            placeholderRows
                         } else {
                             allCoinsList
                         }
@@ -97,13 +103,76 @@ struct HomeView<ViewModel>: View where ViewModel: HomeViewModel {
             }
             .navigationDestination(isPresented: $showDetailView) {
                 if let coin = selectedCoin {
-                    DetailView(vm: DetailViewModelImpl(coin: coin, cryptoStore: core.cryptoStore))
+                    DetailView(vm: DetailViewModelImpl(coin: coin, cryptoStore: core.cryptoStore, portfolioDataService: core.portfolioDataService))
                 }
             }
             .refreshable {
                 vm.reloadData()
             }
         }
+    }
+
+    /// Shown above the list when a refresh failed: the prices already on screen
+    /// stay visible, since stale prices beat a blank screen.
+    private func refreshBanner(_ message: String) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: "exclamationmark.triangle")
+                .font(.system(size: 13))
+                .foregroundColor(Color.theme.statusDanger)
+
+            Text(message)
+                .font(.system(size: 12))
+                .foregroundColor(Color.theme.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            Button("Retry") {
+                vm.reloadData()
+            }
+            .font(.system(size: 12, weight: .semibold))
+            .foregroundColor(Color.theme.brandPrimary)
+            .buttonStyle(.plain)
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color.theme.statusDangerSoft)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(Color.theme.borderSubtle, lineWidth: 1)
+        )
+    }
+
+    /// Placeholder rows for the first load, so the list has shape before data lands.
+    private var placeholderRows: some View {
+        VStack(spacing: 4) {
+            ForEach(0..<8, id: \.self) { _ in
+                HStack(spacing: 12) {
+                    Circle()
+                        .fill(Color.theme.surfaceSecondary)
+                        .frame(width: 36, height: 36)
+
+                    VStack(alignment: .leading, spacing: 6) {
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Color.theme.surfaceSecondary)
+                            .frame(width: 96, height: 12)
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Color.theme.surfaceSecondary)
+                            .frame(width: 64, height: 10)
+                    }
+
+                    Spacer()
+
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.theme.surfaceSecondary)
+                        .frame(width: 72, height: 12)
+                }
+                .padding(.vertical, 12)
+            }
+        }
+        .redacted(reason: .placeholder)
+        .accessibilityLabel("Loading coins")
     }
 
     private var noResults: some View {

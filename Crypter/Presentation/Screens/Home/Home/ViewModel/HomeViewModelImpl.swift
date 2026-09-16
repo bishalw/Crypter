@@ -17,6 +17,8 @@ protocol HomeViewModel: ObservableObject {
     var searchText: String { get set  }
     var sortOption: SortOption { get set  }
     var myTotalHoldingDisplayString: String { get }
+    var errorMessage: String? { get }
+    var isLoading: Bool { get }
     func addTransaction(coin: CoinModel, kind: TransactionKind, amount: Double, pricePerCoin: Double, date: Date)
     func reloadData()
 }
@@ -27,6 +29,8 @@ class HomeViewModelImpl: HomeViewModel {
     @Published var allCoins: [CoinModel] = []
     @Published var portfolioCoins: [CoinModel] = []
     @Published var trendingCoins: [TrendingCoinModel] = []
+    @Published var errorMessage: String? = nil
+    @Published var isLoading: Bool = false
     @Published var sortOption: SortOption = .rank
     @Published var searchText: String = ""
     
@@ -80,6 +84,20 @@ class HomeViewModelImpl: HomeViewModel {
         cryptoStore.trendingCoins
             .sink { [weak self] returnedCoins in
                 self?.trendingCoins = returnedCoins
+            }
+            .store(in: &cancellables)
+
+        cryptoStore.marketErrorMessage
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] message in
+                self?.errorMessage = message
+            }
+            .store(in: &cancellables)
+
+        cryptoStore.isLoadingMarkets
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] isLoading in
+                self?.isLoading = isLoading
             }
             .store(in: &cancellables)
         

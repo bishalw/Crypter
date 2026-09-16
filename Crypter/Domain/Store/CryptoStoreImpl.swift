@@ -13,6 +13,10 @@ protocol CryptoStore {
     var chartPoints: CurrentValueSubject<[ChartPoint], Never> { get set }
     var chartErrorMessage: CurrentValueSubject<String?, Never> { get set }
     var trendingCoins: CurrentValueSubject<[TrendingCoinModel], Never> { get set }
+    /// Why the last market refresh failed, or nil when it succeeded.
+    var marketErrorMessage: CurrentValueSubject<String?, Never> { get set }
+    /// True while a market refresh is in flight.
+    var isLoadingMarkets: CurrentValueSubject<Bool, Never> { get set }
     
     func fetchAllCoins()
     func fetchCoinDetails(coin: CoinModel)
@@ -33,6 +37,8 @@ class CryptoStoreImpl: CryptoStore {
     var chartPoints = CurrentValueSubject<[ChartPoint], Never>([])
     var chartErrorMessage = CurrentValueSubject<String?, Never>(nil)
     var trendingCoins = CurrentValueSubject<[TrendingCoinModel], Never>([])
+    var marketErrorMessage = CurrentValueSubject<String?, Never>(nil)
+    var isLoadingMarkets = CurrentValueSubject<Bool, Never>(false)
     
     private var historicalCache: [String: [String: [ChartPoint]]] = [:]
     private let repository: CryptoRepository
@@ -43,9 +49,17 @@ class CryptoStoreImpl: CryptoStore {
     }
     
     func fetchAllCoins() {
+        isLoadingMarkets.send(true)
+
         repository.fetchAllCoins()
             .receive(on: DispatchQueue.main)
-            .sink(receiveCompletion: { _ in }, receiveValue: { [weak self] coins in
+            .sink(receiveCompletion: { [weak self] completion in
+                self?.isLoadingMarkets.send(false)
+
+                guard case .failure(let error) = completion else { return }
+                self?.marketErrorMessage.send(Self.marketErrorMessage(for: error))
+            }, receiveValue: { [weak self] coins in
+                self?.marketErrorMessage.send(nil)
                 self?.coins.send(coins)
             })
             .store(in: &cancellables)
@@ -54,7 +68,10 @@ class CryptoStoreImpl: CryptoStore {
     func fetchCoinDetails(coin: CoinModel) {
         repository.fetchCoinDetail(coin: coin)
             .receive(on: DispatchQueue.main)
-            .sink(receiveCompletion: { _ in }, receiveValue: { [weak self] details in
+            .sink(receiveCompletion: { [weak self] completion in
+                guard case .failure(let error) = completion else { return }
+                self?.marketErrorMessage.send(Self.marketErrorMessage(for: error))
+            }, receiveValue: { [weak self] details in
                 self?.coinDetails.send(details)
             })
             .store(in: &cancellables)
@@ -63,7 +80,10 @@ class CryptoStoreImpl: CryptoStore {
     func fetchGlobalData() {
         repository.fetchGlobalData()
             .receive(on: DispatchQueue.main)
-            .sink(receiveCompletion: { _ in }, receiveValue: { [weak self] data in
+            .sink(receiveCompletion: { [weak self] completion in
+                guard case .failure(let error) = completion else { return }
+                self?.marketErrorMessage.send(Self.marketErrorMessage(for: error))
+            }, receiveValue: { [weak self] data in
                 self?.globalDetails.send(data)
             })
             .store(in: &cancellables)
@@ -72,7 +92,10 @@ class CryptoStoreImpl: CryptoStore {
     func fetchTrendingCoins() {
         repository.fetchTrendingCoins()
             .receive(on: DispatchQueue.main)
-            .sink(receiveCompletion: { _ in }, receiveValue: { [weak self] coins in
+            .sink(receiveCompletion: { [weak self] completion in
+                guard case .failure(let error) = completion else { return }
+                self?.marketErrorMessage.send(Self.marketErrorMessage(for: error))
+            }, receiveValue: { [weak self] coins in
                 self?.trendingCoins.send(coins)
             })
             .store(in: &cancellables)
@@ -118,6 +141,34 @@ class CryptoStoreImpl: CryptoStore {
         case .year: return "365"
         case .all: return "max"
         }
+    }
+
+    /// CoinGecko's public tier rate limits hard, so 429 gets its own wording —
+    /// it is the failure users hit most and the one they can act on.
+    static func marketErrorMessage(for error: Error) -> String {
+        if case NetworkingError.httpError(let code) = error {
+            switch code {
+            case 429:
+                return "Too many requests to CoinGecko. Wait a moment, or add an API key in Settings."
+            case 500...599:
+                return "CoinGecko is having trouble right now. Prices may be out of date."
+            default:
+                break
+            }
+        }
+
+        if let urlError = error as? URLError {
+            switch urlError.code {
+            case .notConnectedToInternet, .networkConnectionLost:
+                return "No internet connection. Showing the last prices loaded."
+            case .timedOut:
+                return "The request timed out. Prices may be out of date."
+            default:
+                break
+            }
+        }
+
+        return "Couldn't refresh prices. Showing the last ones loaded."
     }
 
     private static func chartErrorMessage(for range: ChartTimeRange, error: Error) -> String {

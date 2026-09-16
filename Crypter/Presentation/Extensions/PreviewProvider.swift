@@ -199,6 +199,8 @@ class MockCryptoStore: CryptoStore {
     var chartPoints: CurrentValueSubject<[ChartPoint], Never>
     var chartErrorMessage: CurrentValueSubject<String?, Never>
     var trendingCoins: CurrentValueSubject<[TrendingCoinModel], Never>
+    var marketErrorMessage = CurrentValueSubject<String?, Never>(nil)
+    var isLoadingMarkets = CurrentValueSubject<Bool, Never>(false)
 
     init(
         coins: [CoinModel]? = CoinModel.mockCoins(),
@@ -246,6 +248,9 @@ class PreviewHomeViewModel: HomeViewModel {
         return "$\(total.formattedWithAbbreviations())"
     }
 
+    var errorMessage: String? { nil }
+    var isLoading: Bool { false }
+
     func addTransaction(coin: CoinModel, kind: TransactionKind, amount: Double, pricePerCoin: Double, date: Date) {}
     func reloadData() {}
 }
@@ -291,6 +296,11 @@ class PreviewPortfolioViewModel: PortfolioViewModel {
 }
 
 class PreviewDetailViewModel: DetailViewModel {
+    @Published var transactions: [PortfolioTransaction] = []
+    @Published var holding: PortfolioHolding? = nil
+
+    func realizedProfit(for transaction: PortfolioTransaction) -> Double? { nil }
+
     @Published var overViewStatistics: [StatisticModel]
     @Published var additionalStatistics: [StatisticModel]
     @Published var coin: CoinModel
