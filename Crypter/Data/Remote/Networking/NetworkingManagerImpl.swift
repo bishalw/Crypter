@@ -17,13 +17,28 @@ class NetworkingManagerImpl: NetworkingManager {
     
     private var urlSession: URLSession
     private var decoder: JSONDecoder
+    private let apiKeyStore: APIKeyStore?
     
-    init(urlSession: URLSession = URLSession.shared, decoder: JSONDecoder = JSONDecoder()) {
+    init(urlSession: URLSession = URLSession.shared, decoder: JSONDecoder = JSONDecoder(), apiKeyStore: APIKeyStore? = nil) {
         self.urlSession = urlSession
         self.decoder = decoder
+        self.apiKeyStore = apiKeyStore
     }
+
+    /// CoinGecko takes the key as a header; without one the request falls back
+    /// to the public tier and its much lower rate limit.
+    private func request(for url: URL) -> URLRequest {
+        var request = URLRequest(url: url)
+
+        if let header = apiKeyStore?.requestHeader {
+            request.setValue(header.value, forHTTPHeaderField: header.field)
+        }
+
+        return request
+    }
+
     func download<T: Decodable>(url: URL, decodingType: T.Type) -> AnyPublisher<T, Error> {
-            return urlSession.dataTaskPublisher(for: url)
+            return urlSession.dataTaskPublisher(for: request(for: url))
                 .subscribe(on: DispatchQueue.global(qos: .default))
                 .tryMap(handleOutput)
                 .decode(type: decodingType, decoder: decoder)

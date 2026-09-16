@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import UIKit
 
 struct PortfolioView<ViewModel>: View where ViewModel: PortfolioViewModel {
 
@@ -59,18 +60,6 @@ struct PortfolioView<ViewModel>: View where ViewModel: PortfolioViewModel {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
-                        withAnimation(.easeInOut(duration: 0.15)) {
-                            hidesBalances.toggle()
-                        }
-                    } label: {
-                        Image(systemName: hidesBalances ? "eye.slash" : "eye")
-                            .foregroundColor(Color.theme.textPrimary)
-                    }
-                    .accessibilityLabel(hidesBalances ? "Show balances" : "Hide balances")
-                }
-
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
                         showPortfolioEditor = true
                     } label: {
                         Image(systemName: "plus")
@@ -114,9 +103,22 @@ extension PortfolioView {
 
     private var balanceSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Total balance")
-                .font(.system(size: 13))
+            Button {
+                toggleBalances()
+            } label: {
+                HStack(spacing: 6) {
+                    Text("Total balance")
+                        .font(.system(size: 13))
+
+                    Image(systemName: hidesBalances ? "eye.slash" : "eye")
+                        .font(.system(size: 12))
+                }
                 .foregroundColor(Color.theme.textSecondary)
+                .padding(.vertical, 6)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(hidesBalances ? "Show balances" : "Hide balances")
 
             Text(hidesBalances ? CoinRowView.maskedValue : vm.totalPortfolioValue.asCurrencyWith2Decimals())
                 .font(.system(size: 40, weight: .semibold, design: .monospaced))
@@ -124,6 +126,8 @@ extension PortfolioView {
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
                 .contentTransition(.numericText())
+                .contentShape(Rectangle())
+                .onTapGesture { toggleBalances() }
 
             HStack(alignment: .top, spacing: 16) {
                 changeColumn(title: "Today", text: todayChangeText, color: todayChangeColor)
@@ -141,6 +145,13 @@ extension PortfolioView {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func toggleBalances() {
+        withAnimation(.easeInOut(duration: 0.15)) {
+            hidesBalances.toggle()
+        }
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
     }
 
     private func changeColumn(title: String, text: String, color: Color) -> some View {

@@ -17,6 +17,7 @@ struct HomeView<ViewModel>: View where ViewModel: HomeViewModel {
     @State private var editorCoin: CoinModel? = nil
     @State private var showDetailView: Bool = false
     @State private var isSearchPresented: Bool = false
+    @State private var showSettings: Bool = false
 
     private var isShowingSearchResults: Bool {
         isSearchPresented || !vm.searchText.isEmpty
@@ -65,6 +66,26 @@ struct HomeView<ViewModel>: View where ViewModel: HomeViewModel {
                 prompt: "Search coins"
             )
             .autocorrectionDisabled()
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        showSettings = true
+                    } label: {
+                        Image(systemName: "gearshape")
+                            .foregroundColor(Color.theme.textPrimary)
+                    }
+                    .accessibilityLabel("Settings")
+                }
+            }
+            .sheet(isPresented: $showSettings) {
+                SettingsView(
+                    vm: SettingsViewModel(
+                        portfolioDataService: core.portfolioDataService,
+                        watchlistStore: watchlist
+                    )
+                )
+                .environmentObject(core.apiKeyStore)
+            }
             .sheet(item: $editorCoin) { coin in
                 HomeAddHoldingSheet(
                     vm: HomeAddHoldingViewModel(

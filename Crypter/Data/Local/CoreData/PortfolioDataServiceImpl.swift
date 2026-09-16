@@ -71,6 +71,7 @@ protocol PortfolioDataService {
     func deleteTransaction(id: UUID)
     func setCostBasis(forCoinID coinID: String, pricePerCoin: Double)
     func deleteAllTransactions(forCoinID coinID: String)
+    func deleteAllTransactions()
     func holding(forCoinID coinID: String) -> PortfolioHolding?
     func transactions(forCoinID coinID: String) -> [PortfolioTransaction]
 }
@@ -181,6 +182,16 @@ class PortfolioDataServiceImpl: PortfolioDataService {
     func deleteAllTransactions(forCoinID coinID: String) {
         let request = NSFetchRequest<TransactionEntity>(entityName: entityName)
         request.predicate = NSPredicate(format: "coinID == %@", coinID)
+
+        guard let entities = try? container.viewContext.fetch(request) else { return }
+
+        entities.forEach { container.viewContext.delete($0) }
+        applyChanges()
+    }
+
+    /// Wipes every transaction, for the "reset portfolio" action in Settings.
+    func deleteAllTransactions() {
+        let request = NSFetchRequest<TransactionEntity>(entityName: entityName)
 
         guard let entities = try? container.viewContext.fetch(request) else { return }
 

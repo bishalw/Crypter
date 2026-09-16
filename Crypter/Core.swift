@@ -9,8 +9,12 @@ import Foundation
 
 class Core: ObservableObject {
     
+    private(set) lazy var apiKeyStore: APIKeyStore = {
+        return APIKeyStore()
+    }()
+
     private(set) lazy var networkingManager: NetworkingManager = {
-        return NetworkingManagerImpl()
+        return NetworkingManagerImpl(apiKeyStore: self.apiKeyStore)
     }()
     
     private(set) lazy var coinAPIService: CoinAPIService = {

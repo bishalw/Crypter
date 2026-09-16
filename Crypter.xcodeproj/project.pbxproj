@@ -53,6 +53,7 @@
 		58B2F7232C1A8E9E008D435A /* GlobalDataDTO+DomainMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B2F7222C1A8E9E008D435A /* GlobalDataDTO+DomainMapper.swift */; };
 		58B2F7262C1A93CD008D435A /* CryptoStoreImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B2F7252C1A93CD008D435A /* CryptoStoreImpl.swift */; };
 		A1C0FFEE0000000000000003 /* WatchlistStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE0000000000000004 /* WatchlistStore.swift */; };
+		A1C0FFEE0000000000000009 /* APIKeyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE000000000000000A /* APIKeyStore.swift */; };
 		58BB301E3059F59000FF39CC /* TrendingDTO.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58BB301D3059F59000FF39CC /* TrendingDTO.swift */; };
 		58BB30203059F59500FF39CC /* TrendingDTO+DomainMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58BB301F3059F59500FF39CC /* TrendingDTO+DomainMapper.swift */; };
 		58BB30223059F59F00FF39CC /* TrendingCoinModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58BB30213059F59F00FF39CC /* TrendingCoinModel.swift */; };
@@ -142,6 +143,7 @@
 		58B2F7222C1A8E9E008D435A /* GlobalDataDTO+DomainMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GlobalDataDTO+DomainMapper.swift"; sourceTree = "<group>"; };
 		58B2F7252C1A93CD008D435A /* CryptoStoreImpl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CryptoStoreImpl.swift; sourceTree = "<group>"; };
 		A1C0FFEE0000000000000004 /* WatchlistStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchlistStore.swift; sourceTree = "<group>"; };
+		A1C0FFEE000000000000000A /* APIKeyStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = APIKeyStore.swift; path = "Crypter/Data/Local/Keychain/APIKeyStore.swift"; sourceTree = SOURCE_ROOT; };
 		58BB301D3059F59000FF39CC /* TrendingDTO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrendingDTO.swift; sourceTree = "<group>"; };
 		58BB301F3059F59500FF39CC /* TrendingDTO+DomainMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TrendingDTO+DomainMapper.swift"; sourceTree = "<group>"; };
 		58BB30213059F59F00FF39CC /* TrendingCoinModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrendingCoinModel.swift; sourceTree = "<group>"; };
@@ -405,6 +407,7 @@
 			children = (
 				58B2F7252C1A93CD008D435A /* CryptoStoreImpl.swift */,
 				A1C0FFEE0000000000000004 /* WatchlistStore.swift */,
+				A1C0FFEE000000000000000A /* APIKeyStore.swift */,
 			);
 			path = Store;
 			sourceTree = "<group>";
@@ -777,6 +780,7 @@
 				58F7C50D2880F435003622E0 /* CircleButtonAnimationView.swift in Sources */,
 				58B2F7262C1A93CD008D435A /* CryptoStoreImpl.swift in Sources */,
 				A1C0FFEE0000000000000003 /* WatchlistStore.swift in Sources */,
+				A1C0FFEE0000000000000009 /* APIKeyStore.swift in Sources */,
 				58756D5D2C23E15D00FA4491 /* ChartView.swift in Sources */,
 				586CB3EB2B513B940023AF7C /* CoinImageRepository.swift in Sources */,
 				5814D3C328B59B04008CD5DC /* CoinImageViewModelImpl.swift in Sources */,
