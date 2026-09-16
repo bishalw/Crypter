@@ -98,7 +98,6 @@ enum CoreDataError: Error {
 class PortfolioDataServiceImpl: PortfolioDataService {
     private let container: NSPersistentContainer
     private let containerName: String = "PortfolioContainer"
-    private let legacyEntityName: String = "PortfolioEntity"
     private let entityName: String = "TransactionEntity"
 
     private let holdingsSubject = CurrentValueSubject<[PortfolioHolding], Never>([])
@@ -134,7 +133,6 @@ class PortfolioDataServiceImpl: PortfolioDataService {
             return
         }
 
-        migrateLegacyHoldingsIfNeeded()
         reload()
     }
 
@@ -233,33 +231,6 @@ class PortfolioDataServiceImpl: PortfolioDataService {
     }
 
     // MARK: PRIVATE
-
-    /// Holdings recorded before transactions existed become opening balances with
-    /// no cost basis, so nothing is invented and the quantities are preserved.
-    private func migrateLegacyHoldingsIfNeeded() {
-        let request = NSFetchRequest<PortfolioEntity>(entityName: legacyEntityName)
-
-        guard let legacyEntities = try? container.viewContext.fetch(request), !legacyEntities.isEmpty else {
-            return
-        }
-
-        for legacy in legacyEntities {
-            if let coinID = legacy.coinID, legacy.amount > 0 {
-                let entity = TransactionEntity(context: container.viewContext)
-                entity.id = UUID()
-                entity.coinID = coinID
-                entity.kind = TransactionKind.opening.rawValue
-                entity.amount = legacy.amount
-                entity.pricePerCoin = 0
-                entity.hasCostBasis = false
-                entity.date = Date()
-            }
-
-            container.viewContext.delete(legacy)
-        }
-
-        save()
-    }
 
     private func reload() {
         let request = NSFetchRequest<TransactionEntity>(entityName: entityName)

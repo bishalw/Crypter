@@ -106,6 +106,7 @@
 		58219F6128D8044600D218F8 /* PortfolioCoinSelectionSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortfolioCoinSelectionSheet.swift; sourceTree = "<group>"; };
 		58219F6328D806E000D218F8 /* XMarkButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XMarkButton.swift; sourceTree = "<group>"; };
 		58219F6828DB9F8700D218F8 /* PortfolioContainer.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = PortfolioContainer.xcdatamodel; sourceTree = "<group>"; };
+		A1C0FFEE000000000000000F /* PortfolioContainer 2.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "PortfolioContainer 2.xcdatamodel"; sourceTree = "<group>"; };
 		58219F6A28DBA24400D218F8 /* PortfolioDataServiceImpl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortfolioDataServiceImpl.swift; sourceTree = "<group>"; };
 		582B685D2C1B9BB800BFECD6 /* CryptoRepositoryImpl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CryptoRepositoryImpl.swift; sourceTree = "<group>"; };
 		582B94442B547475004A1049 /* CoinDetailDTO+DomainMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CoinDetailDTO+DomainMapper.swift"; sourceTree = "<group>"; };
@@ -1141,9 +1142,10 @@
 		58219F6728DB9F8700D218F8 /* PortfolioContainer.xcdatamodeld */ = {
 			isa = XCVersionGroup;
 			children = (
+				A1C0FFEE000000000000000F /* PortfolioContainer 2.xcdatamodel */,
 				58219F6828DB9F8700D218F8 /* PortfolioContainer.xcdatamodel */,
 			);
-			currentVersion = 58219F6828DB9F8700D218F8 /* PortfolioContainer.xcdatamodel */;
+			currentVersion = A1C0FFEE000000000000000F /* PortfolioContainer 2.xcdatamodel */;
 			path = PortfolioContainer.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;
