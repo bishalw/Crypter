@@ -12,6 +12,7 @@ protocol CryptoRepository {
     func fetchCoinDetail(coin: CoinModel) -> AnyPublisher<CoinDetailModel, Error>
     func fetchGlobalData() -> AnyPublisher<MarketDataModel, Error>
     func fetchMarketChart(coinID: String, days: String) -> AnyPublisher<[ChartPoint], Error>
+    func fetchTrendingCoins() -> AnyPublisher<[TrendingCoinModel], Error>
 }
 
 class CryptoRepositoryImpl: CryptoRepository{
@@ -58,6 +59,14 @@ class CryptoRepositoryImpl: CryptoRepository{
                         price: priceEntry[1]
                     )
                 }
+            }
+            .eraseToAnyPublisher()
+    }
+
+    func fetchTrendingCoins() -> AnyPublisher<[TrendingCoinModel], Error> {
+        return coinAPIService.fetchTrendingCoins()
+            .map { trendingDTO in
+                trendingDTO.toDomain()
             }
             .eraseToAnyPublisher()
     }

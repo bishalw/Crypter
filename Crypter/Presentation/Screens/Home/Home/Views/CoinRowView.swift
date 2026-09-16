@@ -5,11 +5,13 @@
 
 
 import SwiftUI
+import Charts
 
 struct CoinRowView: View {
     @EnvironmentObject var core: Core
     let coin: CoinModel
     let showHoldingsColumn: Bool
+    var showSparkline: Bool = false
 
     private var holdingsValueText: String {
         coin.currentHoldingsValue.asCompactCurrency()
@@ -29,15 +31,26 @@ struct CoinRowView: View {
         coin.priceChangePercentage24H?.asPercentString() ?? ""
     }
 
+    private var marketCapText: String {
+        guard let marketCap = coin.marketCap else { return "" }
+        return "$" + marketCap.formattedWithAbbreviations()
+    }
+
     var body: some View {
         HStack(spacing: 0) {
             leftColumn
-            
+
             if showHoldingsColumn {
                 centerColumn
                     .padding(.horizontal, 8)
             }
-            
+
+            if showSparkline {
+                CoinSparklineView(data: coin.price ?? [])
+                    .frame(width: 56, height: 28)
+                    .padding(.horizontal, 8)
+            }
+
             rightColumn
         }
         .background(Color.theme.surfaceBackground.opacity(0.001))
@@ -50,7 +63,7 @@ struct CoinRowView_Previews: PreviewProvider {
             CoinRowView(coin: dev.coin, showHoldingsColumn: true)
                 .previewLayout(.sizeThatFits)
         }
-            CoinRowView(coin: dev.coin, showHoldingsColumn: true)
+            CoinRowView(coin: dev.coin, showHoldingsColumn: false, showSparkline: true)
             .previewLayout(.sizeThatFits)
             .preferredColorScheme(.dark)
     }
@@ -68,19 +81,27 @@ extension CoinRowView {
                 .clipShape(Circle())
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(coin.symbol.uppercased())
+                Text(coin.name)
                     .font(.system(.subheadline, design: .rounded))
                     .fontWeight(.bold)
                     .foregroundColor(Color.theme.textPrimary)
-                Text(coin.name)
-                    .font(.system(size: 11))
-                    .foregroundColor(Color.theme.textSecondary)
                     .lineLimit(1)
+
+                HStack(spacing: 4) {
+                    Text(coin.symbol.uppercased())
+                    if !marketCapText.isEmpty {
+                        Text("·")
+                        Text(marketCapText)
+                    }
+                }
+                .font(.system(size: 11))
+                .foregroundColor(Color.theme.textSecondary)
+                .lineLimit(1)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
-    
+
     private var centerColumn: some View {
         VStack(alignment: .trailing, spacing: 2) {
             Text(holdingsValueText)
@@ -93,14 +114,14 @@ extension CoinRowView {
         }
         .frame(minWidth: 80, alignment: .trailing)
     }
-    
+
     private var rightColumn: some View {
         VStack(alignment: .trailing, spacing: 2) {
             Text(priceText)
                 .font(.system(.subheadline, design: .rounded))
                 .fontWeight(.bold)
                 .foregroundColor(Color.theme.textPrimary)
-            
+
             HStack(spacing: 4) {
                 Image(systemName: (coin.priceChangePercentage24H ?? 0) >= 0 ? "arrow.up.right" : "arrow.down.right")
                 Text(percentChangeText)
@@ -113,5 +134,29 @@ extension CoinRowView {
             )
         }
         .frame(minWidth: 90, alignment: .trailing)
+    }
+}
+
+struct CoinSparklineView: View {
+    let data: [Double]
+
+    var body: some View {
+        if data.isEmpty {
+            Color.clear
+        } else {
+            Chart {
+                ForEach(Array(data.enumerated()), id: \.offset) { index, price in
+                    LineMark(x: .value("Index", index), y: .value("Price", price))
+                        .lineStyle(StrokeStyle(lineWidth: 1.5))
+                        .foregroundStyle(SparklineStyle.lineColor(for: data))
+                }
+            }
+            .chartXAxis(.hidden)
+            .chartYAxis(.hidden)
+            .chartYScale(domain: SparklineStyle.yScaleDomain(for: data))
+            .chartPlotStyle { plotArea in
+                plotArea.background(Color.clear)
+            }
+        }
     }
 }

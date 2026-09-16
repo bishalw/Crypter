@@ -12,11 +12,13 @@ protocol CryptoStore {
     var globalDetails: CurrentValueSubject<MarketDataModel?, Never> { get set }
     var chartPoints: CurrentValueSubject<[ChartPoint], Never> { get set }
     var chartErrorMessage: CurrentValueSubject<String?, Never> { get set }
+    var trendingCoins: CurrentValueSubject<[TrendingCoinModel], Never> { get set }
     
     func fetchAllCoins()
     func fetchCoinDetails(coin: CoinModel)
     func fetchGlobalData()
     func fetchMarketChart(coin: CoinModel, range: ChartTimeRange)
+    func fetchTrendingCoins()
 }
 
 class CryptoStoreImpl: CryptoStore {
@@ -30,6 +32,7 @@ class CryptoStoreImpl: CryptoStore {
     var globalDetails = CurrentValueSubject<MarketDataModel?, Never>(nil)
     var chartPoints = CurrentValueSubject<[ChartPoint], Never>([])
     var chartErrorMessage = CurrentValueSubject<String?, Never>(nil)
+    var trendingCoins = CurrentValueSubject<[TrendingCoinModel], Never>([])
     
     private var historicalCache: [String: [String: [ChartPoint]]] = [:]
     private let repository: CryptoRepository
@@ -62,6 +65,15 @@ class CryptoStoreImpl: CryptoStore {
             .receive(on: DispatchQueue.main)
             .sink(receiveCompletion: { _ in }, receiveValue: { [weak self] data in
                 self?.globalDetails.send(data)
+            })
+            .store(in: &cancellables)
+    }
+    
+    func fetchTrendingCoins() {
+        repository.fetchTrendingCoins()
+            .receive(on: DispatchQueue.main)
+            .sink(receiveCompletion: { _ in }, receiveValue: { [weak self] coins in
+                self?.trendingCoins.send(coins)
             })
             .store(in: &cancellables)
     }
