@@ -34,8 +34,6 @@ struct PortfolioView<ViewModel>: View where ViewModel: PortfolioViewModel {
             }
         }
         .onChange(of: scenePhase) { _, phase in
-            // Re-lock when the app leaves the foreground, so a glance at the
-            // app switcher does not expose the balance.
             if phase == .background { lock.lock() }
         }
     }

@@ -17,8 +17,6 @@ final class PortfolioLock: ObservableObject {
         UserDefaults.standard.bool(forKey: Self.storageKey)
     }
 
-    /// Whether the device can actually do this, so Settings can hide the toggle
-    /// rather than offer a switch that would fail.
     static var isAvailable: Bool {
         LAContext().canEvaluatePolicy(.deviceOwnerAuthentication, error: nil)
     }
@@ -61,7 +59,6 @@ final class PortfolioLock: ObservableObject {
     }
 }
 
-/// Covers the portfolio until the owner authenticates.
 struct PortfolioLockView: View {
     @ObservedObject var lock: PortfolioLock
 

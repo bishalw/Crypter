@@ -24,8 +24,7 @@ enum CSVTransactionParser {
         }
     }
 
-    /// Reads the format produced by Export, matching columns by header name so a
-    /// file edited in a spreadsheet still imports.
+    /// Matches columns by header name, so a file edited in a spreadsheet still imports.
     static func parse(_ text: String) throws -> [ImportedTransaction] {
         let lines = text
             .split(whereSeparator: \.isNewline)

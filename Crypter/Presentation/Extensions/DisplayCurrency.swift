@@ -10,8 +10,7 @@ enum DisplayCurrency: String, CaseIterable, Identifiable {
 
     static let storageKey = "displayCurrency"
 
-    /// Read directly rather than injected, because the number formatters are
-    /// static helpers on Double with nowhere to inject into.
+    /// Read directly because the formatters are static helpers on Double.
     static var current: DisplayCurrency {
         DisplayCurrency(rawValue: UserDefaults.standard.string(forKey: storageKey) ?? "") ?? .usd
     }
@@ -45,7 +44,6 @@ enum DisplayCurrency: String, CaseIterable, Identifiable {
         }
     }
 
-    /// A locale that formats this currency the way its users expect.
     var formattingLocale: Locale {
         switch self {
         case .usd: return Locale(identifier: "en_US")

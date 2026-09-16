@@ -6,8 +6,7 @@
 import WidgetKit
 import SwiftUI
 
-// The widget runs in its own process and shares no code with the app, so it
-// carries a small copy of what it needs: the palette and one API call.
+// The extension shares no code with the app, so it carries its own palette.
 private enum WidgetTheme {
     static let background = Color(red: 0.039, green: 0.043, blue: 0.055)
     static let surface = Color(red: 0.082, green: 0.090, blue: 0.110)
@@ -106,8 +105,7 @@ struct MarketProvider: TimelineProvider {
         Task {
             let coins = await MarketFetcher.topCoins()
             let entry = MarketEntry(date: Date(), coins: coins)
-            // Half-hourly keeps prices current without burning the free tier's
-            // rate limit or the widget's refresh budget.
+            // Half-hourly, to stay inside the free tier's rate limit.
             let next = Calendar.current.date(byAdding: .minute, value: 30, to: Date()) ?? Date()
             completion(Timeline(entries: [entry], policy: .after(next)))
         }

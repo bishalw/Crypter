@@ -9,11 +9,16 @@ and profit are derived from real transactions rather than a number you typed onc
 Everything stays on your device. There is no account, no server, and nothing is
 uploaded.
 
+| Markets | Portfolio | Coin detail |
+| --- | --- | --- |
+| ![Markets](docs/screenshots/markets.png) | ![Portfolio](docs/screenshots/portfolio.png) | ![Coin detail](docs/screenshots/detail.png) |
+
 ## Features
 
 **Markets**
 - Live prices for the top coins, with 7-day sparklines and 24h change
-- Search, and sorting by rank or price
+- Search across every listed coin, not just the page on screen
+- Sort by rank, price, or the day's biggest gainers and losers
 - Global market cap, 24h volume and BTC/ETH dominance
 - Trending coins from CoinGecko's search rankings
 
@@ -21,7 +26,9 @@ uploaded.
 - Holdings derived from buy and sell transactions using average-cost accounting
 - Today's change, all-time profit, and profit already realized by selling
 - Allocation donut with a per-coin breakdown
-- Hide balances with one tap when someone's looking over your shoulder
+- Value charted over time, sampled daily
+- Full transaction history, editable, with CSV import and export
+- Hide balances with one tap, or lock the tab behind Face ID
 
 **Watchlist**
 - Follow coins from a coin's page or by long-pressing a row in Markets
@@ -34,8 +41,12 @@ uploaded.
 
 **Settings**
 - Optional CoinGecko API key, stored in the Keychain, to lift the public rate limit
-- Export every transaction as CSV
+- Seven display currencies, applied to both the prices requested and how they are shown
+- Import and export transactions as CSV
 - Delete all portfolio data
+
+**Home screen widget**
+- Small and medium sizes, showing the largest coins and their daily change
 
 ## Requirements
 
@@ -86,6 +97,8 @@ Crypter/
     ├── Extensions/     Colour theme, formatters, view helpers
     ├── HelperViews/    Reusable controls
     └── Screens/        Markets, Portfolio, Watchlist, Detail, Settings
+
+CrypterWidget/         Home screen widget, a separate extension target
 ```
 
 **Data flow.** A repository fetches and decodes, a store publishes the result as a

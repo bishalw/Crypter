@@ -143,7 +143,6 @@ extension DetailView {
 // MARK: - Transactions
 
 extension DetailView {
-    /// The coin's own history, so a position can be checked without leaving the page.
     private var transactionsSection: some View {
         section(title: "Your transactions", meta: vm.transactions.count == 1 ? "1 entry" : "\(vm.transactions.count) entries") {
             VStack(spacing: 0) {

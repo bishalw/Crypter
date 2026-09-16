@@ -119,8 +119,6 @@ struct TrendingStripView_Previews: PreviewProvider {
 }
 
 
-/// The strip only shows the first few; this lists all of CoinGecko's trending
-/// coins, and hands the chosen one back to Markets to look up.
 struct TrendingListSheet: View {
     let coins: [TrendingCoinModel]
     let onSelect: (TrendingCoinModel) -> Void

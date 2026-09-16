@@ -13,11 +13,8 @@ struct PortfolioSnapshot: Identifiable, Equatable {
     var id: Date { date }
 }
 
-/// Records what the portfolio was worth, once a day.
-///
-/// The value of a past portfolio cannot be reconstructed from CoinGecko without
-/// a historical price call per holding per day, so it is sampled going forward
-/// instead. History therefore starts the day the app first runs.
+/// Past portfolio values cannot be reconstructed without a historical price call
+/// per holding per day, so the total is sampled daily going forward instead.
 final class PortfolioHistoryStore: ObservableObject {
 
     @Published private(set) var snapshots: [PortfolioSnapshot] = []
@@ -33,7 +30,6 @@ final class PortfolioHistoryStore: ObservableObject {
         self.snapshots = Self.load(from: defaults, key: storageKey)
     }
 
-    /// Replaces today's entry rather than appending, so the latest value wins.
     func record(value: Double, on date: Date = Date()) {
         guard value > 0 else { return }
 

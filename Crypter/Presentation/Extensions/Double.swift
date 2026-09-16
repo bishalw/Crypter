@@ -33,8 +33,7 @@ extension Double {
         let formatter = NumberFormatter()
         formatter.usesGroupingSeparator = true
         formatter.numberStyle = .currency
-        // Follows the chosen display currency, not the device locale, which
-        // would otherwise label a euro price with a dollar sign.
+        // The chosen currency, not the device locale, which would mislabel it.
         formatter.locale = DisplayCurrency.current.formattingLocale
         formatter.currencyCode = DisplayCurrency.current.code
         formatter.minimumFractionDigits = 2

@@ -61,7 +61,6 @@ struct PortfolioTransaction: Identifiable, Equatable {
     }
 }
 
-/// One row of an imported CSV, already parsed and validated.
 struct ImportedTransaction {
     let coinID: String
     let kind: TransactionKind
@@ -232,8 +231,7 @@ class PortfolioDataServiceImpl: PortfolioDataService {
         applyChanges()
     }
 
-    /// Adds rows that are not already present, matching on coin, kind, amount,
-    /// price and day, so re-importing the same file does not double a position.
+    /// Skips rows already present, so re-importing a file cannot double a position.
     @discardableResult
     func importTransactions(_ rows: [ImportedTransaction]) -> Int {
         let calendar = Calendar.current
