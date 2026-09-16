@@ -19,6 +19,7 @@ struct PortfolioView<ViewModel>: View where ViewModel: PortfolioViewModel {
     @AppStorage("hidesPortfolioBalances") private var hidesBalances: Bool = false
     @State private var costBasisCoin: CoinModel? = nil
     @State private var editingTransaction: PortfolioTransaction? = nil
+    @State private var showAllTransactions: Bool = false
 
     var body: some View {
         NavigationStack {
@@ -87,6 +88,14 @@ struct PortfolioView<ViewModel>: View where ViewModel: PortfolioViewModel {
                     }
                     .accessibilityLabel("Add holding")
                 }
+            }
+            .sheet(isPresented: $showAllTransactions) {
+                TransactionListSheet(
+                    transactions: vm.recentTransactions,
+                    coins: vm.portfolioCoins,
+                    realizedProfit: { vm.realizedProfit(for: $0) },
+                    onSelect: { editingTransaction = $0 }
+                )
             }
             .sheet(item: $editingTransaction) { transaction in
                 TransactionEditorSheet(
@@ -348,9 +357,12 @@ extension PortfolioView {
 
                 Spacer()
 
-                Text(vm.recentTransactions.count == 1 ? "1 entry" : "\(vm.recentTransactions.count) entries")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(Color.theme.textTertiary)
+                Button("See all") {
+                    showAllTransactions = true
+                }
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(Color.theme.brandPrimary)
+                .buttonStyle(.plain)
             }
             .padding(.bottom, 6)
 

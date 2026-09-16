@@ -48,6 +48,7 @@
 		5898F0282B4F94F800CA8467 /* MockFileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5898F0272B4F94F800CA8467 /* MockFileManager.swift */; };
 		5898F02B2B4F96E200CA8467 /* LocalFileManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5898F02A2B4F96E200CA8467 /* LocalFileManagerTests.swift */; };
 		A1C0FFEE0000000000000007 /* PortfolioHoldingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE0000000000000008 /* PortfolioHoldingsTests.swift */; };
+		A1C0FFEE0000000000000014 /* CSVTransactionParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE0000000000000015 /* CSVTransactionParserTests.swift */; };
 		58ABF2272B46D3EE00D41EF8 /* HomeHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58ABF2262B46D3EE00D41EF8 /* HomeHeaderView.swift */; };
 		58ABF2292B46D62000D41EF8 /* ColumnTitleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58ABF2282B46D62000D41EF8 /* ColumnTitleView.swift */; };
 		58B2F7232C1A8E9E008D435A /* GlobalDataDTO+DomainMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B2F7222C1A8E9E008D435A /* GlobalDataDTO+DomainMapper.swift */; };
@@ -55,6 +56,8 @@
 		A1C0FFEE0000000000000003 /* WatchlistStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE0000000000000004 /* WatchlistStore.swift */; };
 		A1C0FFEE0000000000000009 /* APIKeyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE000000000000000A /* APIKeyStore.swift */; };
 		A1C0FFEE000000000000000B /* TransactionEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE000000000000000C /* TransactionEditorSheet.swift */; };
+		A1C0FFEE0000000000000010 /* TransactionListSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE0000000000000011 /* TransactionListSheet.swift */; };
+		A1C0FFEE0000000000000012 /* CSVTransactionParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE0000000000000013 /* CSVTransactionParser.swift */; };
 		58BB301E3059F59000FF39CC /* TrendingDTO.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58BB301D3059F59000FF39CC /* TrendingDTO.swift */; };
 		A1C0FFEE000000000000000D /* SearchDTO.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE000000000000000E /* SearchDTO.swift */; };
 		58BB30203059F59500FF39CC /* TrendingDTO+DomainMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58BB301F3059F59500FF39CC /* TrendingDTO+DomainMapper.swift */; };
@@ -141,6 +144,7 @@
 		5898F0272B4F94F800CA8467 /* MockFileManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockFileManager.swift; sourceTree = "<group>"; };
 		5898F02A2B4F96E200CA8467 /* LocalFileManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalFileManagerTests.swift; sourceTree = "<group>"; };
 		A1C0FFEE0000000000000008 /* PortfolioHoldingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortfolioHoldingsTests.swift; sourceTree = "<group>"; };
+		A1C0FFEE0000000000000015 /* CSVTransactionParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSVTransactionParserTests.swift; sourceTree = "<group>"; };
 		58ABF2262B46D3EE00D41EF8 /* HomeHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeHeaderView.swift; sourceTree = "<group>"; };
 		58ABF2282B46D62000D41EF8 /* ColumnTitleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColumnTitleView.swift; sourceTree = "<group>"; };
 		58B2F7222C1A8E9E008D435A /* GlobalDataDTO+DomainMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GlobalDataDTO+DomainMapper.swift"; sourceTree = "<group>"; };
@@ -148,6 +152,8 @@
 		A1C0FFEE0000000000000004 /* WatchlistStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchlistStore.swift; sourceTree = "<group>"; };
 		A1C0FFEE000000000000000A /* APIKeyStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = APIKeyStore.swift; path = "Crypter/Data/Local/Keychain/APIKeyStore.swift"; sourceTree = SOURCE_ROOT; };
 		A1C0FFEE000000000000000C /* TransactionEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TransactionEditorSheet.swift; path = "Crypter/Presentation/Screens/Portfolio/Portfolio/TransactionEditorSheet.swift"; sourceTree = SOURCE_ROOT; };
+		A1C0FFEE0000000000000011 /* TransactionListSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TransactionListSheet.swift; path = "Crypter/Presentation/Screens/Portfolio/Portfolio/TransactionListSheet.swift"; sourceTree = SOURCE_ROOT; };
+		A1C0FFEE0000000000000013 /* CSVTransactionParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CSVTransactionParser.swift; path = "Crypter/Data/Local/CSVTransactionParser.swift"; sourceTree = SOURCE_ROOT; };
 		58BB301D3059F59000FF39CC /* TrendingDTO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrendingDTO.swift; sourceTree = "<group>"; };
 		A1C0FFEE000000000000000E /* SearchDTO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchDTO.swift; sourceTree = "<group>"; };
 		58BB301F3059F59500FF39CC /* TrendingDTO+DomainMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TrendingDTO+DomainMapper.swift"; sourceTree = "<group>"; };
@@ -415,6 +421,8 @@
 				A1C0FFEE0000000000000004 /* WatchlistStore.swift */,
 				A1C0FFEE000000000000000A /* APIKeyStore.swift */,
 				A1C0FFEE000000000000000C /* TransactionEditorSheet.swift */,
+				A1C0FFEE0000000000000011 /* TransactionListSheet.swift */,
+				A1C0FFEE0000000000000013 /* CSVTransactionParser.swift */,
 			);
 			path = Store;
 			sourceTree = "<group>";
@@ -502,6 +510,7 @@
 			children = (
 				5898F0292B4F963E00CA8467 /* LocalTests */,
 				A1C0FFEE0000000000000008 /* PortfolioHoldingsTests.swift */,
+				A1C0FFEE0000000000000015 /* CSVTransactionParserTests.swift */,
 			);
 			path = CrypterTests;
 			sourceTree = "<group>";
@@ -790,6 +799,8 @@
 				A1C0FFEE0000000000000003 /* WatchlistStore.swift in Sources */,
 				A1C0FFEE0000000000000009 /* APIKeyStore.swift in Sources */,
 				A1C0FFEE000000000000000B /* TransactionEditorSheet.swift in Sources */,
+				A1C0FFEE0000000000000010 /* TransactionListSheet.swift in Sources */,
+				A1C0FFEE0000000000000012 /* CSVTransactionParser.swift in Sources */,
 				58756D5D2C23E15D00FA4491 /* ChartView.swift in Sources */,
 				586CB3EB2B513B940023AF7C /* CoinImageRepository.swift in Sources */,
 				5814D3C328B59B04008CD5DC /* CoinImageViewModelImpl.swift in Sources */,
@@ -810,6 +821,7 @@
 			files = (
 				5898F02B2B4F96E200CA8467 /* LocalFileManagerTests.swift in Sources */,
 				A1C0FFEE0000000000000007 /* PortfolioHoldingsTests.swift in Sources */,
+				A1C0FFEE0000000000000014 /* CSVTransactionParserTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

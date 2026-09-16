@@ -40,6 +40,19 @@ final class SettingsViewModel: ObservableObject {
         portfolioDataService.deleteAllTransactions()
     }
 
+    func importCSV(from url: URL) -> Result<Int, Error> {
+        let needsScope = url.startAccessingSecurityScopedResource()
+        defer { if needsScope { url.stopAccessingSecurityScopedResource() } }
+
+        do {
+            let text = try String(contentsOf: url, encoding: .utf8)
+            let rows = try CSVTransactionParser.parse(text)
+            return .success(portfolioDataService.importTransactions(rows))
+        } catch {
+            return .failure(error)
+        }
+    }
+
     func transactionsCSV() -> String {
         let header = "date,coin,type,amount,price_per_coin,total,has_cost_basis"
         let formatter = ISO8601DateFormatter()
@@ -80,6 +93,8 @@ struct SettingsView: View {
     @State private var keyText: String = ""
     @State private var showResetConfirmation = false
     @State private var csvURL: URL? = nil
+    @State private var showImporter = false
+    @State private var importMessage: String? = nil
     @FocusState private var isKeyFocused: Bool
 
     var body: some View {
@@ -182,6 +197,20 @@ struct SettingsView: View {
                 .listRowBackground(Color.theme.surfaceSecondary)
             }
 
+            Button {
+                showImporter = true
+            } label: {
+                Label("Import transactions", systemImage: "square.and.arrow.down")
+            }
+            .listRowBackground(Color.theme.surfaceSecondary)
+
+            if let importMessage {
+                Text(importMessage)
+                    .font(.system(size: 12))
+                    .foregroundColor(Color.theme.textSecondary)
+                    .listRowBackground(Color.theme.surfaceSecondary)
+            }
+
             Button(role: .destructive) {
                 showResetConfirmation = true
             } label: {
@@ -194,7 +223,7 @@ struct SettingsView: View {
                 .font(.system(size: 13))
                 .foregroundColor(Color.theme.textSecondary)
         } footer: {
-            Text("Deleting the app also deletes this data, so export a copy if you want a backup.")
+            Text("Import expects the same columns Export writes: date, coin, type, amount and price_per_coin. Deleting the app also deletes this data, so export a copy if you want a backup.")
                 .font(.system(size: 11))
                 .foregroundColor(Color.theme.textTertiary)
         }
@@ -203,6 +232,24 @@ struct SettingsView: View {
         }
         .onAppear {
             csvURL = vm.transactions.isEmpty ? nil : vm.makeCSVFile()
+        }
+        .fileImporter(
+            isPresented: $showImporter,
+            allowedContentTypes: [.commaSeparatedText, .plainText]
+        ) { result in
+            switch result {
+            case .success(let url):
+                switch vm.importCSV(from: url) {
+                case .success(let count):
+                    importMessage = count == 0
+                        ? "Nothing new to import — those rows are already here."
+                        : (count == 1 ? "Imported 1 transaction." : "Imported \(count) transactions.")
+                case .failure(let error):
+                    importMessage = error.localizedDescription
+                }
+            case .failure(let error):
+                importMessage = error.localizedDescription
+            }
         }
         .confirmationDialog(
             "Delete all transactions?",

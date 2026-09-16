@@ -61,6 +61,15 @@ struct PortfolioTransaction: Identifiable, Equatable {
     }
 }
 
+/// One row of an imported CSV, already parsed and validated.
+struct ImportedTransaction {
+    let coinID: String
+    let kind: TransactionKind
+    let amount: Double
+    let pricePerCoin: Double
+    let date: Date
+}
+
 protocol PortfolioDataService {
     var savedEntitiesPublisher: AnyPublisher<[PortfolioHolding], Never> { get }
     /// Set when the local store could not be opened, so the UI can say so
@@ -74,6 +83,7 @@ protocol PortfolioDataService {
     func setCostBasis(forCoinID coinID: String, pricePerCoin: Double)
     func deleteAllTransactions(forCoinID coinID: String)
     func deleteAllTransactions()
+    func importTransactions(_ rows: [ImportedTransaction]) -> Int
     func holding(forCoinID coinID: String) -> PortfolioHolding?
     func transactions(forCoinID coinID: String) -> [PortfolioTransaction]
 }
@@ -220,6 +230,43 @@ class PortfolioDataServiceImpl: PortfolioDataService {
 
         entities.forEach { container.viewContext.delete($0) }
         applyChanges()
+    }
+
+    /// Adds rows that are not already present, matching on coin, kind, amount,
+    /// price and day, so re-importing the same file does not double a position.
+    @discardableResult
+    func importTransactions(_ rows: [ImportedTransaction]) -> Int {
+        let calendar = Calendar.current
+        let existing = transactionsSubject.value
+
+        var added = 0
+
+        for row in rows {
+            let duplicate = existing.contains { current in
+                current.coinID == row.coinID
+                    && current.kind == row.kind
+                    && abs(current.amount - row.amount) < 0.000_000_01
+                    && abs(current.pricePerCoin - row.pricePerCoin) < 0.000_01
+                    && calendar.isDate(current.date, inSameDayAs: row.date)
+            }
+
+            guard !duplicate else { continue }
+
+            let entity = TransactionEntity(context: container.viewContext)
+            entity.id = UUID()
+            entity.coinID = row.coinID
+            entity.kind = row.kind.rawValue
+            entity.amount = row.amount
+            entity.pricePerCoin = row.pricePerCoin
+            entity.hasCostBasis = row.kind != .opening
+            entity.date = row.date
+            added += 1
+        }
+
+        guard added > 0 else { return 0 }
+
+        applyChanges()
+        return added
     }
 
     func holding(forCoinID coinID: String) -> PortfolioHolding? {
