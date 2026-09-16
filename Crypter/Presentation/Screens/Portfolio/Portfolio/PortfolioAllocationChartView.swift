@@ -15,7 +15,7 @@ struct PortfolioAllocationChartView: View {
     @State private var drawProgress: Double = 0
     @Environment(\.colorScheme) private var colorScheme
 
-    // Allocation slices, tuned to sit alongside the pen's purple accent.
+    // Allocation slices, tuned to sit alongside the purple accent.
     private let sliceColors: [Color] = [
         Color(hex: "#9D8CFF"),
         Color(hex: "#34D399"),

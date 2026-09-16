@@ -104,14 +104,6 @@ tracking exist as "opening balance" entries with a quantity but no price. They a
 excluded from profit figures rather than counted as free gains, and you can give
 them a cost at any time.
 
-## Design
-
-The interface is built from a [Pencil](https://pen.dev) design file covering the
-Markets, Portfolio and coin detail screens, plus a reusable coin row and tab bar.
-Its tokens — a purple accent, layered dark surfaces, monospaced numerals — live in
-`ColorTheme` (`Crypter/Presentation/Extensions/Color.swift`), so a colour change is
-a one-line edit rather than a sweep.
-
 ## Testing
 
 ```bash

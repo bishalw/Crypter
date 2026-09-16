@@ -57,7 +57,7 @@ struct MainTabView: View {
         }
         .tint(Color.theme.brandPrimary)
         .onAppear {
-            // The pen shows a translucent dark bar; iOS 26 draws it as floating glass on its own.
+            // A translucent dark bar; iOS 26 draws it as floating glass on its own.
             let appearance = UITabBarAppearance()
             appearance.configureWithDefaultBackground()
             appearance.backgroundColor = UIColor(Color.theme.surfaceTertiary).withAlphaComponent(0.7)
