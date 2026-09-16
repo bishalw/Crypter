@@ -18,6 +18,7 @@ struct HomeView<ViewModel>: View where ViewModel: HomeViewModel {
     @State private var showDetailView: Bool = false
     @State private var isSearchPresented: Bool = false
     @State private var showSettings: Bool = false
+    @State private var showTrendingList: Bool = false
 
     private var isShowingSearchResults: Bool {
         !vm.searchText.isEmpty
@@ -37,7 +38,11 @@ struct HomeView<ViewModel>: View where ViewModel: HomeViewModel {
                         HomeStatsView(statistics: vm.statistics)
 
                         if !vm.trendingCoins.isEmpty {
-                            TrendingStripView(coins: vm.trendingCoins)
+                            TrendingStripView(
+                                coins: vm.trendingCoins,
+                                onSelect: { vm.searchText = $0.name },
+                                onSeeAll: { showTrendingList = true }
+                            )
                         }
                     }
 
@@ -86,6 +91,12 @@ struct HomeView<ViewModel>: View where ViewModel: HomeViewModel {
                     }
                     .accessibilityLabel("Settings")
                 }
+            }
+            .sheet(isPresented: $showTrendingList) {
+                TrendingListSheet(coins: vm.trendingCoins) { coin in
+                    vm.searchText = coin.name
+                }
+                .presentationDetents([.medium, .large])
             }
             .sheet(isPresented: $showSettings) {
                 SettingsView(
@@ -248,7 +259,8 @@ struct HomeView<ViewModel>: View where ViewModel: HomeViewModel {
     private var sortPillOptions: [(title: String, option: SortOption)] {
         [
             ("Top 100", .rank),
-            ("Bottom 100", .rankReversed),
+            ("Gainers", .gainers),
+            ("Losers", .losers),
             ("Price ↑", .price),
             ("Price ↓", .priceReversed)
         ]

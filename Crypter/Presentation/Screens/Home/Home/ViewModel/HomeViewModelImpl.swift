@@ -190,7 +190,10 @@ class HomeViewModelImpl: HomeViewModel {
             coins.sort(by:{ $0.currentPrice > $1.currentPrice })
         case .priceReversed:
             coins.sort(by:{ $0.currentPrice < $1.currentPrice })
-       
+        case .gainers:
+            coins.sort(by: { ($0.priceChangePercentage24H ?? 0) > ($1.priceChangePercentage24H ?? 0) })
+        case .losers:
+            coins.sort(by: { ($0.priceChangePercentage24H ?? 0) < ($1.priceChangePercentage24H ?? 0) })
         }
     }
     
@@ -239,4 +242,5 @@ extension HomeViewModelImpl {
 
 enum SortOption {
     case rank, rankReversed, holdings, holdingsReversed, price, priceReversed
+    case gainers, losers
 }

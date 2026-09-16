@@ -183,6 +183,10 @@ class PortfolioViewModelImpl: PortfolioViewModel {
             coins.sort(by: { $0.currentPrice > $1.currentPrice })
         case .priceReversed:
             coins.sort(by: { $0.currentPrice < $1.currentPrice })
+        case .gainers:
+            coins.sort(by: { ($0.priceChangePercentage24H ?? 0) > ($1.priceChangePercentage24H ?? 0) })
+        case .losers:
+            coins.sort(by: { ($0.priceChangePercentage24H ?? 0) < ($1.priceChangePercentage24H ?? 0) })
         }
     }
     
