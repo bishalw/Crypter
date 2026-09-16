@@ -43,19 +43,16 @@ struct CoinModel: Identifiable {
         return (currentHoldings ?? 0) * currentPrice
     }
 
-    /// What the current holdings cost, when the basis is known.
     var costBasisValue: Double? {
         guard let averageCost, let currentHoldings else { return nil }
         return averageCost * currentHoldings
     }
 
-    /// All-time gain or loss in currency, when the basis is known.
     var totalProfit: Double? {
         guard let costBasisValue else { return nil }
         return currentHoldingsValue - costBasisValue
     }
 
-    /// All-time gain or loss as a percentage, when the basis is known.
     var totalProfitPercentage: Double? {
         guard let costBasisValue, costBasisValue > 0, let totalProfit else { return nil }
         return (totalProfit / costBasisValue) * 100

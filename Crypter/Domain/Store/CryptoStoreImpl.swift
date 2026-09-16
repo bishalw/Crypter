@@ -13,13 +13,9 @@ protocol CryptoStore {
     var chartPoints: CurrentValueSubject<[ChartPoint], Never> { get set }
     var chartErrorMessage: CurrentValueSubject<String?, Never> { get set }
     var trendingCoins: CurrentValueSubject<[TrendingCoinModel], Never> { get set }
-    /// Why the last market refresh failed, or nil when it succeeded.
     var marketErrorMessage: CurrentValueSubject<String?, Never> { get set }
-    /// True while a market refresh is in flight.
     var isLoadingMarkets: CurrentValueSubject<Bool, Never> { get set }
-    /// Coins matching the current query, from the remote search.
     var searchResults: CurrentValueSubject<[CoinModel], Never> { get set }
-    /// True while a search is in flight.
     var isSearching: CurrentValueSubject<Bool, Never> { get set }
     
     func fetchAllCoins()

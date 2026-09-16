@@ -60,7 +60,6 @@ extension Double {
         let formatter = NumberFormatter()
         formatter.usesGroupingSeparator = true
         formatter.numberStyle = .currency
-        // Prices come from the API in USD; see asCurrencyWith2Decimals.
         formatter.locale = Locale(identifier: "en_US")
         formatter.currencyCode = "USD"
         formatter.minimumFractionDigits = 2

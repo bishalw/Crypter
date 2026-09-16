@@ -170,7 +170,6 @@ extension DetailView {
         }
     }
 
-    /// Profit already banked on this coin, or nil when nothing has been sold.
     private var realizedTotal: Double? {
         let profits = vm.transactions.compactMap { vm.realizedProfit(for: $0) }
         guard !profits.isEmpty else { return nil }

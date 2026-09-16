@@ -22,8 +22,6 @@ struct SearchDTO: Codable {
         }
     }
 
-    /// Ids worth pricing, most prominent first. Coins with no market cap rank
-    /// are usually dead or untraded, so ranked ones come first.
     func rankedIDs(limit: Int) -> [String] {
         let ranked = coins
             .filter { $0.marketCapRank != nil }

@@ -202,7 +202,6 @@ struct HomeView<ViewModel>: View where ViewModel: HomeViewModel {
         .padding(.vertical, 40)
     }
 
-    /// Placeholder rows for the first load, so the list has shape before data lands.
     private var placeholderRows: some View {
         VStack(spacing: 4) {
             ForEach(0..<8, id: \.self) { _ in

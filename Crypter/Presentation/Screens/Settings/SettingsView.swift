@@ -40,7 +40,6 @@ final class SettingsViewModel: ObservableObject {
         portfolioDataService.deleteAllTransactions()
     }
 
-    /// One row per transaction, oldest first, so the file reads like a ledger.
     func transactionsCSV() -> String {
         let header = "date,coin,type,amount,price_per_coin,total,has_cost_basis"
         let formatter = ISO8601DateFormatter()
@@ -61,7 +60,6 @@ final class SettingsViewModel: ObservableObject {
         return ([header] + rows).joined(separator: "\n")
     }
 
-    /// Writes the CSV to a temporary file so it can be shared as a document.
     func makeCSVFile() -> URL? {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("crypter-transactions.csv")
 

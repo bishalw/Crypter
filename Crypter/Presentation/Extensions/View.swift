@@ -17,7 +17,6 @@ extension View {
         }
     }
 
-    /// Shows a subtitle under the navigation title where the OS supports it (iOS 26+).
     @ViewBuilder
     func navigationSubtitleIfAvailable(_ subtitle: String) -> some View {
         if #available(iOS 26.0, *) {

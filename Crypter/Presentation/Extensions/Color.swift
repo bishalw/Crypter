@@ -41,51 +41,51 @@ struct ColorTheme {
 
     // MARK: - Brand Colors
 
-    /// Primary brand color (pen: accent)
+    /// Primary brand color
     let brandPrimary = Color(hex: "#9D8CFF")
 
-    /// Tinted brand fill for selected rows, chips and badges (pen: accent-soft)
+    /// Tinted brand fill for selected rows, chips and badges
     let brandSoft = Color(hex: "#9D8CFF24")
 
     // MARK: - Surface Colors
 
-    /// Main background for the app (pen: bg)
+    /// Main background for the app
     let surfaceBackground = Color(hex: "#0A0B0E")
 
-    /// Secondary background for cards and interactive elements (pen: surface)
+    /// Secondary background for cards and interactive elements
     let surfaceSecondary = Color(hex: "#15171C")
 
-    /// Raised background for controls sitting on a card (pen: surface-2)
+    /// Raised background for controls sitting on a card
     let surfaceTertiary = Color(hex: "#1D2027")
 
     /// Top stop of the brand-tinted card wash used on the global market card
     let surfaceBrandTint = Color(hex: "#1C1935")
 
-    /// Subtle divider and border color (pen: border)
+    /// Subtle divider and border color
     let borderSubtle = Color(hex: "#262A33")
 
     // MARK: - Text Colors
 
-    /// Standard high-contrast text (pen: text-primary)
+    /// Standard high-contrast text
     let textPrimary = Color(hex: "#F3F4F6")
 
-    /// Muted text for labels and captions (pen: text-secondary)
+    /// Muted text for labels and captions
     let textSecondary = Color(hex: "#8B92A0")
 
-    /// Faint text for ranks, column headers and footnotes (pen: text-tertiary)
+    /// Faint text for ranks, column headers and footnotes
     let textTertiary = Color(hex: "#5B6170")
 
     // MARK: - Status Colors
 
-    /// Success / Positive Trend (pen: up)
+    /// Success / Positive Trend
     let statusSuccess = Color(hex: "#34D399")
 
-    /// Tinted success fill (pen: up-soft)
+    /// Tinted success fill
     let statusSuccessSoft = Color(hex: "#34D3991F")
 
-    /// Danger / Negative Trend (pen: down)
+    /// Danger / Negative Trend
     let statusDanger = Color(hex: "#F87171")
 
-    /// Tinted danger fill (pen: down-soft)
+    /// Tinted danger fill
     let statusDangerSoft = Color(hex: "#F871711F")
 }

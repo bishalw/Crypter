@@ -45,7 +45,6 @@ enum TransactionKind: String, CaseIterable, Identifiable {
     }
 }
 
-/// A transaction with its Core Data values already unwrapped.
 struct PortfolioTransaction: Identifiable, Equatable {
     let id: UUID
     let coinID: String
@@ -57,7 +56,6 @@ struct PortfolioTransaction: Identifiable, Equatable {
 
     var totalValue: Double { amount * pricePerCoin }
 
-    /// Signed change this transaction applies to the holding.
     var signedAmount: Double {
         kind == .sell ? -amount : amount
     }
@@ -217,7 +215,6 @@ class PortfolioDataServiceImpl: PortfolioDataService {
         applyChanges()
     }
 
-    /// Wipes every transaction, for the "reset portfolio" action in Settings.
     func deleteAllTransactions() {
         let request = NSFetchRequest<TransactionEntity>(entityName: entityName)
 

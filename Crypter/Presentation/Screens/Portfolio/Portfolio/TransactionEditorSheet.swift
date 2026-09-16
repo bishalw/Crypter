@@ -61,7 +61,6 @@ struct TransactionEditorSheet: View {
         (amount ?? 0) * (price ?? 0)
     }
 
-    /// Applies the pending edit to this coin's history and checks it still adds up.
     private var edit: PortfolioTransaction? {
         guard let amount, let price else { return nil }
 
