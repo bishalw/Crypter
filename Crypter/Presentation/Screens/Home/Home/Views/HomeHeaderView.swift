@@ -14,7 +14,7 @@ struct HomeHeaderView: View {
 
     var body: some View {
         HStack {
-            CircleButtonView(iconName: isPortfolioShown ? "settings" : "info")
+            CircleButtonView(iconName: isPortfolioShown ? "gearshape" : "info")
                 .animation(.none, value: isPortfolioShown)
                 .onTapGesture {
                     isPortfolioShown ? onAddButtonTapped() : onInfoButtonTapped()
@@ -24,10 +24,9 @@ struct HomeHeaderView: View {
                 )
             Spacer()
             Text(isPortfolioShown ? "Portfolio" : "Live Prices")
-                .font(.headline)
-                .fontWeight(.heavy)
-                .foregroundColor(Color.theme.brandPrimary)
-                .animation(.none)
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundColor(Color.theme.textPrimary)
+                .animation(.none, value: isPortfolioShown)
             Spacer()
             CircleButtonView(iconName: "chevron.right")
                 .rotationEffect(Angle(degrees: isPortfolioShown ? 180 : 0))

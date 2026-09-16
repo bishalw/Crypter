@@ -13,31 +13,32 @@ struct CrypterApp: App {
     @StateObject var core = Core()
     
     init() {
-        let appearance = UINavigationBarAppearance()
-        appearance.configureWithTransparentBackground()
-        appearance.backgroundColor = .clear
-        
         let uiColor = UIColor(Color.theme.brandPrimary)
-        
-        let largeTitleFont = UIFont.systemFont(ofSize: 34, weight: .bold)
-        let titleFont = UIFont.systemFont(ofSize: 18, weight: .bold)
-        
-        // Safely apply rounded design if available
-        let roundedLargeTitleFont = largeTitleFont.fontDescriptor.withDesign(.rounded).map { UIFont(descriptor: $0, size: 0) } ?? largeTitleFont
-        let roundedTitleFont = titleFont.fontDescriptor.withDesign(.rounded).map { UIFont(descriptor: $0, size: 0) } ?? titleFont
+        let titleColor = UIColor(Color.theme.textPrimary)
 
-        appearance.largeTitleTextAttributes = [
-            .foregroundColor: uiColor,
-            .font: roundedLargeTitleFont
-        ]
-        appearance.titleTextAttributes = [
-            .foregroundColor: uiColor,
-            .font: roundedTitleFont
-        ]
-        
-        UINavigationBar.appearance().standardAppearance = appearance
-        UINavigationBar.appearance().compactAppearance = appearance
-        UINavigationBar.appearance().scrollEdgeAppearance = appearance
+        let largeTitleFont = UIFont.systemFont(ofSize: 34, weight: .bold)
+        let titleFont = UIFont.systemFont(ofSize: 17, weight: .semibold)
+
+        let titleAttributes: [NSAttributedString.Key: Any] = [.foregroundColor: titleColor, .font: titleFont]
+        let largeTitleAttributes: [NSAttributedString.Key: Any] = [.foregroundColor: titleColor, .font: largeTitleFont]
+
+        // Transparent while the large title is showing
+        let scrollEdgeAppearance = UINavigationBarAppearance()
+        scrollEdgeAppearance.configureWithTransparentBackground()
+        scrollEdgeAppearance.titleTextAttributes = titleAttributes
+        scrollEdgeAppearance.largeTitleTextAttributes = largeTitleAttributes
+
+        // Solid once content scrolls under the collapsed title, so it stays legible
+        let standardAppearance = UINavigationBarAppearance()
+        standardAppearance.configureWithOpaqueBackground()
+        standardAppearance.backgroundColor = UIColor(Color.theme.surfaceBackground)
+        standardAppearance.shadowColor = UIColor(Color.theme.borderSubtle)
+        standardAppearance.titleTextAttributes = titleAttributes
+        standardAppearance.largeTitleTextAttributes = largeTitleAttributes
+
+        UINavigationBar.appearance().standardAppearance = standardAppearance
+        UINavigationBar.appearance().compactAppearance = standardAppearance
+        UINavigationBar.appearance().scrollEdgeAppearance = scrollEdgeAppearance
         UINavigationBar.appearance().tintColor = uiColor
     }
     
@@ -45,6 +46,9 @@ struct CrypterApp: App {
         WindowGroup {
                 MainTabView()
                     .environmentObject(core)
+                    .environmentObject(core.watchlistStore)
+                    // The palette is dark-only; keep system controls (search field, keyboard, tab bar) in sync
+                    .preferredColorScheme(.dark)
         }
     }
     

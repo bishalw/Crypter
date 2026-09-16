@@ -10,30 +10,61 @@ import UIKit
 
 struct HomeView<ViewModel>: View where ViewModel: HomeViewModel {
     @EnvironmentObject var core: Core
+    @EnvironmentObject var watchlist: WatchlistStore
     @StateObject var vm: ViewModel
     
     @State private var selectedCoin: CoinModel? = nil
     @State private var editorCoin: CoinModel? = nil
     @State private var showDetailView: Bool = false
-    
+    @State private var isSearchPresented: Bool = false
+
+    private var isShowingSearchResults: Bool {
+        isSearchPresented || !vm.searchText.isEmpty
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
-                    HomeStatsView(statistics: vm.statistics)
-                        .padding(.top, 8)
-                    
-                    SearchBarView(searchText: $vm.searchText)
-                    
-                    sortingHeader
-                    
-                    allCoinsCards
+                    if !isShowingSearchResults {
+                        HomeStatsView(statistics: vm.statistics)
+
+                        if !vm.trendingCoins.isEmpty {
+                            TrendingStripView(coins: vm.trendingCoins)
+                        }
+                    }
+
+                    VStack(spacing: 4) {
+                        sortPills
+                            .padding(.bottom, 12)
+
+                        listColumnHeader
+
+                        if vm.allCoins.isEmpty && !vm.searchText.isEmpty {
+                            noResults
+                        } else {
+                            allCoinsList
+                        }
+                    }
+
+                    footer
                 }
-                .padding()
+                .padding(.horizontal)
+                .padding(.bottom)
+                .animation(.easeInOut(duration: 0.2), value: isShowingSearchResults)
             }
+            .scrollDismissesKeyboard(.immediately)
             .background(Color.theme.surfaceBackground.ignoresSafeArea())
-            .navigationTitle("Market")
+            .navigationTitle("Markets")
             .navigationBarTitleDisplayMode(.large)
+            .navigationSubtitleIfAvailable(Date().asHeaderDateString())
+            .searchable(
+                text: $vm.searchText,
+                isPresented: $isSearchPresented,
+                placement: .navigationBarDrawer(displayMode: .automatic),
+                prompt: "Search coins"
+            )
+            .autocorrectionDisabled()
             .sheet(item: $editorCoin) { coin in
                 HomeAddHoldingSheet(
                     vm: HomeAddHoldingViewModel(
@@ -53,50 +84,92 @@ struct HomeView<ViewModel>: View where ViewModel: HomeViewModel {
             }
         }
     }
-    
-    private var sortingHeader: some View {
-        HStack {
-            Text("Top Cryptos")
-                .font(.title3)
-                .bold()
+
+    private var noResults: some View {
+        VStack(spacing: 6) {
+            Text("No results")
+                .font(.system(size: 15, weight: .semibold))
                 .foregroundColor(Color.theme.textPrimary)
-            
-            Spacer()
-            
-            Menu {
-                Button("Rank", action: { vm.sortOption = .rank })
-                Button("Rank Reversed", action: { vm.sortOption = .rankReversed })
-                Button("Highest Price", action: { vm.sortOption = .price })
-                Button("Lowest Price", action: { vm.sortOption = .priceReversed })
-            } label: {
-                HStack(spacing: 4) {
-                    Text("Sort")
-                    Image(systemName: "chevron.up.chevron.down")
-                }
-                .font(.caption)
-                .fontWeight(.bold)
+            Text("No coins match \u{201C}\(vm.searchText)\u{201D}")
+                .font(.system(size: 13))
                 .foregroundColor(Color.theme.textSecondary)
-                .padding(.vertical, 6)
-                .padding(.horizontal, 10)
-                .background(Color.theme.textSecondary.opacity(0.1))
-                .clipShape(Capsule())
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 40)
+    }
+
+    private var sortPillOptions: [(title: String, option: SortOption)] {
+        [
+            ("Top 100", .rank),
+            ("Bottom 100", .rankReversed),
+            ("Price ↑", .price),
+            ("Price ↓", .priceReversed)
+        ]
+    }
+
+    private var sortPills: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(sortPillOptions, id: \.title) { pill in
+                    let isSelected = vm.sortOption == pill.option
+                    Button {
+                        vm.sortOption = pill.option
+                    } label: {
+                        Text(pill.title)
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(isSelected ? Color.theme.surfaceBackground : Color.theme.textSecondary)
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 14)
+                            .background(
+                                Capsule().fill(isSelected ? Color.theme.textPrimary : Color.theme.surfaceSecondary)
+                            )
+                            .overlay(
+                                Capsule().stroke(isSelected ? Color.clear : Color.theme.borderSubtle, lineWidth: 1)
+                            )
+                    }
+                }
             }
         }
     }
+
+    private var listColumnHeader: some View {
+        HStack {
+            Text("#  Name · Market cap")
+            Spacer()
+            Text("Price / 24h")
+        }
+        .font(.system(size: 11))
+        .foregroundColor(Color.theme.textTertiary)
+        .padding(.vertical, 4)
+    }
     
-    private var allCoinsCards: some View {
-        VStack(spacing: 12) {
+    private var allCoinsList: some View {
+        VStack(spacing: 4) {
             ForEach(vm.allCoins) { coin in
                 Button {
                     selectedCoin = coin
                     showDetailView = true
                 } label: {
-                    CoinRowView(coin: coin, showHoldingsColumn: false)
-                        .padding()
-                        .background(cardBackground)
+                    CoinRowView(coin: coin, showHoldingsColumn: false, showSparkline: true)
+                        .padding(.vertical, 12)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .contextMenu {
+                    Button {
+                        let added = watchlist.toggle(coin)
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                        UIAccessibility.post(
+                            notification: .announcement,
+                            argument: added ? "\(coin.name) added to watchlist" : "\(coin.name) removed from watchlist"
+                        )
+                    } label: {
+                        Label(
+                            watchlist.contains(coin) ? "Remove from Watchlist" : "Add to Watchlist",
+                            systemImage: watchlist.contains(coin) ? "star.slash" : "star"
+                        )
+                    }
+
                     Button {
                         editorCoin = coin
                     } label: {
@@ -106,14 +179,13 @@ struct HomeView<ViewModel>: View where ViewModel: HomeViewModel {
             }
         }
     }
-    
-    private var cardBackground: some View {
-        RoundedRectangle(cornerRadius: 16, style: .continuous)
-            .fill(Color.theme.surfaceSecondary)
-            .overlay(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(Color.theme.borderSubtle, lineWidth: 1)
-            )
+
+    private var footer: some View {
+        Text("Market data by CoinGecko")
+            .font(.caption2)
+            .foregroundColor(Color.theme.textSecondary)
+            .frame(maxWidth: .infinity)
+            .padding(.top, 4)
     }
 }
 
@@ -122,11 +194,15 @@ struct HomeView_Previews: PreviewProvider {
     static var previews: some View {
         HomeView(vm: PreviewHomeViewModel())
             .environmentObject(Core.preview)
+            .environmentObject(WatchlistStore())
     }
 }
 
 final class HomeAddHoldingViewModel: ObservableObject {
     @Published var quantityText: String = ""
+    @Published var priceText: String = ""
+    @Published var kind: TransactionKind = .buy
+    @Published var date: Date = Date()
     @Published private(set) var currentHoldings: Double?
 
     let coin: CoinModel
@@ -138,17 +214,27 @@ final class HomeAddHoldingViewModel: ObservableObject {
     init(coin: CoinModel, portfolioDataService: PortfolioDataService) {
         self.coin = coin
         self.portfolioDataService = portfolioDataService
+        self.priceText = String(format: "%.2f", coin.currentPrice)
         bind()
+    }
+
+    var pricePerCoin: Double {
+        Double(priceText) ?? coin.currentPrice
     }
 
     var liveValue: Double {
         guard let quantity = Double(quantityText) else { return 0 }
-        return quantity * coin.currentPrice
+        return quantity * pricePerCoin
     }
 
     var canSave: Bool {
-        guard let amount = Double(quantityText), amount >= 0 else { return false }
-        return true
+        guard let amount = Double(quantityText), amount > 0 else { return false }
+
+        if kind == .sell, let currentHoldings {
+            return amount <= currentHoldings
+        }
+
+        return kind == .buy
     }
 
     var currentHoldingsText: String? {
@@ -156,25 +242,31 @@ final class HomeAddHoldingViewModel: ObservableObject {
         return "Currently holding \(currentHoldings.asNumberString()) \(coin.symbol.uppercased())"
     }
 
-    func saveHolding() {
-        guard let amount = Double(quantityText) else { return }
-        portfolioDataService.updatePortfolio(coin: coin, amount: amount)
+    var sellsMoreThanHeld: Bool {
+        guard kind == .sell, let amount = Double(quantityText), amount > 0 else { return false }
+        return amount > (currentHoldings ?? 0)
+    }
+
+    func saveTransaction() {
+        guard let amount = Double(quantityText), amount > 0 else { return }
+
+        portfolioDataService.addTransaction(
+            coin: coin,
+            kind: kind,
+            amount: amount,
+            pricePerCoin: pricePerCoin,
+            date: date
+        )
     }
 
     private func bind() {
         portfolioDataService.savedEntitiesPublisher
-            .map { [weak self] entities -> Double? in
+            .map { [weak self] holdings -> Double? in
                 guard let self else { return nil }
-                return entities.first(where: { $0.coinID == self.coin.id })?.amount
+                return holdings.first(where: { $0.coinID == self.coin.id })?.amount
             }
             .sink { [weak self] holdings in
-                guard let self else { return }
-                self.currentHoldings = holdings
-
-                if !self.didLoadInitialQuantity {
-                    self.quantityText = holdings?.asNumberString() ?? ""
-                    self.didLoadInitialQuantity = true
-                }
+                self?.currentHoldings = holdings
             }
             .store(in: &cancellables)
     }
@@ -184,6 +276,7 @@ struct HomeAddHoldingSheet: View {
     @EnvironmentObject var core: Core
     @Environment(\.dismiss) private var dismiss
     @FocusState private var isQuantityFocused: Bool
+    @FocusState private var isPriceFocused: Bool
     @StateObject var vm: HomeAddHoldingViewModel
 
     private var priceChangeColor: Color {
@@ -193,21 +286,13 @@ struct HomeAddHoldingSheet: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 24) {
+                VStack(spacing: 20) {
                     coinHeaderCard
-                    
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("7D Price Trend")
-                            .font(.caption)
-                            .fontWeight(.bold)
-                            .foregroundColor(Color.theme.textSecondary)
-                        
-                        MiniSparklineView(data: vm.coin.price ?? [])
-                            .frame(height: 120)
-                    }
-                    
+
+                    kindPicker
+
                     inputCard
-                    
+
                     if vm.liveValue > 0 {
                         valueCard
                             .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -216,7 +301,7 @@ struct HomeAddHoldingSheet: View {
                 .padding()
             }
             .background(Color.theme.surfaceBackground.ignoresSafeArea())
-            .navigationTitle(vm.currentHoldings == nil ? "Add Holding" : "Update Holding")
+            .navigationTitle(vm.kind == .sell ? "Sell \(vm.coin.symbol.uppercased())" : "Buy \(vm.coin.symbol.uppercased())")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -228,8 +313,8 @@ struct HomeAddHoldingSheet: View {
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(vm.currentHoldings == nil ? "Add" : "Update") {
-                        saveHolding()
+                    Button("Save") {
+                        saveTransaction()
                     }
                     .font(.headline)
                     .disabled(!vm.canSave)
@@ -245,34 +330,39 @@ struct HomeAddHoldingSheet: View {
 }
 
 extension HomeAddHoldingSheet {
+    private var kindPicker: some View {
+        Picker("Transaction type", selection: $vm.kind) {
+            Text("Buy").tag(TransactionKind.buy)
+            Text("Sell").tag(TransactionKind.sell)
+        }
+        .pickerStyle(.segmented)
+    }
+
     private var coinHeaderCard: some View {
         HStack(spacing: 16) {
             CoinImageView(vm: CoinImageViewModelImpl(coinImageRepository: core.coinImageRepository, coin: vm.coin))
                 .frame(width: 44, height: 44)
                 .clipShape(Circle())
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text(vm.coin.name)
-                    .font(.headline)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(Color.theme.textPrimary)
                 Text(vm.coin.symbol.uppercased())
-                    .font(.caption)
+                    .font(.system(size: 12))
                     .foregroundColor(Color.theme.textSecondary)
             }
 
             Spacer()
 
-            VStack(alignment: .trailing, spacing: 2) {
+            VStack(alignment: .trailing, spacing: 4) {
                 Text(vm.coin.currentPrice.asCurrencyWith6Decimals())
-                    .font(.system(.subheadline, design: .rounded))
-                    .fontWeight(.bold)
-                
-                HStack(spacing: 4) {
-                    Image(systemName: (vm.coin.priceChangePercentage24H ?? 0) >= 0 ? "arrow.up.right" : "arrow.down.right")
-                    Text(vm.coin.priceChangePercentage24H?.asPercentString() ?? "0.00%")
-                }
-                .font(.caption2)
-                .fontWeight(.bold)
-                .foregroundColor(priceChangeColor)
+                    .font(.system(size: 13, weight: .medium, design: .monospaced))
+                    .foregroundColor(Color.theme.textPrimary)
+
+                Text(vm.coin.priceChangePercentage24H?.asPercentString() ?? "0.00%")
+                    .font(.system(size: 12, weight: .medium, design: .monospaced))
+                    .foregroundColor(priceChangeColor)
             }
         }
         .padding()
@@ -282,31 +372,77 @@ extension HomeAddHoldingSheet {
     private var inputCard: some View {
         VStack(alignment: .trailing, spacing: 8) {
             HStack {
-                Text("How much do you own?")
-                    .font(.subheadline)
+                Text("Amount")
+                    .font(.system(size: 13))
                     .foregroundColor(Color.theme.textSecondary)
                 
                 Spacer()
                 
-                TextField("Enter Amount", text: $vm.quantityText)
-                    .keyboardType(.decimalPad)
-                    .multilineTextAlignment(.trailing)
-                    .font(.system(.title3, design: .rounded))
-                    .fontWeight(.bold)
-                    .focused($isQuantityFocused)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(isQuantityFocused && vm.quantityText.isEmpty ? Color.theme.brandPrimary.opacity(0.05) : Color.clear)
-                    )
+                TextField(
+                    "",
+                    text: $vm.quantityText,
+                    prompt: Text("0.00").foregroundColor(Color.theme.textTertiary)
+                )
+                .keyboardType(.decimalPad)
+                .multilineTextAlignment(.trailing)
+                .font(.system(size: 24, weight: .semibold, design: .monospaced))
+                .foregroundColor(Color.theme.textPrimary)
+                .focused($isQuantityFocused)
+
+                Text(vm.coin.symbol.uppercased())
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(Color.theme.textSecondary)
             }
             
-            if let currentHoldingsText = vm.currentHoldingsText {
+            Divider()
+                .overlay(Color.theme.borderSubtle)
+
+            HStack {
+                Text(vm.kind == .sell ? "Price sold at" : "Price paid")
+                    .font(.system(size: 13))
+                    .foregroundColor(Color.theme.textSecondary)
+
+                Spacer()
+
+                TextField(
+                    "",
+                    text: $vm.priceText,
+                    prompt: Text("0.00").foregroundColor(Color.theme.textTertiary)
+                )
+                .keyboardType(.decimalPad)
+                .multilineTextAlignment(.trailing)
+                .font(.system(size: 15, weight: .medium, design: .monospaced))
+                .foregroundColor(Color.theme.textPrimary)
+                .focused($isPriceFocused)
+
+                Text("USD")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(Color.theme.textSecondary)
+            }
+
+            Divider()
+                .overlay(Color.theme.borderSubtle)
+
+            DatePicker(
+                "Date",
+                selection: $vm.date,
+                in: ...Date(),
+                displayedComponents: .date
+            )
+            .font(.system(size: 13))
+            .foregroundColor(Color.theme.textSecondary)
+            .tint(Color.theme.brandPrimary)
+
+            if vm.sellsMoreThanHeld {
+                Text("You only hold \(vm.currentHoldingsText ?? "0")")
+                    .font(.system(size: 11))
+                    .foregroundColor(Color.theme.statusDanger)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            } else if let currentHoldingsText = vm.currentHoldingsText {
                 Text(currentHoldingsText)
-                    .font(.caption2)
-                    .foregroundColor(Color.theme.statusSuccess)
-                    .fontWeight(.bold)
+                    .font(.system(size: 11))
+                    .foregroundColor(Color.theme.textTertiary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
         .padding()
@@ -316,13 +452,13 @@ extension HomeAddHoldingSheet {
     private var valueCard: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Current Position Value")
-                    .font(.caption)
+                Text(vm.kind == .sell ? "Proceeds" : "Total cost")
+                    .font(.system(size: 13))
                     .foregroundColor(Color.theme.textSecondary)
                 Text(vm.liveValue.asCurrencyWith2Decimals())
-                    .font(.system(.title2, design: .rounded))
-                    .fontWeight(.bold)
-                    .foregroundColor(Color.theme.statusSuccess)
+                    .font(.system(size: 22, weight: .semibold, design: .monospaced))
+                    .foregroundColor(Color.theme.textPrimary)
+                    .contentTransition(.numericText())
             }
             Spacer()
         }
@@ -331,18 +467,18 @@ extension HomeAddHoldingSheet {
     }
 
     private var cardBackground: some View {
-        RoundedRectangle(cornerRadius: 16, style: .continuous)
+        RoundedRectangle(cornerRadius: 20, style: .continuous)
             .fill(Color.theme.surfaceSecondary)
             .overlay(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
                     .stroke(Color.theme.borderSubtle, lineWidth: 1)
             )
     }
 
-    private func saveHolding() {
-        vm.saveHolding()
+    private func saveTransaction() {
+        vm.saveTransaction()
         UINotificationFeedbackGenerator().notificationOccurred(.success)
-        UIAccessibility.post(notification: .announcement, argument: "\(vm.coin.name) saved to portfolio")
+        UIAccessibility.post(notification: .announcement, argument: "\(vm.coin.name) transaction saved")
         UIApplication.shared.endEditing()
         dismiss()
     }

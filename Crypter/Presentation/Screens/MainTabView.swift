@@ -33,7 +33,7 @@ struct MainTabView: View {
                 }
             }
                 .tabItem {
-                    Label("Home", systemImage: "house")
+                    Label("Markets", systemImage: "chart.line.uptrend.xyaxis")
                 }
             
             Group {
@@ -47,16 +47,24 @@ struct MainTabView: View {
                 }
             }
                 .tabItem {
-                    Label("Portfolio", systemImage: "creditcard")
+                    Label("Portfolio", systemImage: "wallet.bifold")
                 }
-        }.onAppear {
+
+            WatchlistView(vm: WatchlistViewModel(cryptoStore: core.cryptoStore))
+                .tabItem {
+                    Label("Watchlist", systemImage: "star")
+                }
+        }
+        .tint(Color.theme.brandPrimary)
+        .onAppear {
+            // The pen shows a translucent dark bar; iOS 26 draws it as floating glass on its own.
             let appearance = UITabBarAppearance()
-              appearance.configureWithOpaqueBackground()
-              UITabBar.appearance().standardAppearance = appearance
-              
-              if #available(iOS 15.0, *) {
-                  UITabBar.appearance().scrollEdgeAppearance = appearance
-              }
+            appearance.configureWithDefaultBackground()
+            appearance.backgroundColor = UIColor(Color.theme.surfaceTertiary).withAlphaComponent(0.7)
+            appearance.shadowColor = UIColor(Color.theme.borderSubtle)
+
+            UITabBar.appearance().standardAppearance = appearance
+            UITabBar.appearance().scrollEdgeAppearance = appearance
         }
     }
 }
@@ -68,5 +76,6 @@ struct MainTabView_Previews: PreviewProvider {
             portfolioTabOverride: AnyView(PortfolioView(vm: PreviewPortfolioViewModel()))
         )
             .environmentObject(Core.preview)
+            .environmentObject(WatchlistStore())
     }
 }

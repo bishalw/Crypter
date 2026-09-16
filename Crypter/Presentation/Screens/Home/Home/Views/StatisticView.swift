@@ -34,31 +34,39 @@ struct StatisticView: View {
             HStack(spacing: 4) {
                 if let icon = iconName {
                     Image(systemName: icon)
-                        .font(.caption2)
+                        .font(.system(size: 11))
                 }
                 Text(stat.title)
-                    .font(.caption)
+                    .font(.system(size: 13))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
             .frame(height: 18) // Fixed height for alignment
             .foregroundColor(Color.theme.textSecondary)
-            
+
             Text(stat.value)
-                .font(.system(.headline, design: .rounded))
+                .font(.system(size: 17, weight: .semibold, design: .monospaced))
                 .foregroundColor(Color.theme.textPrimary)
                 .minimumScaleFactor(0.8)
                 .lineLimit(1)
-            
+
             if let percentageChange = stat.percentageChange {
+                let isUp = percentageChange >= 0
+
                 HStack(spacing: 4) {
-                    Image(systemName: "triangle.fill")
-                        .font(.system(size: 8))
-                        .rotationEffect(Angle(degrees: percentageChange >= 0 ? 0 : 180))
-                    
-                    Text(percentageChange.asPercentString())
-                        .font(.caption2)
-                        .bold()
+                    Image(systemName: isUp ? "arrow.up.right" : "arrow.down.right")
+                        .font(.system(size: 9, weight: .semibold))
+
+                    Text((isUp ? "+" : "") + percentageChange.asPercentString())
+                        .font(.system(size: 11, weight: .medium, design: .monospaced))
                 }
-                .foregroundColor(percentageChange >= 0 ? Color.theme.statusSuccess : Color.theme.statusDanger)
+                .foregroundColor(isUp ? Color.theme.statusSuccess : Color.theme.statusDanger)
+                .padding(.horizontal, 7)
+                .padding(.vertical, 3)
+                .background(
+                    Capsule()
+                        .fill(isUp ? Color.theme.statusSuccessSoft : Color.theme.statusDangerSoft)
+                )
             }
         }
     }

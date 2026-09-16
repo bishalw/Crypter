@@ -35,10 +35,14 @@ struct SortButton: View {
             HStack(spacing: 4) {
                 Text(title)
                 Image(systemName: "chevron.down")
+                    .font(.system(size: 9, weight: .semibold))
                     .rotationEffect(Angle(degrees: isActiveSortOption && isReversed ? 180 : 0))
                     .opacity(isActiveSortOption ? 1.0 : 0.0)
             }
+            .font(.system(size: 11))
+            .foregroundColor(isActiveSortOption ? Color.theme.textSecondary : Color.theme.textTertiary)
         }
+        .buttonStyle(.plain)
     }
     
     var isActiveSortOption: Bool {

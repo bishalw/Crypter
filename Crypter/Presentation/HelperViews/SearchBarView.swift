@@ -15,15 +15,23 @@ struct SearchBarView: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: "magnifyingglass")
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundColor(searchText.isEmpty ? Color.theme.textSecondary : Color.theme.brandPrimary)
-            
-            TextField("Search by name or symbol...", text: $searchText)
-                .font(.system(.body, design: .rounded))
-                .foregroundColor(Color.theme.textPrimary)
-                .disableAutocorrection(true)
-                .focused($isFocused)
-            
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundColor(isFocused || !searchText.isEmpty ? Color.theme.brandPrimary : Color.theme.textSecondary)
+
+            TextField(
+                "",
+                text: $searchText,
+                prompt: Text("Search by name or symbol")
+                    .foregroundColor(Color.theme.textSecondary)
+            )
+            .font(.system(size: 15))
+            .foregroundColor(Color.theme.textPrimary)
+            .tint(Color.theme.brandPrimary)
+            .autocorrectionDisabled(true)
+            .textInputAutocapitalization(.never)
+            .submitLabel(.search)
+            .focused($isFocused)
+
             if !searchText.isEmpty {
                 Button {
                     withAnimation(.spring()) {
@@ -32,8 +40,10 @@ struct SearchBarView: View {
                     }
                 } label: {
                     Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 15))
                         .foregroundColor(Color.theme.textSecondary)
                 }
+                .buttonStyle(.plain)
                 .transition(.scale.combined(with: .opacity))
             }
         }
@@ -45,7 +55,7 @@ struct SearchBarView: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(isFocused ? Color.theme.brandPrimary.opacity(0.5) : Color.theme.borderSubtle, lineWidth: 1)
+                .stroke(isFocused ? Color.theme.brandPrimary : Color.theme.borderSubtle, lineWidth: 1)
         )
         .padding(.vertical, 8)
     }
@@ -53,15 +63,19 @@ struct SearchBarView: View {
 
 struct SearchBarView_Previews: PreviewProvider {
     static var previews: some View {
-        Group{
+        Group {
             SearchBarView(searchText: .constant(""))
+                .padding()
+                .background(Color.theme.surfaceBackground)
                 .previewLayout(.sizeThatFits)
                 .preferredColorScheme(.dark)
-            
-            SearchBarView(searchText: .constant(""))
+
+            SearchBarView(searchText: .constant("bitcoin"))
+                .padding()
+                .background(Color.theme.surfaceBackground)
                 .previewLayout(.sizeThatFits)
-                .preferredColorScheme(.light)
+                .preferredColorScheme(.dark)
         }
-        
+
     }
 }

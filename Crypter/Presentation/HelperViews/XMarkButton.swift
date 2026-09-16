@@ -11,12 +11,13 @@ struct XMarkButton: View {
     
     var body: some View {
         Button(action: {
-           dismiss()
-    }, label: {
-        Image(systemName: "xmark")
-            .font(.headline)
-        
-    })
+            dismiss()
+        }, label: {
+            Image(systemName: "xmark")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundColor(Color.theme.textPrimary)
+        })
+        .buttonStyle(.plain)
     }
 }
 

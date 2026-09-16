@@ -14,36 +14,49 @@ struct HomeStatsView: View {
     private var rowStats: [StatisticModel] { Array(statistics.dropFirst()) }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
+        VStack(alignment: .leading, spacing: 14) {
             if let heroStat {
                 heroSection(heroStat)
             }
 
             if !rowStats.isEmpty {
+                Divider()
+                    .overlay(Color.theme.borderSubtle)
+
                 HStack(alignment: .top, spacing: 0) {
                     ForEach(rowStats) { stat in
                         VStack(alignment: .leading, spacing: 4) {
                             Text(stat.title)
-                                .font(.caption2)
-                                .foregroundColor(Color.theme.textSecondary)
+                                .font(.system(size: 11))
+                                .foregroundColor(Color.theme.textTertiary)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.8)
+
                             Text(stat.value)
-                                .font(.system(.subheadline, design: .rounded))
-                                .fontWeight(.bold)
+                                .font(.system(size: 14, weight: .medium, design: .monospaced))
                                 .foregroundColor(Color.theme.textPrimary)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.8)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
             }
         }
-        .padding()
+        .padding(18)
         .background(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Color.theme.surfaceSecondary)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .stroke(Color.theme.borderSubtle, lineWidth: 1)
+                .fill(
+                    LinearGradient(
+                        colors: [Color.theme.surfaceBrandTint, Color.theme.surfaceSecondary],
+                        startPoint: .topTrailing,
+                        endPoint: .bottomLeading
+                    )
                 )
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .stroke(Color.theme.borderSubtle, lineWidth: 1)
         )
     }
 
@@ -51,30 +64,44 @@ struct HomeStatsView: View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 6) {
                 Text(stat.title == "Market Cap" ? "Global market cap" : stat.title)
-                    .font(.caption)
+                    .font(.system(size: 12))
                     .foregroundColor(Color.theme.textSecondary)
+
                 Text(stat.value)
-                    .font(.system(.largeTitle, design: .rounded))
-                    .fontWeight(.bold)
+                    .font(.system(size: 28, weight: .semibold, design: .monospaced))
                     .foregroundColor(Color.theme.textPrimary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
             }
 
-            Spacer()
+            Spacer(minLength: 12)
 
             if let change = stat.percentageChange {
-                HStack(spacing: 4) {
-                    Image(systemName: change >= 0 ? "arrow.up.right" : "arrow.down.right")
-                    Text("\(change.asPercentString()) 24h")
-                }
-                .font(.system(size: 12, weight: .bold, design: .rounded))
-                .foregroundColor(change >= 0 ? Color.theme.statusSuccess : Color.theme.statusDanger)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
-                .background(
-                    Capsule().fill((change >= 0 ? Color.theme.statusSuccess : Color.theme.statusDanger).opacity(0.15))
-                )
+                changePill(change)
             }
         }
+    }
+
+    private func changePill(_ change: Double) -> some View {
+        let isUp = change >= 0
+        let tint = isUp ? Color.theme.statusSuccess : Color.theme.statusDanger
+        let softTint = isUp ? Color.theme.statusSuccessSoft : Color.theme.statusDangerSoft
+        let signedChange = (isUp ? "+" : "") + change.asPercentString()
+
+        return HStack(spacing: 4) {
+            Image(systemName: isUp ? "arrow.up.right" : "arrow.down.right")
+                .font(.system(size: 11, weight: .semibold))
+
+            Text("\(signedChange) 24h")
+                .font(.system(size: 12, weight: .medium, design: .monospaced))
+        }
+        .foregroundColor(tint)
+        .padding(.horizontal, 9)
+        .padding(.vertical, 5)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(softTint)
+        )
     }
 }
 

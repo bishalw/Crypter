@@ -38,15 +38,8 @@ struct ChartView: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            TimeRangePicker(selected: $selectedTimeRange)
-                .onChange(of: selectedTimeRange) { newValue in
-                    onRangeChange(newValue)
-                    resetSelection()
-                }
-            
             chartContent
-                .padding(.top, 4)
-                .opacity(isLoading ? 0.6 : 1.0)
+                .opacity(isLoading ? 0.5 : 1.0)
                 .overlay {
                     if isLoading && metrics.points.isEmpty {
                         ProgressView()
@@ -54,42 +47,28 @@ struct ChartView: View {
                     }
                 }
 
-            if !metrics.points.isEmpty {
-                VStack(spacing: 16) {
-                    ChartSummaryRow(metrics: metrics)
-                    
-                    Divider()
-                        .overlay(Color.theme.borderSubtle)
-                        .padding(.horizontal)
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Reference Lines")
-                            .font(.caption)
-                            .fontWeight(.bold)
-                            .foregroundColor(Color.theme.textSecondary)
-                            .padding(.horizontal)
-                        
-                        ReferenceLinePicker(
-                            selected: $selectedReferenceLine,
-                            options: availableReferenceLines
-                        )
-                    }
+            TimeRangePicker(selected: $selectedTimeRange)
+                .onChange(of: selectedTimeRange) { _, newValue in
+                    onRangeChange(newValue)
+                    resetSelection()
                 }
+
+            if !metrics.points.isEmpty {
+                ChartSummaryRow(metrics: metrics)
+
+                Divider()
+                    .overlay(Color.theme.borderSubtle)
+
+                ReferenceLinePicker(
+                    selected: $selectedReferenceLine,
+                    options: availableReferenceLines
+                )
             }
         }
-        .onChange(of: points) { newPoints in
+        .onChange(of: points) { _, newPoints in
             metrics = ChartMetrics(points: newPoints)
             resetSelection()
         }
-        .padding(.vertical)
-        .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color.theme.surfaceSecondary)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(Color.theme.borderSubtle, lineWidth: 1)
-                )
-        )
     }
 
     private var isPositiveTimeframe: Bool {
@@ -122,29 +101,17 @@ struct ChartView: View {
     @ViewBuilder
     private var chartContent: some View {
         if let errorMessage, metrics.points.isEmpty && !isLoading {
-            ChartPlaceholderView(state: .error(errorMessage), rangeLabel: selectedTimeRange.rawValue)
+            ChartPlaceholderView(state: .error(errorMessage))
         } else if metrics.points.isEmpty && !isLoading {
-            ChartPlaceholderView(state: .empty, rangeLabel: selectedTimeRange.rawValue)
-        } else if #available(iOS 16, *) {
-            chartBody(data: metrics.points)
+            ChartPlaceholderView(state: .empty)
         } else {
-            Text("Charts require iOS 16.0+")
-                .foregroundColor(Color.theme.textSecondary)
-                .frame(height: 250)
+            chartBody(data: metrics.points)
         }
     }
 
-    @available(iOS 16, *)
     private func chartBody(data: [ChartPoint]) -> some View {
         Chart {
-            ForEach(Array(data.enumerated()), id: \.offset) { index, point in
-                LineMark(
-                    x: .value("Date", point.date),
-                    y: .value("Price", point.price)
-                )
-                .foregroundStyle(timeframeColor.gradient)
-                .interpolationMethod(.catmullRom)
-
+            ForEach(Array(data.enumerated()), id: \.offset) { _, point in
                 AreaMark(
                     x: .value("Date", point.date),
                     yStart: .value("Baseline", yScaleDomain.lowerBound),
@@ -152,23 +119,76 @@ struct ChartView: View {
                 )
                 .foregroundStyle(
                     LinearGradient(
-                        gradient: Gradient(colors: [timeframeColor.opacity(0.35), .clear]),
+                        colors: [timeframeColor.opacity(0.28), timeframeColor.opacity(0.0)],
                         startPoint: .top,
                         endPoint: .bottom
                     )
                 )
+                .interpolationMethod(.catmullRom)
+
+                LineMark(
+                    x: .value("Date", point.date),
+                    y: .value("Price", point.price)
+                )
+                .foregroundStyle(timeframeColor)
+                .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
+                .interpolationMethod(.catmullRom)
             }
 
             if let value = referenceLineValue {
                 RuleMark(y: .value("Reference", value))
-                    .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [5, 5]))
-                .foregroundStyle(timeframeColor.opacity(0.4))
+                    .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
+                    .foregroundStyle(Color.theme.brandPrimary.opacity(0.6))
+                    .annotation(position: .top, alignment: .leading, spacing: 2) {
+                        ChartBadge(text: selectedReferenceLine.rawValue, tint: Color.theme.brandPrimary)
+                    }
+            }
+
+            if selectedPoint == nil {
+                if let highPoint = metrics.highPoint {
+                    PointMark(
+                        x: .value("High date", highPoint.date),
+                        y: .value("High", highPoint.price)
+                    )
+                    .symbolSize(0)
+                    .annotation(
+                        position: .top,
+                        spacing: 4,
+                        overflowResolution: .init(x: .fit(to: .chart), y: .fit(to: .chart))
+                    ) {
+                        ChartBadge(text: "H " + Self.compact(highPoint.price))
+                    }
+                }
+
+                if let lowPoint = metrics.lowPoint {
+                    PointMark(
+                        x: .value("Low date", lowPoint.date),
+                        y: .value("Low", lowPoint.price)
+                    )
+                    .symbolSize(0)
+                    .annotation(
+                        position: .bottom,
+                        spacing: 4,
+                        overflowResolution: .init(x: .fit(to: .chart), y: .fit(to: .chart))
+                    ) {
+                        ChartBadge(text: "L " + Self.compact(lowPoint.price))
+                    }
+                }
+
+                if let lastPoint = data.last {
+                    PointMark(
+                        x: .value("Latest date", lastPoint.date),
+                        y: .value("Latest", lastPoint.price)
+                    )
+                    .symbolSize(60)
+                    .foregroundStyle(timeframeColor)
+                }
             }
 
             if let point = selectedPoint {
                 RuleMark(x: .value("Selected", point.date))
-                    .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 2]))
-                    .foregroundStyle(Color.theme.textSecondary.opacity(0.45))
+                    .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 3]))
+                    .foregroundStyle(Color.theme.borderSubtle)
 
                 PointMark(
                     x: .value("Selected Date", point.date),
@@ -176,7 +196,11 @@ struct ChartView: View {
                 )
                 .symbolSize(70)
                 .foregroundStyle(timeframeColor)
-                .annotation(position: .top, spacing: 10) {
+                .annotation(
+                    position: .top,
+                    spacing: 10,
+                    overflowResolution: .init(x: .fit(to: .chart), y: .disabled)
+                ) {
                     ChartTooltip(point: point, accentColor: timeframeColor)
                 }
 
@@ -185,67 +209,49 @@ struct ChartView: View {
                     y: .value("Selected Highlight Price", point.price)
                 )
                 .symbolSize(20)
-                .foregroundStyle(Color.white)
+                .foregroundStyle(Color.theme.surfaceBackground)
             }
         }
         .chartYScale(domain: yScaleDomain)
         .chartXAxis(.hidden)
         .chartYAxis {
-            AxisMarks(position: .leading, values: .automatic(desiredCount: 4)) { value in
-                AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [4]))
-                    .foregroundStyle(Color.theme.textSecondary.opacity(0.18))
-                AxisValueLabel {
-                    if let doubleValue = value.as(Double.self) {
-                        Text(doubleValue.asCurrencyWith2Decimals())
-                            .font(.system(size: 8, design: .monospaced))
-                            .foregroundColor(Color.theme.textSecondary)
-                    }
-                }
+            AxisMarks(position: .leading, values: .automatic(desiredCount: 4)) { _ in
+                AxisGridLine(stroke: StrokeStyle(lineWidth: 1))
+                    .foregroundStyle(Color.theme.borderSubtle.opacity(0.6))
             }
         }
-        .frame(height: 250)
+        .chartPlotStyle { plotArea in
+            plotArea.padding(.vertical, 12)
+        }
+        .frame(height: 200)
         .chartOverlay { proxy in
             GeometryReader { geometry in
-                ZStack(alignment: .topLeading) {
-                    Rectangle()
-                        .fill(Color.clear)
-                        .contentShape(Rectangle())
-                        .gesture(
-                            DragGesture(minimumDistance: 0)
-                                .onChanged { value in
-                                    handleDrag(value: value, proxy: proxy, geometry: geometry)
-                                }
-                                .onEnded { _ in
-                                    withAnimation(.easeOut(duration: 0.2)) { resetSelection() }
-                                }
-                        )
-                    
-                    if let value = referenceLineValue, let yPosition = proxy.position(forY: value) {
-                        Text(selectedReferenceLine.rawValue)
-                            .font(.system(size: 10, weight: .bold, design: .rounded))
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 3)
-                            .background(Capsule().fill(timeframeColor))
-                            .overlay(Capsule().stroke(Color.white.opacity(0.3), lineWidth: 1))
-                            .offset(y: yPosition - 12)
-                    }
-                }
+                Rectangle()
+                    .fill(Color.clear)
+                    .contentShape(Rectangle())
+                    .gesture(
+                        DragGesture(minimumDistance: 0)
+                            .onChanged { value in
+                                handleDrag(value: value, proxy: proxy, geometry: geometry)
+                            }
+                            .onEnded { _ in
+                                withAnimation(.easeOut(duration: 0.2)) { resetSelection() }
+                            }
+                    )
             }
         }
     }
 
-    @available(iOS 16, *)
     private func handleDrag(value: DragGesture.Value, proxy: ChartProxy, geometry: GeometryProxy) {
         guard let plotFrame = proxy.plotFrame else { return }
         let plotRect = geometry[plotFrame]
         let xPosition = value.location.x - plotRect.origin.x
         guard xPosition >= 0, xPosition <= plotRect.size.width else { return }
-        
+
         guard let date: Date = proxy.value(atX: xPosition) else { return }
-        
+
         let closestIndex = metrics.closestIndex(to: date)
-        
+
         if let index = closestIndex, selectedIndex != index {
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
             withAnimation(.interactiveSpring(response: 0.22, dampingFraction: 0.82)) {
@@ -267,6 +273,10 @@ struct ChartView: View {
         case .low24h: return coin.low24H
         }
     }
+
+    fileprivate static func compact(_ value: Double) -> String {
+        abs(value) >= 1000 ? "$" + value.formattedWithAbbreviations() : value.asCurrencyWith2Decimals()
+    }
 }
 
 private struct ChartMetrics {
@@ -277,6 +287,8 @@ private struct ChartMetrics {
     let currentPrice: Double?
     let highPrice: Double?
     let lowPrice: Double?
+    let highPoint: ChartPoint?
+    let lowPoint: ChartPoint?
     let changePercent: Double
     let isPositiveTimeframe: Bool
 
@@ -285,8 +297,10 @@ private struct ChartMetrics {
         self.dates = points.map(\.date)
         self.startPrice = points.first?.price
         self.currentPrice = points.last?.price
-        self.highPrice = points.map(\.price).max()
-        self.lowPrice = points.map(\.price).min()
+        self.highPoint = points.max(by: { $0.price < $1.price })
+        self.lowPoint = points.min(by: { $0.price < $1.price })
+        self.highPrice = highPoint?.price
+        self.lowPrice = lowPoint?.price
 
         if let startPrice, let currentPrice, startPrice > 0 {
             self.changePercent = ((currentPrice - startPrice) / startPrice) * 100
@@ -330,110 +344,163 @@ private struct ChartMetrics {
 
 // MARK: - Components
 
+/// Small pill used for the high / low / reference callouts drawn on the chart.
+private struct ChartBadge: View {
+    let text: String
+    var tint: Color = Color.theme.textSecondary
+
+    var body: some View {
+        Text(text)
+            .font(.system(size: 10, design: .monospaced))
+            .foregroundColor(tint)
+            .padding(.vertical, 2)
+            .padding(.horizontal, 6)
+            .background(
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(Color.theme.surfaceTertiary)
+            )
+    }
+}
+
 struct TimeRangePicker: View {
     @Binding var selected: ChartTimeRange
     @Namespace private var rangeNamespace
+
     var body: some View {
         HStack(spacing: 0) {
             ForEach(ChartTimeRange.availableCases) { range in
                 Button {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { selected = range }
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { selected = range }
                 } label: {
                     Text(range.rawValue)
-                        .font(.system(.caption, design: .rounded))
-                        .fontWeight(selected == range ? .bold : .medium)
-                        .foregroundColor(selected == range ? Color.theme.brandPrimary : Color.theme.textSecondary)
-                        .padding(.vertical, 8)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(selected == range ? Color.theme.textPrimary : Color.theme.textTertiary)
                         .frame(maxWidth: .infinity)
-                        .background(ZStack {
+                        .frame(height: 32)
+                        .background {
                             if selected == range {
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(Color.theme.brandPrimary.opacity(0.15))
+                                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                    .fill(Color.theme.surfaceTertiary)
                                     .matchedGeometryEffect(id: "range_background", in: rangeNamespace)
                             }
-                        })
+                        }
+                        .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
             }
         }
         .padding(4)
-        .background(Color.theme.textSecondary.opacity(0.05))
-        .clipShape(RoundedRectangle(cornerRadius: 10))
-        .padding(.horizontal)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color.theme.surfaceSecondary)
+        )
     }
 }
 
 struct ReferenceLinePicker: View {
     @Binding var selected: ChartReferenceLine
     let options: [ChartReferenceLine]
+
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 10) {
+            HStack(spacing: 8) {
                 ForEach(options) { line in
                     Button {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
                             selected = (line == .none) ? .none : (selected == line ? .none : line)
                         }
                     } label: {
                         Text(line.rawValue)
-                            .font(.system(size: 11, weight: .semibold, design: .rounded))
+                            .font(.system(size: 12, weight: .medium))
                             .foregroundColor(selected == line ? Color.theme.brandPrimary : Color.theme.textSecondary)
-                            .padding(.vertical, 6)
+                            .padding(.vertical, 8)
                             .padding(.horizontal, 12)
-                            .background(RoundedRectangle(cornerRadius: 8).fill(selected == line ? Color.theme.brandPrimary.opacity(0.12) : Color.theme.surfaceSecondary))
-                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(selected == line ? Color.theme.brandPrimary : Color.theme.textSecondary.opacity(0.2), lineWidth: 1))
+                            .background(
+                                Capsule(style: .continuous)
+                                    .fill(selected == line ? Color.theme.brandSoft : Color.theme.surfaceSecondary)
+                                    .overlay(
+                                        Capsule(style: .continuous)
+                                            .stroke(
+                                                selected == line ? Color.theme.brandPrimary : Color.theme.borderSubtle,
+                                                lineWidth: 1
+                                            )
+                                    )
+                            )
                     }
+                    .buttonStyle(.plain)
                 }
             }
-            .padding(.horizontal)
             .padding(.vertical, 2)
         }
+        .scrollClipDisabled()
     }
 }
 
 struct ChartTooltip: View {
     let point: ChartPoint
     let accentColor: Color
+
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(point.date.asShortDateString())
-                .font(.system(size: 8))
-                .foregroundColor(Color.theme.textSecondary)
+                .font(.system(size: 10))
+                .foregroundColor(Color.theme.textTertiary)
+
             Text(point.price.asCurrencyWith2Decimals())
-                .font(.subheadline)
-                .fontWeight(.semibold)
-                .foregroundColor(Color.theme.brandPrimary)
+                .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                .foregroundColor(Color.theme.textPrimary)
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
-        .background(RoundedRectangle(cornerRadius: 10).fill(Color.theme.surfaceSecondary))
-        .overlay(RoundedRectangle(cornerRadius: 10).stroke(accentColor.opacity(0.3), lineWidth: 1))
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(Color.theme.surfaceTertiary)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .stroke(accentColor.opacity(0.4), lineWidth: 1)
+                )
+        )
     }
 }
 
 private struct ChartSummaryRow: View {
     let metrics: ChartMetrics
+
     var body: some View {
-        HStack {
-            summaryItem(label: "Start", value: format(metrics.startPrice ?? 0))
-            Spacer(); summaryItem(label: "High", value: format(metrics.highPrice ?? 0))
-            Spacer(); summaryItem(label: "Low", value: format(metrics.lowPrice ?? 0))
-            Spacer(); VStack(spacing: 2) {
-                Text("Change").font(.caption2).foregroundColor(Color.theme.textSecondary)
-                Text(metrics.changePercent.asPercentString()).font(.caption).fontWeight(.semibold).foregroundColor(metrics.changePercent >= 0 ? Color.theme.statusSuccess : Color.theme.statusDanger)
-            }
-        }.padding(.horizontal)
+        HStack(alignment: .top, spacing: 12) {
+            summaryItem(label: "Start", value: ChartView.compact(metrics.startPrice ?? 0))
+            Spacer(minLength: 0)
+            summaryItem(label: "High", value: ChartView.compact(metrics.highPrice ?? 0))
+            Spacer(minLength: 0)
+            summaryItem(label: "Low", value: ChartView.compact(metrics.lowPrice ?? 0))
+            Spacer(minLength: 0)
+            summaryItem(
+                label: "Change",
+                value: (metrics.changePercent >= 0 ? "+" : "") + metrics.changePercent.asPercentString(),
+                tint: metrics.changePercent >= 0 ? Color.theme.statusSuccess : Color.theme.statusDanger
+            )
+        }
+        .contentTransition(.numericText())
     }
-    private func summaryItem(label: String, value: String) -> some View {
-        VStack(spacing: 2) {
-            Text(label).font(.caption2).foregroundColor(Color.theme.textSecondary)
-            Text(value).font(.caption).fontWeight(.semibold).foregroundColor(Color.theme.textPrimary)
+
+    private func summaryItem(label: String, value: String, tint: Color = Color.theme.textPrimary) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(label)
+                .font(.system(size: 11))
+                .foregroundColor(Color.theme.textTertiary)
+
+            Text(value)
+                .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                .foregroundColor(tint)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
         }
     }
-    private func format(_ v: Double) -> String { abs(v) >= 1000 ? "$\(v.formattedWithAbbreviations())" : v.asCurrencyWith2Decimals() }
 }
 
 struct MiniSparklineView: View {
     let data: [Double]
+
     var body: some View {
         if data.isEmpty {
             placeholder
@@ -441,16 +508,28 @@ struct MiniSparklineView: View {
             Chart {
                 ForEach(Array(data.enumerated()), id: \.offset) { i, p in
                     LineMark(x: .value("I", i), y: .value("P", p))
-                        .foregroundStyle(SparklineStyle.lineColor(for: data).gradient)
+                        .foregroundStyle(SparklineStyle.lineColor(for: data))
+                        .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
                 }
             }
-            .chartXAxis(.hidden).chartYAxis(.hidden).frame(height: 120)
-            .background(RoundedRectangle(cornerRadius: 14).fill(Color.theme.surfaceSecondary))
+            .chartXAxis(.hidden)
+            .chartYAxis(.hidden)
+            .frame(height: 120)
+            .background(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(Color.theme.surfaceSecondary)
+            )
         }
     }
+
     private var placeholder: some View {
-        RoundedRectangle(cornerRadius: 14).fill(Color.theme.surfaceSecondary)
-            .overlay(Text("No data").font(.caption).foregroundColor(Color.theme.textSecondary))
+        RoundedRectangle(cornerRadius: 20, style: .continuous)
+            .fill(Color.theme.surfaceSecondary)
+            .overlay(
+                Text("No data")
+                    .font(.system(size: 12))
+                    .foregroundColor(Color.theme.textTertiary)
+            )
     }
 }
 
@@ -460,14 +539,30 @@ struct ChartPlaceholderView: View {
         case error(String)
     }
 
-    let state: State; let rangeLabel: String
+    let state: State
+
     var body: some View {
         VStack(spacing: 12) {
-            Image(systemName: "chart.line.downtrend.xyaxis").font(.system(size: 36)).foregroundColor(Color.theme.textSecondary.opacity(0.5))
-            Text(title).font(.callout).foregroundColor(Color.theme.textSecondary)
+            Image(systemName: "chart.line.uptrend.xyaxis")
+                .font(.system(size: 28))
+                .foregroundColor(Color.theme.textTertiary)
+
+            Text(title)
+                .font(.system(size: 13))
+                .multilineTextAlignment(.center)
+                .foregroundColor(Color.theme.textSecondary)
+                .padding(.horizontal, 24)
         }
-        .frame(height: 250).frame(maxWidth: .infinity)
-        .background(RoundedRectangle(cornerRadius: 12).fill(Color.theme.textSecondary.opacity(0.03)))
+        .frame(height: 200)
+        .frame(maxWidth: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(Color.theme.surfaceSecondary)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .stroke(Color.theme.borderSubtle, lineWidth: 1)
+                )
+        )
     }
 
     private var title: String {

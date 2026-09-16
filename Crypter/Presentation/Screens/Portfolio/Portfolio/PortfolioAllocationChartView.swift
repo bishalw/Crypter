@@ -5,35 +5,35 @@
 
 import SwiftUI
 
-import SwiftUI
-
 struct PortfolioAllocationChartView: View {
     let coins: [CoinModel]
     let totalValue: Double
     let totalChange: Double
+    var hidesValues: Bool = false
 
     @State private var selectedIndex: Int? = nil
     @State private var drawProgress: Double = 0
     @Environment(\.colorScheme) private var colorScheme
 
+    // Allocation slices, tuned to sit alongside the pen's purple accent.
     private let sliceColors: [Color] = [
-        Color(red: 0.30, green: 0.78, blue: 0.55),
-        Color(red: 0.36, green: 0.53, blue: 0.95),
-        Color(red: 0.95, green: 0.62, blue: 0.27),
-        Color(red: 0.68, green: 0.42, blue: 0.90),
-        Color(red: 0.92, green: 0.40, blue: 0.53),
-        Color(red: 0.25, green: 0.72, blue: 0.78),
-        Color(red: 0.95, green: 0.80, blue: 0.30),
+        Color(hex: "#9D8CFF"),
+        Color(hex: "#34D399"),
+        Color(hex: "#F7931A"),
+        Color(hex: "#627EEA"),
+        Color(hex: "#F87171"),
+        Color(hex: "#38BDF8"),
+        Color(hex: "#FBBF24"),
     ]
 
     private var displayItems: [ChartItem] { /* ... Existing Logic remains unchanged ... */
         let sorted = coins.sorted { $0.currentHoldingsValue > $1.currentHoldingsValue }
         if sorted.count <= 5 {
-            return sorted.map { ChartItem(id: $0.id, label: $0.symbol.uppercased(), symbol: $0.symbol.uppercased(), value: $0.currentHoldingsValue, percentage: percentage(for: $0.currentHoldingsValue), isAggregate: false) }
+            return sorted.map { ChartItem(id: $0.id, label: $0.name, symbol: $0.symbol.uppercased(), value: $0.currentHoldingsValue, percentage: percentage(for: $0.currentHoldingsValue), isAggregate: false) }
         }
-        var items = sorted.prefix(4).map { ChartItem(id: $0.id, label: $0.symbol.uppercased(), symbol: $0.symbol.uppercased(), value: $0.currentHoldingsValue, percentage: percentage(for: $0.currentHoldingsValue), isAggregate: false) }
+        var items = sorted.prefix(4).map { ChartItem(id: $0.id, label: $0.name, symbol: $0.symbol.uppercased(), value: $0.currentHoldingsValue, percentage: percentage(for: $0.currentHoldingsValue), isAggregate: false) }
         let othersValue = sorted.dropFirst(4).reduce(0.0) { $0 + $1.currentHoldingsValue }
-        items.append(ChartItem(id: "others", label: "Other Holdings", symbol: "Others", value: othersValue, percentage: percentage(for: othersValue), isAggregate: true))
+        items.append(ChartItem(id: "others", label: "Other", symbol: "Other", value: othersValue, percentage: percentage(for: othersValue), isAggregate: true))
         return items
     }
 
@@ -48,23 +48,18 @@ struct PortfolioAllocationChartView: View {
         return result
     }
 
-    private var totalChangeColor: Color {
-        totalChange > 0 ? Color.theme.statusSuccess : (totalChange < 0 ? Color.theme.statusDanger : Color.theme.textSecondary)
-    }
-
     var body: some View {
         if coins.isEmpty || totalValue <= 0 {
             emptyState
         } else {
             chartContent
-                .padding(20) // Increased padding for breathing room
+                .padding(18)
                 .background(
-                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
                         .fill(Color.theme.surfaceSecondary)
-                        .shadow(color: Color.black.opacity(0.1), radius: 15, x: 0, y: 8)
                 )
                 .overlay(
-                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
                         .stroke(Color.theme.borderSubtle, lineWidth: 1)
                 )
         }
@@ -75,7 +70,7 @@ struct PortfolioAllocationChartView: View {
         VStack(spacing: 12) {
             Image(systemName: "chart.pie.fill")
                 .font(.system(size: 40))
-                .foregroundColor(Color.theme.textSecondary.opacity(0.3))
+                .foregroundColor(Color.theme.textTertiary)
             Text("No allocation data")
                 .font(.callout.weight(.medium))
                 .foregroundColor(Color.theme.textSecondary)
@@ -83,95 +78,68 @@ struct PortfolioAllocationChartView: View {
         .frame(maxWidth: .infinity)
         .frame(height: 160)
         .background(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .fill(Color.theme.surfaceSecondary)
         )
     }
 
     
     // MARK: - Chart Content
-        private var chartContent: some View {
-            // Tighter spacing between chart and legend
-            HStack(alignment: .center, spacing: 16) {
-                // Reduced size slightly to give the legend more horizontal room
-                donutChart(size: 110)
-                
-                legendView
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
+    private var chartContent: some View {
+        HStack(alignment: .center, spacing: 22) {
+            donutChart(size: 124)
+
+            legendView
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
 
-        // MARK: - Legend
-        private var legendView: some View {
-            VStack(alignment: .leading, spacing: 8) {
-                ForEach(Array(displayItems.enumerated()), id: \.element.id) { index, item in
-                    let isSelected = selectedIndex == index
-                    let color = sliceColors[index % sliceColors.count]
+    // MARK: - Legend
+    private var legendView: some View {
+        VStack(alignment: .leading, spacing: 11) {
+            ForEach(Array(displayItems.enumerated()), id: \.element.id) { index, item in
+                let isSelected = selectedIndex == index
+                let color = sliceColors[index % sliceColors.count]
 
-                    Button {
-                        withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) {
-                            selectedIndex = selectedIndex == index ? nil : index
-                            if selectedIndex != nil {
-                                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                            }
-                        }
-                    } label: {
-                        HStack(spacing: 8) { // Tighter spacing between dot and text
-                            Circle()
-                                .fill(color)
-                                .frame(width: 8, height: 8) // Slightly smaller dot
+                Button {
+                    toggleSelection(index)
+                } label: {
+                    HStack(spacing: 8) {
+                        RoundedRectangle(cornerRadius: 2, style: .continuous)
+                            .fill(color)
+                            .frame(width: 8, height: 8)
 
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(item.symbol)
-                                    // Scaled down the font slightly
-                                    .font(.subheadline.weight(isSelected ? .bold : .semibold))
-                                    .foregroundColor(Color.theme.textPrimary)
-                                    // CRITICAL: Stop the wrapping
-                                    .lineLimit(1)
-                                    .minimumScaleFactor(0.6)
-                                
-                                Text(item.value.asCompactCurrency())
-                                    .font(.caption2)
-                                    .foregroundColor(Color.theme.textSecondary)
-                                    // CRITICAL: Stop the wrapping
-                                    .lineLimit(1)
-                                    .minimumScaleFactor(0.6)
-                            }
+                        Text(item.label)
+                            .font(.system(size: 13))
+                            .foregroundColor(isSelected ? Color.theme.textPrimary : Color.theme.textSecondary)
+                            .lineLimit(1)
+                            .frame(maxWidth: .infinity, alignment: .leading)
 
-                            // CRITICAL: Reduce the minimum length so it doesn't push text away
-                            Spacer(minLength: 4)
-
-                            Text(percentageText(for: item.percentage))
-                                .font(.subheadline.weight(isSelected ? .bold : .semibold))
-                                .foregroundColor(isSelected ? color : Color.theme.textSecondary)
-                                // CRITICAL: Stop the wrapping
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.6)
-                        }
-                        .monospacedDigit()
-                        // Reduced horizontal padding so it fits better
-                        .padding(.vertical, 4)
-                        .padding(.horizontal, 8)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                .fill(isSelected ? color.opacity(0.15) : Color.clear)
-                        )
+                        Text(percentageText(for: item.percentage))
+                            .font(.system(size: 13, weight: .medium, design: .monospaced))
+                            .foregroundColor(Color.theme.textPrimary)
+                            .lineLimit(1)
                     }
-                    .opacity(selectedIndex == nil || isSelected ? 1.0 : 0.4)
-                    .buttonStyle(.plain)
+                    .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
+                .opacity(selectedIndex == nil || isSelected ? 1.0 : 0.4)
+                .accessibilityLabel(accessibilityLabel(for: item))
             }
         }
-        // You can now DELETE regularChartContent and compactChartContent!
+    }
+
+    private func toggleSelection(_ index: Int) {
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+            selectedIndex = selectedIndex == index ? nil : index
+        }
+        if selectedIndex != nil {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        }
+    }
 
     private func donutChart(size: CGFloat) -> some View {
         ZStack {
-            // Subtle inner background to define the "hole" better
-            Circle()
-                .fill(Color.theme.brandPrimary.opacity(0.03))
-                .frame(width: size * 0.7)
-                .blur(radius: 5)
-
             ForEach(Array(slices.enumerated()), id: \.offset) { index, slice in
                 let isSelected = selectedIndex == index
                 let sliceColor = sliceColors[index % sliceColors.count]
@@ -181,88 +149,42 @@ struct PortfolioAllocationChartView: View {
                     endDegrees: min(slice.end, drawProgress * 360),
                     angularInset: 0.8
                 )
-                .fill(
-                    LinearGradient(
-                        colors: [sliceColor, sliceColor.opacity(0.8)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .overlay(
-                     DonutSlice(startDegrees: min(slice.start, drawProgress * 360), endDegrees: min(slice.end, drawProgress * 360), angularInset: 0.8)
-                        .stroke(Color.theme.surfaceBackground, lineWidth: 2)
-                )
-                .scaleEffect(isSelected ? 1.08 : 1.0)
+                .fill(sliceColor)
                 .opacity(selectedIndex == nil || isSelected ? 1.0 : 0.4)
-                .shadow(color: isSelected ? sliceColor.opacity(0.3) : Color.clear, radius: 10, x: 0, y: 0)
-                .animation(.spring(response: 0.4, dampingFraction: 0.6), value: selectedIndex)
+                .animation(.spring(response: 0.4, dampingFraction: 0.7), value: selectedIndex)
                 .onTapGesture {
-                    withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) {
-                        selectedIndex = selectedIndex == index ? nil : index
-                        if selectedIndex != nil {
-                            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                        }
-                    }
+                    toggleSelection(index)
                 }
                 .animation(.easeOut(duration: 0.8).delay(Double(index) * 0.08), value: drawProgress)
             }
             
             centerLabel
-                .frame(width: size * 0.58)
+                .frame(width: size * 0.55)
         }
-        .padding(12)
-        .frame(width: size + 24, height: size + 24)
+        .frame(width: size, height: size)
         .onAppear {
             withAnimation(.easeOut(duration: 0.8)) { drawProgress = 1.0 }
         }
     }
 
-    private var regularChartContent: some View {
-        HStack(alignment: .center, spacing: 20) {
-            donutChart(size: 150)
-            legendView
-        }
-    }
-
-    private var compactChartContent: some View {
-        VStack(spacing: 24) {
-            donutChart(size: 170)
-            legendView
-        }
-    }
-
     @ViewBuilder
     private var centerLabel: some View {
-        VStack(spacing: 0) {
+        VStack(spacing: 2) {
             if let index = selectedIndex, index < displayItems.count {
                 let item = displayItems[index]
-                Text(item.symbol)
-                    .font(.system(size: 8, weight: .bold, design: .rounded))
-                    .foregroundColor(Color.theme.textSecondary)
-                
                 Text(percentageText(for: item.percentage))
-                    .font(.system(size: 16, weight: .bold, design: .rounded))
-                    .foregroundColor(sliceColors[index % sliceColors.count])
-                
-                Text(item.value.asCompactCurrency())
-                    .font(.system(size: 10, weight: .medium, design: .monospaced))
+                    .font(.system(size: 18, weight: .semibold, design: .monospaced))
                     .foregroundColor(Color.theme.textPrimary)
-            } else {
-                Text("TOTAL")
-                    .font(.system(size: 8, weight: .bold, design: .rounded))
+                Text(hidesValues ? CoinRowView.maskedValue : item.value.asCompactCurrency())
+                    .font(.system(size: 11))
                     .foregroundColor(Color.theme.textSecondary)
-                
-                Text(totalValue.asCompactCurrency())
-                    .font(.system(size: 16, weight: .bold, design: .rounded))
+            } else {
+                Text("\(coins.count)")
+                    .font(.system(size: 22, weight: .semibold, design: .monospaced))
                     .foregroundColor(Color.theme.textPrimary)
-                
-                HStack(spacing: 2) {
-                    Image(systemName: totalChange >= 0 ? "arrow.up" : "arrow.down")
-                        .font(.system(size: 8, weight: .bold))
-                    Text(totalChange.asSignedCompactCurrency())
-                        .font(.system(size: 9, weight: .bold, design: .monospaced))
-                }
-                .foregroundColor(totalChangeColor)
+                Text(coins.count == 1 ? "asset" : "assets")
+                    .font(.system(size: 11))
+                    .foregroundColor(Color.theme.textSecondary)
             }
         }
         .lineLimit(1)
@@ -271,7 +193,6 @@ struct PortfolioAllocationChartView: View {
         .contentTransition(.numericText())
     }
 
-    
     // ... [Helper functions percentage(), percentageText() remain the same]
 
 
@@ -308,7 +229,7 @@ private struct ChartItem {
 private struct DonutSlice: Shape {
     var startDegrees: Double
     var endDegrees: Double
-    var holeRatio: CGFloat = 0.65
+    var holeRatio: CGFloat = 0.74
     var angularInset: Double = 1.5
 
     var animatableData: AnimatablePair<Double, Double> {

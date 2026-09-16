@@ -8,9 +8,6 @@
 import Foundation
 import SwiftUI
 
-import Foundation
-import SwiftUI
-
 struct PortfolioView<ViewModel>: View where ViewModel: PortfolioViewModel {
 
     @EnvironmentObject var core: Core
@@ -18,33 +15,42 @@ struct PortfolioView<ViewModel>: View where ViewModel: PortfolioViewModel {
     @State private var selectedCoin: CoinModel? = nil
     @State private var showDetailView: Bool = false
     @State private var showPortfolioEditor: Bool = false
+    @AppStorage("hidesPortfolioBalances") private var hidesBalances: Bool = false
+    @State private var costBasisCoin: CoinModel? = nil
 
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 24) {
+                VStack(spacing: 28) {
                     if vm.portfolioCoins.isEmpty {
                         emptyStateView
                             .padding(.top, 60)
                     } else {
-                        portfolioHeader
-                        
+                        balanceSection
+
                         PortfolioAllocationChartView(
                             coins: vm.portfolioCoins,
                             totalValue: vm.totalPortfolioValue,
-                            totalChange: vm.totalPortfolio24hChange
+                            totalChange: vm.totalPortfolio24hChange,
+                            hidesValues: hidesBalances
                         )
-                        
-                        assetListHeader
-                        
-                        assetCards
+
+                        holdingsSection
+
+                        if !vm.recentTransactions.isEmpty {
+                            transactionsSection
+                        }
+
+                        footer
                     }
                 }
-                .padding()
+                .padding(.horizontal, 20)
+                .padding(.bottom, 24)
             }
             .background(Color.theme.surfaceBackground.ignoresSafeArea())
             .navigationTitle("Portfolio")
             .navigationBarTitleDisplayMode(.large)
+            .navigationSubtitleIfAvailable("Stored on this device")
             .navigationDestination(isPresented: $showDetailView) {
                 if let coin = selectedCoin {
                     DetailView(vm: DetailViewModelImpl(coin: coin, cryptoStore: core.cryptoStore))
@@ -53,12 +59,29 @@ struct PortfolioView<ViewModel>: View where ViewModel: PortfolioViewModel {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
+                        withAnimation(.easeInOut(duration: 0.15)) {
+                            hidesBalances.toggle()
+                        }
+                    } label: {
+                        Image(systemName: hidesBalances ? "eye.slash" : "eye")
+                            .foregroundColor(Color.theme.textPrimary)
+                    }
+                    .accessibilityLabel(hidesBalances ? "Show balances" : "Hide balances")
+                }
+
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
                         showPortfolioEditor = true
                     } label: {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.title3)
-                            .foregroundColor(Color.theme.brandPrimary)
+                        Image(systemName: "plus")
+                            .foregroundColor(Color.theme.textPrimary)
                     }
+                    .accessibilityLabel("Add holding")
+                }
+            }
+            .sheet(item: $costBasisCoin) { coin in
+                CostBasisSheet(coin: coin) { price in
+                    vm.setCostBasis(for: coin, pricePerCoin: price)
                 }
             }
             .sheet(isPresented: $showPortfolioEditor) {
@@ -73,139 +96,285 @@ struct PortfolioView<ViewModel>: View where ViewModel: PortfolioViewModel {
 }
 
 extension PortfolioView {
-    
-    private var portfolioHeader: some View {
-        HStack(spacing: 16) {
-            statCard(
-                title: "Portfolio Value",
-                value: vm.myTotalHoldingDisplayString,
-                percentageChange: vm.totalPortfolio24hChangePercent,
-                icon: "briefcase.fill"
-            )
 
-            statCard(
-                title: "24h Change",
-                value: vm.totalPortfolio24hChange.asSignedCompactCurrency(),
-                percentageChange: nil,
-                icon: "chart.line.uptrend.xyaxis"
-            )
-        }
+    private var todayChangeColor: Color {
+        vm.totalPortfolio24hChange >= 0 ? Color.theme.statusSuccess : Color.theme.statusDanger
     }
 
-    private func statCard(title: String, value: String, percentageChange: Double?, icon: String) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 6) {
-                Image(systemName: icon)
-                    .font(.caption2)
-                Text(title)
-                    .font(.system(size: 10, weight: .bold))
-                    .textCase(.uppercase)
-            }
-            .foregroundColor(Color.theme.textSecondary)
+    private var todayChangeText: String {
+        guard !hidesBalances else {
+            return "\(CoinRowView.maskedValue) · \(abs(vm.totalPortfolio24hChangePercent).asPercentString())"
+        }
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text(value)
-                    .font(.system(.title2, design: .rounded))
-                    .fontWeight(.bold)
-                    .foregroundColor(Color.theme.textPrimary)
-                    .lineLimit(1)
+        let change = vm.totalPortfolio24hChange
+        let amount = (change >= 0 ? "+" : "-") + abs(change).asCurrencyWith2Decimals()
+        let percent = abs(vm.totalPortfolio24hChangePercent).asPercentString()
+        return "\(amount) · \(percent)"
+    }
 
-                if let change = percentageChange {
-                    HStack(spacing: 4) {
-                        Image(systemName: "triangle.fill")
-                            .font(.system(size: 8))
-                            .rotationEffect(Angle(degrees: change >= 0 ? 0 : 180))
-                        Text(change.asPercentString())
-                            .font(.caption2)
-                            .bold()
-                    }
-                    .foregroundColor(change >= 0 ? Color.theme.statusSuccess : Color.theme.statusDanger)
-                } else {
-                    // Placeholder to maintain consistent card height
-                    HStack(spacing: 4) {
-                        Image(systemName: "triangle.fill")
-                            .font(.system(size: 8))
-                            .opacity(0)
-                        Text("0.00%")
-                            .font(.caption2)
-                            .bold()
-                            .opacity(0)
-                    }
+    private var balanceSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Total balance")
+                .font(.system(size: 13))
+                .foregroundColor(Color.theme.textSecondary)
+
+            Text(hidesBalances ? CoinRowView.maskedValue : vm.totalPortfolioValue.asCurrencyWith2Decimals())
+                .font(.system(size: 40, weight: .semibold, design: .monospaced))
+                .foregroundColor(Color.theme.textPrimary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
+                .contentTransition(.numericText())
+
+            HStack(alignment: .top, spacing: 16) {
+                changeColumn(title: "Today", text: todayChangeText, color: todayChangeColor)
+
+                if let allTimeText {
+                    changeColumn(title: "All time", text: allTimeText, color: allTimeChangeColor)
                 }
+            }
+
+            if vm.hasUnknownCostBasis {
+                Text("All-time excludes holdings added before transactions · long-press one to set its cost")
+                    .font(.system(size: 11))
+                    .foregroundColor(Color.theme.textTertiary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16)
-        .background(cardBackground)
     }
 
-    private var cardBackground: some View {
-        RoundedRectangle(cornerRadius: 16, style: .continuous)
-            .fill(Color.theme.surfaceSecondary)
-            .overlay(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(Color.theme.borderSubtle, lineWidth: 1)
-            )
-    }
-
-    private var assetListHeader: some View {
-        HStack {
-            Text("Your Assets")
-                .font(.title3)
-                .bold()
-                .foregroundColor(Color.theme.textPrimary)
-            
-            Spacer()
-            
-            Menu {
-                Button("Highest Holdings", action: { vm.sortOption = .holdings })
-                Button("Lowest Holdings", action: { vm.sortOption = .holdingsReversed })
-                Button("Highest Price", action: { vm.sortOption = .price })
-                Button("Lowest Price", action: { vm.sortOption = .priceReversed })
-            } label: {
-                HStack(spacing: 4) {
-                    Text("Sort")
-                    Image(systemName: "chevron.up.chevron.down")
-                }
-                .font(.caption)
-                .fontWeight(.bold)
-                .foregroundColor(Color.theme.textSecondary)
-                .padding(.vertical, 6)
-                .padding(.horizontal, 10)
-                .background(Color.theme.textSecondary.opacity(0.1))
-                .clipShape(Capsule())
-            }
+    private func changeColumn(title: String, text: String, color: Color) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(title)
+                .font(.system(size: 11))
+                .foregroundColor(Color.theme.textTertiary)
+            Text(text)
+                .font(.system(size: 13, weight: .medium, design: .monospaced))
+                .foregroundColor(color)
         }
     }
 
-    private var assetCards: some View {
-        VStack(spacing: 12) {
-            ForEach(vm.portfolioCoins) { coin in
+    private var allTimeChangeColor: Color {
+        (vm.allTimeProfit ?? 0) >= 0 ? Color.theme.statusSuccess : Color.theme.statusDanger
+    }
+
+    private var allTimeText: String? {
+        guard let profit = vm.allTimeProfit, let percent = vm.allTimeProfitPercent else { return nil }
+
+        guard !hidesBalances else {
+            return "\(CoinRowView.maskedValue) · \(abs(percent).asPercentString())"
+        }
+
+        let amount = (profit >= 0 ? "+" : "-") + abs(profit).asCurrencyWith2Decimals()
+        return "\(amount) · \(abs(percent).asPercentString())"
+    }
+
+    private var sortOptions: [(title: String, option: SortOption)] {
+        [
+            ("Value", .holdings),
+            ("Value ↑", .holdingsReversed),
+            ("Price", .price),
+            ("Price ↑", .priceReversed)
+        ]
+    }
+
+    private var sortTitle: String {
+        sortOptions.first(where: { $0.option == vm.sortOption })?.title ?? "Value"
+    }
+
+    private var holdingsSection: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Text("Holdings")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundColor(Color.theme.textPrimary)
+
+                Spacer()
+
+                Menu {
+                    Picker("Sort", selection: $vm.sortOption) {
+                        Text("Highest value").tag(SortOption.holdings)
+                        Text("Lowest value").tag(SortOption.holdingsReversed)
+                        Text("Highest price").tag(SortOption.price)
+                        Text("Lowest price").tag(SortOption.priceReversed)
+                    }
+                } label: {
+                    Text("Sort: \(sortTitle)")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(Color.theme.brandPrimary)
+                }
+            }
+            .padding(.bottom, 6)
+
+            ForEach(Array(vm.portfolioCoins.enumerated()), id: \.element.id) { index, coin in
                 Button {
                     selectedCoin = coin
                     showDetailView = true
                 } label: {
-                    CoinRowView(coin: coin, showHoldingsColumn: true)
-                        .padding()
-                        .background(cardBackground)
+                    CoinRowView(coin: coin, showHoldingsColumn: true, hidesValues: hidesBalances)
+                        .padding(.vertical, 14)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .contextMenu {
+                    if coin.averageCost == nil {
+                        Button {
+                            costBasisCoin = coin
+                        } label: {
+                            Label("Set cost basis", systemImage: "dollarsign.circle")
+                        }
+                    }
+
                     Button(role: .destructive) {
-                        withAnimation { vm.updatePortfolio(coin: coin, amount: 0) }
+                        withAnimation { vm.removeFromPortfolio(coin: coin) }
                     } label: {
                         Label("Remove from Portfolio", systemImage: "trash")
                     }
                 }
+
+                if index < vm.portfolioCoins.count - 1 {
+                    Rectangle()
+                        .fill(Color.theme.borderSubtle)
+                        .frame(height: 1)
+                }
             }
         }
+    }
+
+    private var transactionsSection: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Text("Recent transactions")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundColor(Color.theme.textPrimary)
+
+                Spacer()
+
+                Text(vm.recentTransactions.count == 1 ? "1 entry" : "\(vm.recentTransactions.count) entries")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(Color.theme.textTertiary)
+            }
+            .padding(.bottom, 6)
+
+            ForEach(Array(vm.recentTransactions.prefix(10).enumerated()), id: \.element.id) { index, transaction in
+                transactionRow(transaction)
+
+                if index < min(vm.recentTransactions.count, 10) - 1 {
+                    Rectangle()
+                        .fill(Color.theme.borderSubtle)
+                        .frame(height: 1)
+                }
+            }
+        }
+    }
+
+    private func transactionRow(_ transaction: PortfolioTransaction) -> some View {
+        let coin = vm.portfolioCoins.first(where: { $0.id == transaction.coinID })
+        let symbol = coin?.symbol.uppercased() ?? transaction.coinID.uppercased()
+        let tint: Color = {
+            switch transaction.kind {
+            case .buy: return Color.theme.statusSuccess
+            case .sell: return Color.theme.statusDanger
+            case .opening: return Color.theme.textSecondary
+            }
+        }()
+
+        return HStack(spacing: 12) {
+            Image(systemName: transaction.kind.iconName)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundColor(tint)
+                .frame(width: 36, height: 36)
+                .background(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(tint.opacity(0.12))
+                )
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(transactionTitle(transaction, symbol: symbol))
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(Color.theme.textPrimary)
+
+                Text(transactionSubtitle(transaction))
+                    .font(.system(size: 12))
+                    .foregroundColor(Color.theme.textSecondary)
+            }
+
+            Spacer(minLength: 8)
+
+            VStack(alignment: .trailing, spacing: 3) {
+                Text(signedAmountText(transaction, symbol: symbol))
+                    .font(.system(size: 13, weight: .medium, design: .monospaced))
+                    .foregroundColor(Color.theme.textPrimary)
+
+                Text(transaction.hasCostBasis ? transaction.totalValue.asCurrencyWith2Decimals() : "Set cost basis")
+                    .font(.system(size: 12, design: transaction.hasCostBasis ? .monospaced : .default))
+                    .foregroundColor(transaction.hasCostBasis ? Color.theme.textTertiary : Color.theme.brandPrimary)
+            }
+        }
+        .padding(.vertical, 12)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            guard transaction.kind == .opening, let coin else { return }
+            costBasisCoin = coin
+        }
+        .contextMenu {
+            if transaction.kind == .opening, let coin {
+                Button {
+                    costBasisCoin = coin
+                } label: {
+                    Label("Set cost basis", systemImage: "dollarsign.circle")
+                }
+            }
+
+            Button(role: .destructive) {
+                withAnimation { vm.deleteTransaction(id: transaction.id) }
+            } label: {
+                Label("Delete transaction", systemImage: "trash")
+            }
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(transaction.kind == .opening ? .isButton : [])
+    }
+
+    private func transactionTitle(_ transaction: PortfolioTransaction, symbol: String) -> String {
+        switch transaction.kind {
+        case .buy: return "Bought \(symbol)"
+        case .sell: return "Sold \(symbol)"
+        case .opening: return "Opening balance \(symbol)"
+        }
+    }
+
+    private func transactionSubtitle(_ transaction: PortfolioTransaction) -> String {
+        let date = transaction.date.formatted(.dateTime.month(.abbreviated).day())
+
+        guard transaction.hasCostBasis else { return "\(date) · price unknown" }
+
+        return "\(date) · @ \(transaction.pricePerCoin.asCurrencyWith2Decimals())"
+    }
+
+    private func signedAmountText(_ transaction: PortfolioTransaction, symbol: String) -> String {
+        guard !hidesBalances else { return CoinRowView.maskedValue }
+
+        let sign = transaction.kind == .sell ? "-" : "+"
+        return "\(sign)\(transaction.amount.asNumberString()) \(symbol)"
+    }
+
+    private var footer: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "checkmark.shield")
+                .font(.system(size: 11))
+            Text("Holdings stay local · Prices by CoinGecko")
+                .font(.system(size: 11))
+        }
+        .foregroundColor(Color.theme.textTertiary)
+        .frame(maxWidth: .infinity)
     }
 
     private var emptyStateView: some View {
         VStack(spacing: 24) {
             ZStack {
                 Circle()
-                    .fill(Color.theme.brandPrimary.opacity(0.1))
+                    .fill(Color.theme.brandSoft)
                     .frame(width: 140, height: 140)
                 
                 Image(systemName: "chart.pie.fill")
@@ -234,14 +403,108 @@ extension PortfolioView {
                     Text("Add First Coin")
                 }
                 .font(.headline)
-                .foregroundColor(.white)
+                .foregroundColor(Color.theme.surfaceBackground)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .background(Color.theme.brandPrimary)
-                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             }
             .padding(.horizontal, 40)
         }
+    }
+}
+
+/// Lets a holding carried over from before transaction tracking be given an
+/// average purchase price, so it can join the all-time P/L.
+struct CostBasisSheet: View {
+    let coin: CoinModel
+    let onSave: (Double) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @FocusState private var isPriceFocused: Bool
+    @State private var priceText: String = ""
+
+    private var price: Double? {
+        guard let value = Double(priceText), value > 0 else { return nil }
+        return value
+    }
+
+    var body: some View {
+        NavigationStack {
+            VStack(alignment: .leading, spacing: 20) {
+                Text("What did you pay on average for one \(coin.symbol.uppercased())?")
+                    .font(.system(size: 15))
+                    .foregroundColor(Color.theme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                HStack(spacing: 8) {
+                    TextField(
+                        "",
+                        text: $priceText,
+                        prompt: Text("0.00").foregroundColor(Color.theme.textTertiary)
+                    )
+                    .keyboardType(.decimalPad)
+                    .font(.system(size: 28, weight: .semibold, design: .monospaced))
+                    .foregroundColor(Color.theme.textPrimary)
+                    .tint(Color.theme.brandPrimary)
+                    .focused($isPriceFocused)
+
+                    Text("USD")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(Color.theme.textSecondary)
+                }
+                .padding(.vertical, 12)
+                .padding(.horizontal, 14)
+                .background(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(Color.theme.surfaceTertiary)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .strokeBorder(
+                            isPriceFocused ? Color.theme.brandPrimary : Color.theme.borderSubtle,
+                            lineWidth: 1
+                        )
+                )
+
+                if let price, let holdings = coin.currentHoldings {
+                    Text("Marks your \(holdings.asNumberString()) \(coin.symbol.uppercased()) as bought for \((holdings * price).asCurrencyWith2Decimals())")
+                        .font(.system(size: 12))
+                        .foregroundColor(Color.theme.textTertiary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Spacer()
+            }
+            .padding(20)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.theme.surfaceBackground.ignoresSafeArea())
+            .navigationTitle("Cost basis")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel", role: .cancel) { dismiss() }
+                        .foregroundColor(Color.theme.textSecondary)
+                }
+
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        guard let price else { return }
+                        onSave(price)
+                        UINotificationFeedbackGenerator().notificationOccurred(.success)
+                        dismiss()
+                    }
+                    .foregroundColor(Color.theme.brandPrimary)
+                    .disabled(price == nil)
+                }
+            }
+            .onAppear {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    isPriceFocused = true
+                }
+            }
+        }
+        .presentationDetents([.height(280)])
     }
 }
 

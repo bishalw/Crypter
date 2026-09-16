@@ -12,14 +12,28 @@ struct CoinRowView: View {
     let coin: CoinModel
     let showHoldingsColumn: Bool
     var showSparkline: Bool = false
+    var hidesValues: Bool = false
+
+    static let maskedValue = "••••••"
 
     private var holdingsValueText: String {
-        coin.currentHoldingsValue.asCompactCurrency()
+        hidesValues ? Self.maskedValue : coin.currentHoldingsValue.asCurrencyWith2Decimals()
     }
 
     private var holdingsAmountText: String {
-        (coin.currentHoldings ?? 0).asNumberString()
+        guard !hidesValues else { return Self.maskedValue + " " + coin.symbol.uppercased() }
+
+        let amount = NSNumber(value: coin.currentHoldings ?? 0)
+        return (Self.amountFormatter.string(from: amount) ?? "0") + " " + coin.symbol.uppercased()
     }
+
+    private static let amountFormatter: NumberFormatter = {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.minimumFractionDigits = 0
+        formatter.maximumFractionDigits = 4
+        return formatter
+    }()
 
     private var priceText: String {
         coin.currentPrice >= 1000
@@ -27,8 +41,25 @@ struct CoinRowView: View {
             : coin.currentPrice.asCurrencyWith6Decimals()
     }
 
+    /// In the portfolio, all-time profit is the number that matters — fall back to
+    /// the 24h move when the cost basis is unknown.
+    private var showsAllTimeProfit: Bool {
+        showHoldingsColumn && coin.totalProfitPercentage != nil
+    }
+
+    private var changeText: String {
+        guard showsAllTimeProfit, let profit = coin.totalProfitPercentage else { return percentChangeText }
+        return (profit >= 0 ? "+" : "") + profit.asPercentString()
+    }
+
+    private var changeColor: Color {
+        let value = showsAllTimeProfit ? (coin.totalProfitPercentage ?? 0) : (coin.priceChangePercentage24H ?? 0)
+        return value >= 0 ? Color.theme.statusSuccess : Color.theme.statusDanger
+    }
+
     private var percentChangeText: String {
-        coin.priceChangePercentage24H?.asPercentString() ?? ""
+        guard let change = coin.priceChangePercentage24H else { return "" }
+        return (change >= 0 ? "+" : "") + change.asPercentString()
     }
 
     private var marketCapText: String {
@@ -37,18 +68,12 @@ struct CoinRowView: View {
     }
 
     var body: some View {
-        HStack(spacing: 0) {
+        HStack(spacing: 12) {
             leftColumn
-
-            if showHoldingsColumn {
-                centerColumn
-                    .padding(.horizontal, 8)
-            }
 
             if showSparkline {
                 CoinSparklineView(data: coin.price ?? [])
-                    .frame(width: 56, height: 28)
-                    .padding(.horizontal, 8)
+                    .frame(width: 60, height: 26)
             }
 
             rightColumn
@@ -71,30 +96,35 @@ struct CoinRowView_Previews: PreviewProvider {
 extension CoinRowView {
     private var leftColumn: some View {
         HStack(spacing: 12) {
-            Text("\(coin.rank)")
-                .font(.system(size: 10, weight: .bold, design: .rounded))
-                .foregroundColor(Color.theme.textSecondary)
-                .frame(width: 20, alignment: .leading)
+            if !showHoldingsColumn {
+                Text("\(coin.rank)")
+                    .font(.system(size: 11, design: .monospaced))
+                    .foregroundColor(Color.theme.textTertiary)
+                    .frame(width: 16, alignment: .leading)
+            }
 
             CoinImageView(vm: CoinImageViewModelImpl(coinImageRepository: core.coinImageRepository, coin: coin))
-                .frame(width: 32, height: 32)
+                .frame(width: 36, height: 36)
                 .clipShape(Circle())
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text(coin.name)
-                    .font(.system(.subheadline, design: .rounded))
-                    .fontWeight(.bold)
+                    .font(.system(size: 15, weight: .semibold))
                     .foregroundColor(Color.theme.textPrimary)
                     .lineLimit(1)
 
                 HStack(spacing: 4) {
-                    Text(coin.symbol.uppercased())
-                    if !marketCapText.isEmpty {
-                        Text("·")
-                        Text(marketCapText)
+                    if showHoldingsColumn {
+                        Text(holdingsAmountText)
+                    } else {
+                        Text(coin.symbol.uppercased())
+                        if !marketCapText.isEmpty {
+                            Text("·")
+                            Text(marketCapText)
+                        }
                     }
                 }
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundColor(Color.theme.textSecondary)
                 .lineLimit(1)
             }
@@ -102,38 +132,18 @@ extension CoinRowView {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private var centerColumn: some View {
-        VStack(alignment: .trailing, spacing: 2) {
-            Text(holdingsValueText)
-                .font(.system(.subheadline, design: .rounded))
-                .fontWeight(.bold)
-                .foregroundColor(Color.theme.textPrimary)
-            Text(holdingsAmountText)
-                .font(.system(size: 11, design: .monospaced))
-                .foregroundColor(Color.theme.textSecondary)
-        }
-        .frame(minWidth: 80, alignment: .trailing)
-    }
-
     private var rightColumn: some View {
-        VStack(alignment: .trailing, spacing: 2) {
-            Text(priceText)
-                .font(.system(.subheadline, design: .rounded))
-                .fontWeight(.bold)
+        VStack(alignment: .trailing, spacing: 4) {
+            Text(showHoldingsColumn ? holdingsValueText : priceText)
+                .font(.system(size: 13, weight: .medium, design: .monospaced))
                 .foregroundColor(Color.theme.textPrimary)
+                .lineLimit(1)
 
-            HStack(spacing: 4) {
-                Image(systemName: (coin.priceChangePercentage24H ?? 0) >= 0 ? "arrow.up.right" : "arrow.down.right")
-                Text(percentChangeText)
-            }
-            .font(.system(size: 11, weight: .bold, design: .rounded))
-            .foregroundColor(
-                (coin.priceChangePercentage24H ?? 0) >= 0 ?
-                Color.theme.statusSuccess :
-                Color.theme.statusDanger
-            )
+            Text(changeText)
+                .font(.system(size: 12, weight: .medium, design: .monospaced))
+                .foregroundColor(changeColor)
         }
-        .frame(minWidth: 90, alignment: .trailing)
+        .fixedSize(horizontal: true, vertical: false)
     }
 }
 

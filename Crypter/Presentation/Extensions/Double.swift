@@ -17,6 +17,10 @@ extension Date {
     func asShortDateString() -> String {
         formatted(.dateTime.month(.abbreviated).day())
     }
+
+    func asHeaderDateString() -> String {
+        formatted(.dateTime.weekday(.wide).month(.abbreviated).day())
+    }
 }
 
 extension Double {
@@ -29,9 +33,10 @@ extension Double {
         let formatter = NumberFormatter()
         formatter.usesGroupingSeparator = true
         formatter.numberStyle = .currency
-        //formatter.locale = .current // <- default val
-        //formatter.currencyCode = "usd"
-        //formatter.currencySymbol = "$"
+        // Prices come from the API in USD, so the symbol is pinned rather than
+        // taken from the device locale (which would label a USD price "£").
+        formatter.locale = Locale(identifier: "en_US")
+        formatter.currencyCode = "USD"
         formatter.minimumFractionDigits = 2
         formatter.maximumFractionDigits = 2
         return formatter
@@ -55,9 +60,9 @@ extension Double {
         let formatter = NumberFormatter()
         formatter.usesGroupingSeparator = true
         formatter.numberStyle = .currency
-        //formatter.locale = .current // <- default val
-        //formatter.currencyCode = "usd"
-        //formatter.currencySymbol = "$"
+        // Prices come from the API in USD; see asCurrencyWith2Decimals.
+        formatter.locale = Locale(identifier: "en_US")
+        formatter.currencyCode = "USD"
         formatter.minimumFractionDigits = 2
         formatter.maximumFractionDigits = 6
         return formatter
