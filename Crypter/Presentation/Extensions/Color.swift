@@ -88,4 +88,7 @@ struct ColorTheme {
 
     /// Tinted danger fill
     let statusDangerSoft = Color(hex: "#F871711F")
+
+    /// Trending / hot accent
+    let statusHot = Color(hex: "#FB923C")
 }

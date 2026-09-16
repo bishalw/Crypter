@@ -13,8 +13,9 @@ struct TrendingStripView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 6) {
-                Text("🔥")
-                    .font(.system(size: 14))
+                Image(systemName: "flame.fill")
+                    .font(.system(size: 13))
+                    .foregroundColor(Color.theme.statusHot)
 
                 Text("Trending on CoinGecko")
                     .font(.system(size: 15, weight: .semibold))
