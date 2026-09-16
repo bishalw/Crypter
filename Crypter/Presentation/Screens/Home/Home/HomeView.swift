@@ -27,7 +27,9 @@ struct HomeView<ViewModel>: View where ViewModel: HomeViewModel {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
-                    if let errorMessage = vm.errorMessage {
+                    // With nothing loaded yet the empty state carries the message,
+                    // so the banner would say it twice.
+                    if let errorMessage = vm.errorMessage, !vm.allCoins.isEmpty {
                         refreshBanner(errorMessage)
                     }
 
@@ -47,6 +49,8 @@ struct HomeView<ViewModel>: View where ViewModel: HomeViewModel {
 
                         if vm.allCoins.isEmpty && !vm.searchText.isEmpty {
                             noResults
+                        } else if vm.allCoins.isEmpty && vm.errorMessage != nil && !vm.isLoading {
+                            failedFirstLoad
                         } else if vm.allCoins.isEmpty {
                             placeholderRows
                         } else {
@@ -142,6 +146,45 @@ struct HomeView<ViewModel>: View where ViewModel: HomeViewModel {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .stroke(Color.theme.borderSubtle, lineWidth: 1)
         )
+    }
+
+    /// Nothing loaded and the refresh failed: the list has nothing to show, so
+    /// the failure becomes the content rather than a note above empty space.
+    private var failedFirstLoad: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "wifi.exclamationmark")
+                .font(.system(size: 40))
+                .foregroundColor(Color.theme.textTertiary)
+
+            VStack(spacing: 6) {
+                Text("Couldn't load coins")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundColor(Color.theme.textPrimary)
+
+                Text(vm.errorMessage ?? "")
+                    .font(.system(size: 13))
+                    .foregroundColor(Color.theme.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Button {
+                vm.reloadData()
+            } label: {
+                Text("Try again")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(Color.theme.surfaceBackground)
+                    .padding(.vertical, 12)
+                    .padding(.horizontal, 24)
+                    .background(
+                        Capsule().fill(Color.theme.brandPrimary)
+                    )
+            }
+            .buttonStyle(.plain)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 24)
+        .padding(.vertical, 48)
     }
 
     /// Placeholder rows for the first load, so the list has shape before data lands.

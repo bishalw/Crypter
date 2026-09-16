@@ -170,23 +170,51 @@ extension DetailView {
         }
     }
 
+    /// Profit already banked on this coin, or nil when nothing has been sold.
+    private var realizedTotal: Double? {
+        let profits = vm.transactions.compactMap { vm.realizedProfit(for: $0) }
+        guard !profits.isEmpty else { return nil }
+        return profits.reduce(0, +)
+    }
+
     private func positionSummary(_ holding: PortfolioHolding) -> some View {
-        HStack(alignment: .top) {
-            summaryColumn(
-                title: "Average cost",
-                value: holding.averageCost?.asCurrencyWith2Decimals() ?? "Unknown",
-                color: Color.theme.textPrimary
-            )
-
-            Spacer()
-
-            if let profit = vm.coin.totalProfit, let percent = vm.coin.totalProfitPercentage {
+        VStack(spacing: 12) {
+            HStack(alignment: .top) {
                 summaryColumn(
-                    title: "Unrealized",
-                    value: (profit >= 0 ? "+" : "-") + abs(profit).asCurrencyWith2Decimals() + " · " + abs(percent).asPercentString(),
-                    color: profit >= 0 ? Color.theme.statusSuccess : Color.theme.statusDanger,
+                    title: "Holding",
+                    value: holding.amount.asNumberString() + " " + vm.coin.symbol.uppercased(),
+                    color: Color.theme.textPrimary
+                )
+
+                Spacer()
+
+                summaryColumn(
+                    title: "Average cost",
+                    value: holding.averageCost?.asCurrencyWith2Decimals() ?? "Unknown",
+                    color: holding.averageCost == nil ? Color.theme.textTertiary : Color.theme.textPrimary,
                     alignment: .trailing
                 )
+            }
+
+            HStack(alignment: .top) {
+                if let profit = vm.coin.totalProfit, let percent = vm.coin.totalProfitPercentage {
+                    summaryColumn(
+                        title: "Unrealized",
+                        value: (profit >= 0 ? "+" : "-") + abs(profit).asCurrencyWith2Decimals() + " · " + abs(percent).asPercentString(),
+                        color: profit >= 0 ? Color.theme.statusSuccess : Color.theme.statusDanger
+                    )
+                }
+
+                Spacer()
+
+                if let realizedTotal {
+                    summaryColumn(
+                        title: "Realized",
+                        value: (realizedTotal >= 0 ? "+" : "-") + abs(realizedTotal).asCurrencyWith2Decimals(),
+                        color: realizedTotal >= 0 ? Color.theme.statusSuccess : Color.theme.statusDanger,
+                        alignment: .trailing
+                    )
+                }
             }
         }
         .padding(.vertical, 14)

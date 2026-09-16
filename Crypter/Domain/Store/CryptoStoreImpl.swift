@@ -78,9 +78,13 @@ class CryptoStoreImpl: CryptoStore {
     }
     
     func fetchGlobalData() {
+        isLoadingMarkets.send(true)
+
         repository.fetchGlobalData()
             .receive(on: DispatchQueue.main)
             .sink(receiveCompletion: { [weak self] completion in
+                self?.isLoadingMarkets.send(false)
+
                 guard case .failure(let error) = completion else { return }
                 self?.marketErrorMessage.send(Self.marketErrorMessage(for: error))
             }, receiveValue: { [weak self] data in
