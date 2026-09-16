@@ -16,8 +16,11 @@ protocol DetailViewModel: ObservableObject {
     var chartPoints: [ChartPoint] { get set }
     var isLoadingChart: Bool { get set }
     var chartErrorMessage: String? { get set }
-    
+    var transactions: [PortfolioTransaction] { get }
+    var holding: PortfolioHolding? { get }
+
     func fetchMarketChart(range: ChartTimeRange)
+    func realizedProfit(for transaction: PortfolioTransaction) -> Double?
 }
 
 class DetailViewModelImpl: ObservableObject, DetailViewModel {
@@ -30,14 +33,18 @@ class DetailViewModelImpl: ObservableObject, DetailViewModel {
     @Published var chartPoints: [ChartPoint] = []
     @Published var isLoadingChart: Bool = false
     @Published var chartErrorMessage: String? = nil
+    @Published var transactions: [PortfolioTransaction] = []
+    @Published var holding: PortfolioHolding? = nil
     
     @Published var coin: CoinModel
     private let cryptoStore: CryptoStore
+    private let portfolioDataService: PortfolioDataService?
     private var cancellables = Set<AnyCancellable>()
     
-    init(coin: CoinModel, cryptoStore: CryptoStore) {
+    init(coin: CoinModel, cryptoStore: CryptoStore, portfolioDataService: PortfolioDataService? = nil) {
         self.coin = coin
         self.cryptoStore = cryptoStore
+        self.portfolioDataService = portfolioDataService
         self.addSubscribers()
         
         // Initial fetches
@@ -45,6 +52,10 @@ class DetailViewModelImpl: ObservableObject, DetailViewModel {
         fetchMarketChart(range: .week)
     }
     
+    func realizedProfit(for transaction: PortfolioTransaction) -> Double? {
+        PortfolioDataServiceImpl.realizedProfits(from: transactions)[transaction.id]
+    }
+
     func fetchMarketChart(range: ChartTimeRange) {
         isLoadingChart = true
         chartErrorMessage = nil
@@ -52,6 +63,29 @@ class DetailViewModelImpl: ObservableObject, DetailViewModel {
     }
     
     private func addSubscribers() {
+        portfolioDataService?.transactionsPublisher
+            .map { [weak self] transactions in
+                transactions.filter { $0.coinID == self?.coin.id }
+            }
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] transactions in
+                self?.transactions = transactions
+            }
+            .store(in: &cancellables)
+
+        portfolioDataService?.savedEntitiesPublisher
+            .map { [weak self] holdings in
+                holdings.first(where: { $0.coinID == self?.coin.id })
+            }
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] holding in
+                self?.holding = holding
+
+                guard let self, let holding else { return }
+                self.coin = self.coin.updatePosition(amount: holding.amount, averageCost: holding.averageCost)
+            }
+            .store(in: &cancellables)
+
         cryptoStore.coinDetails
             .receive(on: DispatchQueue.main)
             .sink { [weak self] (returnedCoinDetails) in

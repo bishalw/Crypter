@@ -65,9 +65,13 @@ struct PortfolioTransaction: Identifiable, Equatable {
 
 protocol PortfolioDataService {
     var savedEntitiesPublisher: AnyPublisher<[PortfolioHolding], Never> { get }
+    /// Set when the local store could not be opened, so the UI can say so
+    /// instead of pretending the portfolio is empty.
+    var storeErrorPublisher: AnyPublisher<String?, Never> { get }
     var transactionsPublisher: AnyPublisher<[PortfolioTransaction], Never> { get }
 
     func addTransaction(coin: CoinModel, kind: TransactionKind, amount: Double, pricePerCoin: Double, date: Date)
+    func updateTransaction(id: UUID, kind: TransactionKind, amount: Double, pricePerCoin: Double, date: Date)
     func deleteTransaction(id: UUID)
     func setCostBasis(forCoinID coinID: String, pricePerCoin: Double)
     func deleteAllTransactions(forCoinID coinID: String)
@@ -101,6 +105,7 @@ class PortfolioDataServiceImpl: PortfolioDataService {
 
     private let holdingsSubject = CurrentValueSubject<[PortfolioHolding], Never>([])
     private let transactionsSubject = CurrentValueSubject<[PortfolioTransaction], Never>([])
+    private let storeErrorSubject = CurrentValueSubject<String?, Never>(nil)
 
     var savedEntitiesPublisher: AnyPublisher<[PortfolioHolding], Never> {
         holdingsSubject.eraseToAnyPublisher()
@@ -108,6 +113,10 @@ class PortfolioDataServiceImpl: PortfolioDataService {
 
     var transactionsPublisher: AnyPublisher<[PortfolioTransaction], Never> {
         transactionsSubject.eraseToAnyPublisher()
+    }
+
+    var storeErrorPublisher: AnyPublisher<String?, Never> {
+        storeErrorSubject.eraseToAnyPublisher()
     }
 
     var savedHoldings: [PortfolioHolding] {
@@ -121,8 +130,10 @@ class PortfolioDataServiceImpl: PortfolioDataService {
             initError = error
         }
 
-        if initError != nil {
-            print("error")
+        if let initError {
+            storeErrorSubject.send("Couldn't open your saved portfolio. Recent changes may not be showing.")
+            print("Error loading Core Data store. \(initError)")
+            return
         }
 
         migrateLegacyHoldingsIfNeeded()
@@ -137,6 +148,23 @@ class PortfolioDataServiceImpl: PortfolioDataService {
         let entity = TransactionEntity(context: container.viewContext)
         entity.id = UUID()
         entity.coinID = coin.id
+        entity.kind = kind.rawValue
+        entity.amount = amount
+        entity.pricePerCoin = pricePerCoin
+        entity.hasCostBasis = kind != .opening
+        entity.date = date
+
+        applyChanges()
+    }
+
+    func updateTransaction(id: UUID, kind: TransactionKind, amount: Double, pricePerCoin: Double, date: Date) {
+        guard amount > 0 else { return }
+
+        let request = NSFetchRequest<TransactionEntity>(entityName: entityName)
+        request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+
+        guard let entity = try? container.viewContext.fetch(request).first else { return }
+
         entity.kind = kind.rawValue
         entity.amount = amount
         entity.pricePerCoin = pricePerCoin
@@ -266,6 +294,67 @@ class PortfolioDataServiceImpl: PortfolioDataService {
             hasCostBasis: entity.hasCostBasis,
             date: entity.date ?? Date()
         )
+    }
+
+    /// Profit locked in by each sell, keyed by transaction id.
+    ///
+    /// A sell only has a realized figure when the coins it sold had a known
+    /// cost, so sells drawn from an opening balance are absent rather than
+    /// reported as pure profit.
+    static func realizedProfits(from transactions: [PortfolioTransaction]) -> [UUID: Double] {
+        var result: [UUID: Double] = [:]
+        let byCoin = Dictionary(grouping: transactions, by: { $0.coinID })
+
+        for (_, coinTransactions) in byCoin {
+            var amount: Double = 0
+            var costTotal: Double = 0
+            var basisKnown = true
+
+            for transaction in coinTransactions.sorted(by: { $0.date < $1.date }) {
+                switch transaction.kind {
+                case .buy:
+                    amount += transaction.amount
+                    costTotal += transaction.totalValue
+                case .opening:
+                    amount += transaction.amount
+                    basisKnown = false
+                case .sell:
+                    let averageCost = amount > 0 ? costTotal / amount : 0
+                    let sold = min(transaction.amount, amount)
+
+                    if basisKnown, sold > 0 {
+                        result[transaction.id] = (transaction.pricePerCoin - averageCost) * sold
+                    }
+
+                    amount -= sold
+                    costTotal -= averageCost * sold
+                }
+            }
+        }
+
+        return result
+    }
+
+    /// True when no sell in the list is larger than the amount held at that point.
+    /// Used to reject an edit that would make an earlier history impossible.
+    static func isConsistent(_ transactions: [PortfolioTransaction]) -> Bool {
+        let byCoin = Dictionary(grouping: transactions, by: { $0.coinID })
+
+        for (_, coinTransactions) in byCoin {
+            var amount: Double = 0
+
+            for transaction in coinTransactions.sorted(by: { $0.date < $1.date }) {
+                switch transaction.kind {
+                case .buy, .opening:
+                    amount += transaction.amount
+                case .sell:
+                    if transaction.amount > amount + 0.000_000_01 { return false }
+                    amount -= transaction.amount
+                }
+            }
+        }
+
+        return true
     }
 
     /// Average-cost accounting: buys raise the basis, sells reduce the quantity at

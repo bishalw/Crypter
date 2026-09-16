@@ -13,6 +13,8 @@ struct DetailView<ViewModel>: View where ViewModel: DetailViewModel {
     @EnvironmentObject var watchlist: WatchlistStore
     @AppStorage("hidesPortfolioBalances") private var hidesBalances: Bool = false
     @State private var showFullDescription: Bool = false
+    @State private var showTransactionEditor: Bool = false
+    @State private var editingTransaction: PortfolioTransaction? = nil
 
     var body: some View {
         ScrollView {
@@ -35,6 +37,10 @@ struct DetailView<ViewModel>: View where ViewModel: DetailViewModel {
 
                 if let low = vm.coin.low24H, let high = vm.coin.high24H, high > low {
                     rangeSection(low: low, high: high)
+                }
+
+                if !vm.transactions.isEmpty {
+                    transactionsSection
                 }
 
                 if !vm.overViewStatistics.isEmpty {
@@ -78,6 +84,37 @@ struct DetailView<ViewModel>: View where ViewModel: DetailViewModel {
                 watchlistButton
             }
         }
+        .safeAreaInset(edge: .bottom) {
+            addTransactionBar
+        }
+        .sheet(isPresented: $showTransactionEditor) {
+            HomeAddHoldingSheet(
+                vm: HomeAddHoldingViewModel(
+                    coin: vm.coin,
+                    portfolioDataService: core.portfolioDataService
+                )
+            )
+            .environmentObject(core)
+        }
+        .sheet(item: $editingTransaction) { transaction in
+            TransactionEditorSheet(
+                transaction: transaction,
+                symbol: vm.coin.symbol.uppercased(),
+                siblings: vm.transactions,
+                onSave: { kind, amount, price, date in
+                    core.portfolioDataService.updateTransaction(
+                        id: transaction.id,
+                        kind: kind,
+                        amount: amount,
+                        pricePerCoin: price,
+                        date: date
+                    )
+                },
+                onDelete: {
+                    core.portfolioDataService.deleteTransaction(id: transaction.id)
+                }
+            )
+        }
     }
 }
 
@@ -100,6 +137,162 @@ extension DetailView {
                 .foregroundColor(isWatched ? Color.theme.brandPrimary : Color.theme.textPrimary)
         }
         .accessibilityLabel(isWatched ? "Remove from watchlist" : "Add to watchlist")
+    }
+}
+
+// MARK: - Transactions
+
+extension DetailView {
+    /// The coin's own history, so a position can be checked without leaving the page.
+    private var transactionsSection: some View {
+        section(title: "Your transactions", meta: vm.transactions.count == 1 ? "1 entry" : "\(vm.transactions.count) entries") {
+            VStack(spacing: 0) {
+                if let holding = vm.holding {
+                    positionSummary(holding)
+
+                    Rectangle()
+                        .fill(Color.theme.borderSubtle)
+                        .frame(height: 1)
+                }
+
+                ForEach(Array(vm.transactions.enumerated()), id: \.element.id) { index, transaction in
+                    transactionRow(transaction)
+
+                    if index < vm.transactions.count - 1 {
+                        Rectangle()
+                            .fill(Color.theme.borderSubtle)
+                            .frame(height: 1)
+                    }
+                }
+            }
+            .padding(.horizontal, 16)
+            .background(cardBackground)
+        }
+    }
+
+    private func positionSummary(_ holding: PortfolioHolding) -> some View {
+        HStack(alignment: .top) {
+            summaryColumn(
+                title: "Average cost",
+                value: holding.averageCost?.asCurrencyWith2Decimals() ?? "Unknown",
+                color: Color.theme.textPrimary
+            )
+
+            Spacer()
+
+            if let profit = vm.coin.totalProfit, let percent = vm.coin.totalProfitPercentage {
+                summaryColumn(
+                    title: "Unrealized",
+                    value: (profit >= 0 ? "+" : "-") + abs(profit).asCurrencyWith2Decimals() + " · " + abs(percent).asPercentString(),
+                    color: profit >= 0 ? Color.theme.statusSuccess : Color.theme.statusDanger,
+                    alignment: .trailing
+                )
+            }
+        }
+        .padding(.vertical, 14)
+    }
+
+    private func summaryColumn(
+        title: String,
+        value: String,
+        color: Color,
+        alignment: HorizontalAlignment = .leading
+    ) -> some View {
+        VStack(alignment: alignment, spacing: 3) {
+            Text(title)
+                .font(.system(size: 11))
+                .foregroundColor(Color.theme.textTertiary)
+            Text(value)
+                .font(.system(size: 13, weight: .medium, design: .monospaced))
+                .foregroundColor(color)
+        }
+    }
+
+    private func transactionRow(_ transaction: PortfolioTransaction) -> some View {
+        let tint: Color = {
+            switch transaction.kind {
+            case .buy: return Color.theme.statusSuccess
+            case .sell: return Color.theme.statusDanger
+            case .opening: return Color.theme.textSecondary
+            }
+        }()
+
+        let realized = vm.realizedProfit(for: transaction)
+
+        return HStack(spacing: 12) {
+            Image(systemName: transaction.kind.iconName)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundColor(tint)
+                .frame(width: 32, height: 32)
+                .background(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(tint.opacity(0.12))
+                )
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(transaction.kind.title)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(Color.theme.textPrimary)
+
+                Text(transaction.hasCostBasis
+                     ? "\(transaction.date.formatted(.dateTime.month(.abbreviated).day())) · @ \(transaction.pricePerCoin.asCurrencyWith2Decimals())"
+                     : "\(transaction.date.formatted(.dateTime.month(.abbreviated).day())) · price unknown")
+                    .font(.system(size: 12))
+                    .foregroundColor(Color.theme.textSecondary)
+            }
+
+            Spacer(minLength: 8)
+
+            VStack(alignment: .trailing, spacing: 3) {
+                Text((transaction.kind == .sell ? "-" : "+") + transaction.amount.asNumberString() + " " + vm.coin.symbol.uppercased())
+                    .font(.system(size: 13, weight: .medium, design: .monospaced))
+                    .foregroundColor(Color.theme.textPrimary)
+
+                if let realized {
+                    Text(((realized >= 0 ? "+" : "-") + abs(realized).asCurrencyWith2Decimals()) + " realized")
+                        .font(.system(size: 12, design: .monospaced))
+                        .foregroundColor(realized >= 0 ? Color.theme.statusSuccess : Color.theme.statusDanger)
+                } else {
+                    Text(transaction.hasCostBasis ? transaction.totalValue.asCurrencyWith2Decimals() : "No cost basis")
+                        .font(.system(size: 12, design: transaction.hasCostBasis ? .monospaced : .default))
+                        .foregroundColor(Color.theme.textTertiary)
+                }
+            }
+        }
+        .padding(.vertical, 12)
+        .contentShape(Rectangle())
+        .onTapGesture { editingTransaction = transaction }
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isButton)
+    }
+
+    private var addTransactionBar: some View {
+        Button {
+            showTransactionEditor = true
+        } label: {
+            Label("Add transaction", systemImage: "plus")
+                .font(.system(size: 15, weight: .semibold))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .foregroundColor(Color.theme.surfaceBackground)
+                .background(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(Color.theme.brandPrimary)
+                )
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, 20)
+        .padding(.top, 10)
+        .padding(.bottom, 10)
+        .background(alignment: .top) {
+            Color.theme.surfaceBackground
+                .ignoresSafeArea(edges: .bottom)
+                .overlay(alignment: .top) {
+                    Rectangle()
+                        .fill(Color.theme.borderSubtle)
+                        .frame(height: 1)
+                }
+        }
     }
 }
 

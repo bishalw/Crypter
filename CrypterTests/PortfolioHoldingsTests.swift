@@ -128,6 +128,67 @@ final class PortfolioHoldingsTests: XCTestCase {
         XCTAssertTrue(PortfolioDataServiceImpl.holdings(from: []).isEmpty)
     }
 
+    // MARK: - Realized profit
+
+    func test_sellAboveAverageCost_realizesTheDifference() {
+        let sell = transaction(.sell, amount: 1, price: 150)
+        let profits = PortfolioDataServiceImpl.realizedProfits(from: [
+            transaction(.buy, amount: 2, price: 100, daysAgo: 1),
+            sell,
+        ])
+
+        XCTAssertEqual(profits[sell.id] ?? 0, 50, accuracy: 0.0001)
+    }
+
+    func test_sellBelowAverageCost_realizesALoss() {
+        let sell = transaction(.sell, amount: 2, price: 80)
+        let profits = PortfolioDataServiceImpl.realizedProfits(from: [
+            transaction(.buy, amount: 2, price: 100, daysAgo: 1),
+            sell,
+        ])
+
+        XCTAssertEqual(profits[sell.id] ?? 0, -40, accuracy: 0.0001)
+    }
+
+    func test_sellFromAnOpeningBalance_hasNoRealizedFigure() {
+        let sell = transaction(.sell, amount: 1, price: 150)
+        let profits = PortfolioDataServiceImpl.realizedProfits(from: [
+            transaction(.opening, amount: 2, price: 0, daysAgo: 1),
+            sell,
+        ])
+
+        XCTAssertNil(profits[sell.id])
+    }
+
+    func test_buysDoNotRealizeAnything() {
+        let buy = transaction(.buy, amount: 1, price: 100)
+
+        XCTAssertTrue(PortfolioDataServiceImpl.realizedProfits(from: [buy]).isEmpty)
+    }
+
+    // MARK: - Consistency checks used when editing
+
+    func test_historyIsConsistentWhenSellsFitWithinHoldings() {
+        XCTAssertTrue(PortfolioDataServiceImpl.isConsistent([
+            transaction(.buy, amount: 2, price: 100, daysAgo: 2),
+            transaction(.sell, amount: 2, price: 150, daysAgo: 1),
+        ]))
+    }
+
+    func test_historyIsInconsistentWhenASellExceedsWhatWasHeld() {
+        XCTAssertFalse(PortfolioDataServiceImpl.isConsistent([
+            transaction(.buy, amount: 1, price: 100, daysAgo: 2),
+            transaction(.sell, amount: 2, price: 150, daysAgo: 1),
+        ]))
+    }
+
+    func test_aSellBeforeItsBuyIsInconsistent() {
+        XCTAssertFalse(PortfolioDataServiceImpl.isConsistent([
+            transaction(.buy, amount: 5, price: 100, daysAgo: 1),
+            transaction(.sell, amount: 5, price: 150, daysAgo: 3),
+        ]))
+    }
+
     // MARK: - Profit reporting on the coin model
 
     func test_profitIsReportedAgainstAverageCost() {

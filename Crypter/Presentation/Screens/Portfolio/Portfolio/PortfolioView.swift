@@ -18,11 +18,31 @@ struct PortfolioView<ViewModel>: View where ViewModel: PortfolioViewModel {
     @State private var showPortfolioEditor: Bool = false
     @AppStorage("hidesPortfolioBalances") private var hidesBalances: Bool = false
     @State private var costBasisCoin: CoinModel? = nil
+    @State private var editingTransaction: PortfolioTransaction? = nil
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 28) {
+                    if let storeErrorMessage = vm.storeErrorMessage {
+                        HStack(alignment: .top, spacing: 10) {
+                            Image(systemName: "exclamationmark.triangle")
+                                .font(.system(size: 13))
+                                .foregroundColor(Color.theme.statusDanger)
+
+                            Text(storeErrorMessage)
+                                .font(.system(size: 12))
+                                .foregroundColor(Color.theme.textSecondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .fill(Color.theme.statusDangerSoft)
+                        )
+                    }
+
                     if vm.portfolioCoins.isEmpty {
                         emptyStateView
                             .padding(.top, 60)
@@ -54,7 +74,7 @@ struct PortfolioView<ViewModel>: View where ViewModel: PortfolioViewModel {
             .navigationSubtitleIfAvailable("Stored on this device")
             .navigationDestination(isPresented: $showDetailView) {
                 if let coin = selectedCoin {
-                    DetailView(vm: DetailViewModelImpl(coin: coin, cryptoStore: core.cryptoStore))
+                    DetailView(vm: DetailViewModelImpl(coin: coin, cryptoStore: core.cryptoStore, portfolioDataService: core.portfolioDataService))
                 }
             }
             .toolbar {
@@ -67,6 +87,20 @@ struct PortfolioView<ViewModel>: View where ViewModel: PortfolioViewModel {
                     }
                     .accessibilityLabel("Add holding")
                 }
+            }
+            .sheet(item: $editingTransaction) { transaction in
+                TransactionEditorSheet(
+                    transaction: transaction,
+                    symbol: vm.portfolioCoins.first(where: { $0.id == transaction.coinID })?.symbol.uppercased()
+                        ?? transaction.coinID.uppercased(),
+                    siblings: vm.recentTransactions.filter { $0.coinID == transaction.coinID },
+                    onSave: { kind, amount, price, date in
+                        vm.updateTransaction(id: transaction.id, kind: kind, amount: amount, pricePerCoin: price, date: date)
+                    },
+                    onDelete: {
+                        vm.deleteTransaction(id: transaction.id)
+                    }
+                )
             }
             .sheet(item: $costBasisCoin) { coin in
                 CostBasisSheet(coin: coin) { price in
@@ -135,6 +169,10 @@ extension PortfolioView {
                 if let allTimeText {
                     changeColumn(title: "All time", text: allTimeText, color: allTimeChangeColor)
                 }
+
+                if let realizedText {
+                    changeColumn(title: "Realized", text: realizedText, color: realizedChangeColor)
+                }
             }
 
             if vm.hasUnknownCostBasis {
@@ -163,6 +201,18 @@ extension PortfolioView {
                 .font(.system(size: 13, weight: .medium, design: .monospaced))
                 .foregroundColor(color)
         }
+    }
+
+    private var realizedChangeColor: Color {
+        (vm.totalRealizedProfit ?? 0) >= 0 ? Color.theme.statusSuccess : Color.theme.statusDanger
+    }
+
+    private var realizedText: String? {
+        guard let realized = vm.totalRealizedProfit else { return nil }
+
+        guard !hidesBalances else { return CoinRowView.maskedValue }
+
+        return (realized >= 0 ? "+" : "-") + abs(realized).asCurrencyWith2Decimals()
     }
 
     private var allTimeChangeColor: Color {
@@ -317,16 +367,21 @@ extension PortfolioView {
                     .font(.system(size: 13, weight: .medium, design: .monospaced))
                     .foregroundColor(Color.theme.textPrimary)
 
-                Text(transaction.hasCostBasis ? transaction.totalValue.asCurrencyWith2Decimals() : "Set cost basis")
-                    .font(.system(size: 12, design: transaction.hasCostBasis ? .monospaced : .default))
-                    .foregroundColor(transaction.hasCostBasis ? Color.theme.textTertiary : Color.theme.brandPrimary)
+                if let realized = vm.realizedProfit(for: transaction), !hidesBalances {
+                    Text(((realized >= 0 ? "+" : "-") + abs(realized).asCurrencyWith2Decimals()) + " realized")
+                        .font(.system(size: 12, design: .monospaced))
+                        .foregroundColor(realized >= 0 ? Color.theme.statusSuccess : Color.theme.statusDanger)
+                } else {
+                    Text(transaction.hasCostBasis ? transaction.totalValue.asCurrencyWith2Decimals() : "Set cost basis")
+                        .font(.system(size: 12, design: transaction.hasCostBasis ? .monospaced : .default))
+                        .foregroundColor(transaction.hasCostBasis ? Color.theme.textTertiary : Color.theme.brandPrimary)
+                }
             }
         }
         .padding(.vertical, 12)
         .contentShape(Rectangle())
         .onTapGesture {
-            guard transaction.kind == .opening, let coin else { return }
-            costBasisCoin = coin
+            editingTransaction = transaction
         }
         .contextMenu {
             if transaction.kind == .opening, let coin {
@@ -337,6 +392,12 @@ extension PortfolioView {
                 }
             }
 
+            Button {
+                editingTransaction = transaction
+            } label: {
+                Label("Edit transaction", systemImage: "pencil")
+            }
+
             Button(role: .destructive) {
                 withAnimation { vm.deleteTransaction(id: transaction.id) }
             } label: {
@@ -344,7 +405,7 @@ extension PortfolioView {
             }
         }
         .accessibilityElement(children: .combine)
-        .accessibilityAddTraits(transaction.kind == .opening ? .isButton : [])
+        .accessibilityAddTraits(.isButton)
     }
 
     private func transactionTitle(_ transaction: PortfolioTransaction, symbol: String) -> String {

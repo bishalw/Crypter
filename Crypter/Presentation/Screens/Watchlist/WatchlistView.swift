@@ -67,7 +67,7 @@ struct WatchlistView: View {
             }
             .navigationDestination(isPresented: $showDetailView) {
                 if let coin = selectedCoin {
-                    DetailView(vm: DetailViewModelImpl(coin: coin, cryptoStore: core.cryptoStore))
+                    DetailView(vm: DetailViewModelImpl(coin: coin, cryptoStore: core.cryptoStore, portfolioDataService: core.portfolioDataService))
                 }
             }
             .refreshable {

@@ -16,8 +16,10 @@ protocol PortfolioViewModel: ObservableObject {
     var totalPortfolio24hChangePercent: Double { get }
     var sortOption: SortOption { get set }
     var recentTransactions: [PortfolioTransaction] { get }
+    var storeErrorMessage: String? { get }
     func removeFromPortfolio(coin: CoinModel)
     func deleteTransaction(id: UUID)
+    func updateTransaction(id: UUID, kind: TransactionKind, amount: Double, pricePerCoin: Double, date: Date)
     func setCostBasis(for coin: CoinModel, pricePerCoin: Double)
     func reloadData()
 }
@@ -31,9 +33,13 @@ extension PortfolioViewModel {
 
     var recentTransactions: [PortfolioTransaction] { [] }
 
+    var storeErrorMessage: String? { nil }
+
     func deleteTransaction(id: UUID) { }
 
     func setCostBasis(for coin: CoinModel, pricePerCoin: Double) { }
+
+    func updateTransaction(id: UUID, kind: TransactionKind, amount: Double, pricePerCoin: Double, date: Date) { }
 
     /// Coins whose cost basis is known, i.e. everything bought through a transaction.
     private var coinsWithKnownCost: [CoinModel] {
@@ -61,6 +67,21 @@ extension PortfolioViewModel {
         guard let totalCostBasis, totalCostBasis > 0, let allTimeProfit else { return nil }
         return (allTimeProfit / totalCostBasis) * 100
     }
+
+    private var realizedProfits: [UUID: Double] {
+        PortfolioDataServiceImpl.realizedProfits(from: recentTransactions)
+    }
+
+    /// Profit already banked by selling, or nil when nothing has been sold.
+    var totalRealizedProfit: Double? {
+        let profits = realizedProfits
+        guard !profits.isEmpty else { return nil }
+        return profits.values.reduce(0, +)
+    }
+
+    func realizedProfit(for transaction: PortfolioTransaction) -> Double? {
+        realizedProfits[transaction.id]
+    }
 }
 
 class PortfolioViewModelImpl: PortfolioViewModel {
@@ -69,6 +90,7 @@ class PortfolioViewModelImpl: PortfolioViewModel {
     @Published var searchText: String = ""
     @Published var sortOption: SortOption = .holdings
     @Published var recentTransactions: [PortfolioTransaction] = []
+    @Published var storeErrorMessage: String? = nil
     
     private let cryptoStore: CryptoStore
     private let portfolioDataService: PortfolioDataService
@@ -100,6 +122,13 @@ class PortfolioViewModelImpl: PortfolioViewModel {
                 self?.recentTransactions = transactions
             }
             .store(in: &cancellables)
+
+        portfolioDataService.storeErrorPublisher
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] message in
+                self?.storeErrorMessage = message
+            }
+            .store(in: &cancellables)
     }
 
     func deleteTransaction(id: UUID) {
@@ -108,6 +137,10 @@ class PortfolioViewModelImpl: PortfolioViewModel {
 
     func setCostBasis(for coin: CoinModel, pricePerCoin: Double) {
         portfolioDataService.setCostBasis(forCoinID: coin.id, pricePerCoin: pricePerCoin)
+    }
+
+    func updateTransaction(id: UUID, kind: TransactionKind, amount: Double, pricePerCoin: Double, date: Date) {
+        portfolioDataService.updateTransaction(id: id, kind: kind, amount: amount, pricePerCoin: pricePerCoin, date: date)
     }
 
     func removeFromPortfolio(coin: CoinModel) {
