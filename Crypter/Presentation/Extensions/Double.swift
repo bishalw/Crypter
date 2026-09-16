@@ -33,10 +33,10 @@ extension Double {
         let formatter = NumberFormatter()
         formatter.usesGroupingSeparator = true
         formatter.numberStyle = .currency
-        // Prices come from the API in USD, so the symbol is pinned rather than
-        // taken from the device locale (which would label a USD price "£").
-        formatter.locale = Locale(identifier: "en_US")
-        formatter.currencyCode = "USD"
+        // Follows the chosen display currency, not the device locale, which
+        // would otherwise label a euro price with a dollar sign.
+        formatter.locale = DisplayCurrency.current.formattingLocale
+        formatter.currencyCode = DisplayCurrency.current.code
         formatter.minimumFractionDigits = 2
         formatter.maximumFractionDigits = 2
         return formatter
@@ -60,8 +60,8 @@ extension Double {
         let formatter = NumberFormatter()
         formatter.usesGroupingSeparator = true
         formatter.numberStyle = .currency
-        formatter.locale = Locale(identifier: "en_US")
-        formatter.currencyCode = "USD"
+        formatter.locale = DisplayCurrency.current.formattingLocale
+        formatter.currencyCode = DisplayCurrency.current.code
         formatter.minimumFractionDigits = 2
         formatter.maximumFractionDigits = 6
         return formatter
@@ -94,7 +94,7 @@ extension Double {
 
     func asCompactCurrency() -> String {
         let sign = self < 0 ? "-" : ""
-        return sign + "$" + abs(self).formattedWithAbbreviations()
+        return sign + DisplayCurrency.current.symbol + abs(self).formattedWithAbbreviations()
     }
 
     func asSignedCompactCurrency() -> String {

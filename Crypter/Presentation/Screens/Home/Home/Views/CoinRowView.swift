@@ -64,7 +64,7 @@ struct CoinRowView: View {
 
     private var marketCapText: String {
         guard let marketCap = coin.marketCap else { return "" }
-        return "$" + marketCap.formattedWithAbbreviations()
+        return DisplayCurrency.current.symbol + marketCap.formattedWithAbbreviations()
     }
 
     var body: some View {

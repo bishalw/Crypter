@@ -52,14 +52,14 @@ struct MarketDataModel {
 
     var marketCap: String {
         if let item = totalMarketCap.first(where: { $0.key == "usd" }){
-            return "$" + item.value.formattedWithAbbreviations()
+            return DisplayCurrency.current.symbol + item.value.formattedWithAbbreviations()
         }
         return ""
     }
     
     var volume: String {
         if let item = totalVolume.first(where: { $0.key == "usd" }) {
-            return "$" +  item.value.formattedWithAbbreviations()
+            return DisplayCurrency.current.symbol +  item.value.formattedWithAbbreviations()
         }
         return ""
     }

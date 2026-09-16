@@ -58,6 +58,7 @@
 		A1C0FFEE000000000000000B /* TransactionEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE000000000000000C /* TransactionEditorSheet.swift */; };
 		A1C0FFEE0000000000000010 /* TransactionListSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE0000000000000011 /* TransactionListSheet.swift */; };
 		A1C0FFEE0000000000000012 /* CSVTransactionParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE0000000000000013 /* CSVTransactionParser.swift */; };
+		A1C0FFEE0000000000000018 /* PortfolioLockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE0000000000000019 /* PortfolioLockView.swift */; };
 		58BB301E3059F59000FF39CC /* TrendingDTO.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58BB301D3059F59000FF39CC /* TrendingDTO.swift */; };
 		A1C0FFEE000000000000000D /* SearchDTO.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE000000000000000E /* SearchDTO.swift */; };
 		58BB30203059F59500FF39CC /* TrendingDTO+DomainMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58BB301F3059F59500FF39CC /* TrendingDTO+DomainMapper.swift */; };
@@ -71,6 +72,7 @@
 		58EAC00528BE8E940092477A /* SearchBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58EAC00428BE8E940092477A /* SearchBarView.swift */; };
 		58EAC00728BEB6480092477A /* UIApplication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58EAC00628BEB6480092477A /* UIApplication.swift */; };
 		A1C0FFEE0000000000000001 /* View.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE0000000000000002 /* View.swift */; };
+		A1C0FFEE0000000000000016 /* DisplayCurrency.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE0000000000000017 /* DisplayCurrency.swift */; };
 		58EBEFB628C030690079D982 /* StatisticModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58EBEFB528C030690079D982 /* StatisticModel.swift */; };
 		58EBEFB828C0318F0079D982 /* StatisticView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58EBEFB728C0318F0079D982 /* StatisticView.swift */; };
 		58F7C4D42880E0AB003622E0 /* CrypterApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58F7C4D32880E0AB003622E0 /* CrypterApp.swift */; };
@@ -154,6 +156,7 @@
 		A1C0FFEE000000000000000C /* TransactionEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TransactionEditorSheet.swift; path = "Crypter/Presentation/Screens/Portfolio/Portfolio/TransactionEditorSheet.swift"; sourceTree = SOURCE_ROOT; };
 		A1C0FFEE0000000000000011 /* TransactionListSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TransactionListSheet.swift; path = "Crypter/Presentation/Screens/Portfolio/Portfolio/TransactionListSheet.swift"; sourceTree = SOURCE_ROOT; };
 		A1C0FFEE0000000000000013 /* CSVTransactionParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CSVTransactionParser.swift; path = "Crypter/Data/Local/CSVTransactionParser.swift"; sourceTree = SOURCE_ROOT; };
+		A1C0FFEE0000000000000019 /* PortfolioLockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PortfolioLockView.swift; path = "Crypter/Presentation/Screens/Portfolio/Portfolio/PortfolioLockView.swift"; sourceTree = SOURCE_ROOT; };
 		58BB301D3059F59000FF39CC /* TrendingDTO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrendingDTO.swift; sourceTree = "<group>"; };
 		A1C0FFEE000000000000000E /* SearchDTO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchDTO.swift; sourceTree = "<group>"; };
 		58BB301F3059F59500FF39CC /* TrendingDTO+DomainMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TrendingDTO+DomainMapper.swift"; sourceTree = "<group>"; };
@@ -167,6 +170,7 @@
 		58EAC00428BE8E940092477A /* SearchBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchBarView.swift; sourceTree = "<group>"; };
 		58EAC00628BEB6480092477A /* UIApplication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIApplication.swift; sourceTree = "<group>"; };
 		A1C0FFEE0000000000000002 /* View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = View.swift; sourceTree = "<group>"; };
+		A1C0FFEE0000000000000017 /* DisplayCurrency.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayCurrency.swift; sourceTree = "<group>"; };
 		58EBEFB528C030690079D982 /* StatisticModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatisticModel.swift; sourceTree = "<group>"; };
 		58EBEFB728C0318F0079D982 /* StatisticView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatisticView.swift; sourceTree = "<group>"; };
 		58F7C4D02880E0AB003622E0 /* Crypter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Crypter.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -423,6 +427,7 @@
 				A1C0FFEE000000000000000C /* TransactionEditorSheet.swift */,
 				A1C0FFEE0000000000000011 /* TransactionListSheet.swift */,
 				A1C0FFEE0000000000000013 /* CSVTransactionParser.swift */,
+				A1C0FFEE0000000000000019 /* PortfolioLockView.swift */,
 			);
 			path = Store;
 			sourceTree = "<group>";
@@ -532,6 +537,7 @@
 				5830C8132890D04500A9DC2A /* Double.swift */,
 				58EAC00628BEB6480092477A /* UIApplication.swift */,
 				A1C0FFEE0000000000000002 /* View.swift */,
+				A1C0FFEE0000000000000017 /* DisplayCurrency.swift */,
 				58E0C4112948898200097811 /* String.swift */,
 			);
 			path = Extensions;
@@ -783,6 +789,7 @@
 				586B86972925A0690035513B /* DetailViewModelImpl.swift in Sources */,
 				58EAC00728BEB6480092477A /* UIApplication.swift in Sources */,
 				A1C0FFEE0000000000000001 /* View.swift in Sources */,
+				A1C0FFEE0000000000000016 /* DisplayCurrency.swift in Sources */,
 				586CB4002B5226480023AF7C /* CoinAPIServiceImpl.swift in Sources */,
 				586CB3F32B51BC750023AF7C /* CoinDTO+DomainMapper.swift in Sources */,
 				586CB3DD2B510B1F0023AF7C /* CoinImageRepositoryImpl.swift in Sources */,
@@ -801,6 +808,7 @@
 				A1C0FFEE000000000000000B /* TransactionEditorSheet.swift in Sources */,
 				A1C0FFEE0000000000000010 /* TransactionListSheet.swift in Sources */,
 				A1C0FFEE0000000000000012 /* CSVTransactionParser.swift in Sources */,
+				A1C0FFEE0000000000000018 /* PortfolioLockView.swift in Sources */,
 				58756D5D2C23E15D00FA4491 /* ChartView.swift in Sources */,
 				586CB3EB2B513B940023AF7C /* CoinImageRepository.swift in Sources */,
 				5814D3C328B59B04008CD5DC /* CoinImageViewModelImpl.swift in Sources */,
@@ -983,6 +991,7 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Unlocks your portfolio so only you can see your holdings.";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
@@ -1014,6 +1023,7 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Unlocks your portfolio so only you can see your holdings.";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.6;

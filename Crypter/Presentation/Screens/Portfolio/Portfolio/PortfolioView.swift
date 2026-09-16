@@ -20,8 +20,25 @@ struct PortfolioView<ViewModel>: View where ViewModel: PortfolioViewModel {
     @State private var costBasisCoin: CoinModel? = nil
     @State private var editingTransaction: PortfolioTransaction? = nil
     @State private var showAllTransactions: Bool = false
+    @StateObject private var lock = PortfolioLock()
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
+        Group {
+            if lock.isEnabled && !lock.isUnlocked {
+                PortfolioLockView(lock: lock)
+            } else {
+                content
+            }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            // Re-lock when the app leaves the foreground, so a glance at the
+            // app switcher does not expose the balance.
+            if phase == .background { lock.lock() }
+        }
+    }
+
+    private var content: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 28) {
@@ -148,7 +165,7 @@ extension PortfolioView {
         let sign = value >= 0 ? "+" : "-"
 
         if abs(value) >= 10_000 {
-            return sign + "$" + abs(value).formattedWithAbbreviations()
+            return sign + DisplayCurrency.current.symbol + abs(value).formattedWithAbbreviations()
         }
 
         return sign + abs(value).asCurrencyWith2Decimals()

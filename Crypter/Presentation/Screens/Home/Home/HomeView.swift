@@ -100,6 +100,7 @@ struct HomeView<ViewModel>: View where ViewModel: HomeViewModel {
             }
             .sheet(isPresented: $showSettings) {
                 SettingsView(
+                    onCurrencyChange: { vm.reloadData() },
                     vm: SettingsViewModel(
                         portfolioDataService: core.portfolioDataService,
                         watchlistStore: watchlist

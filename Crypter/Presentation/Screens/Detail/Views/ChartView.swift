@@ -275,7 +275,7 @@ struct ChartView: View {
     }
 
     fileprivate static func compact(_ value: Double) -> String {
-        abs(value) >= 1000 ? "$" + value.formattedWithAbbreviations() : value.asCurrencyWith2Decimals()
+        abs(value) >= 1000 ? DisplayCurrency.current.symbol + value.formattedWithAbbreviations() : value.asCurrencyWith2Decimals()
     }
 }
 

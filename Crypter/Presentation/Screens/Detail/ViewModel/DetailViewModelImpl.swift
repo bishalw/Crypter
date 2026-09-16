@@ -149,7 +149,7 @@ class DetailViewModelImpl: ObservableObject, DetailViewModel {
 
     private func formatCurrency(_ value: Double?) -> String {
         guard let value = value else { return "N/A" }
-        return "$" + value.formattedWithAbbreviations()
+        return DisplayCurrency.current.symbol + value.formattedWithAbbreviations()
     }
     
     private func createAdditionalArray(coinModel: CoinModel, coinDetailModel: CoinDetailModel?) -> [StatisticModel] {

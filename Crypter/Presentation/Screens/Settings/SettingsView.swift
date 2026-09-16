@@ -86,11 +86,15 @@ final class SettingsViewModel: ObservableObject {
 }
 
 struct SettingsView: View {
+    let onCurrencyChange: () -> Void
+
     @EnvironmentObject var apiKeyStore: APIKeyStore
     @Environment(\.dismiss) private var dismiss
     @StateObject var vm: SettingsViewModel
 
     @State private var keyText: String = ""
+    @State private var currency: DisplayCurrency = .current
+    @AppStorage(PortfolioLock.storageKey) private var locksPortfolio: Bool = false
     @State private var showResetConfirmation = false
     @State private var csvURL: URL? = nil
     @State private var showImporter = false
@@ -101,6 +105,7 @@ struct SettingsView: View {
         NavigationStack {
             List {
                 dataSourceSection
+                displaySection
                 myDataSection
             }
             .listStyle(.insetGrouped)
@@ -168,6 +173,42 @@ struct SettingsView: View {
             Text(apiKeyStore.hasKey
                  ? "Prices load with your \(apiKeyStore.tier.title.lowercased()) key. It is stored in the device Keychain and only sent to CoinGecko."
                  : "Without a key, prices come from CoinGecko's public tier, which is rate limited and can make refreshes fail. A free key from their dashboard raises that limit.")
+                .font(.system(size: 11))
+                .foregroundColor(Color.theme.textTertiary)
+        }
+    }
+
+    // MARK: - Display
+
+    private var displaySection: some View {
+        Section {
+            if PortfolioLock.isAvailable {
+                Toggle(isOn: $locksPortfolio) {
+                    Text("Require \(PortfolioLock.biometryName)")
+                }
+                .tint(Color.theme.brandPrimary)
+                .listRowBackground(Color.theme.surfaceSecondary)
+                .onChange(of: locksPortfolio) { _, newValue in
+                    UserDefaults.standard.set(newValue, forKey: PortfolioLock.storageKey)
+                }
+            }
+
+            Picker("Currency", selection: $currency) {
+                ForEach(DisplayCurrency.allCases) { option in
+                    Text("\(option.code) · \(option.title)").tag(option)
+                }
+            }
+            .listRowBackground(Color.theme.surfaceSecondary)
+            .onChange(of: currency) { _, newValue in
+                UserDefaults.standard.set(newValue.rawValue, forKey: DisplayCurrency.storageKey)
+                onCurrencyChange()
+            }
+        } header: {
+            Text("Display")
+                .font(.system(size: 13))
+                .foregroundColor(Color.theme.textSecondary)
+        } footer: {
+            Text("Prices are requested from CoinGecko in this currency, so changing it reloads them. The lock covers the Portfolio tab whenever the app returns from the background.")
                 .font(.system(size: 11))
                 .foregroundColor(Color.theme.textTertiary)
         }
@@ -269,6 +310,7 @@ struct SettingsView: View {
 struct SettingsView_Previews: PreviewProvider {
     static var previews: some View {
         SettingsView(
+            onCurrencyChange: {},
             vm: SettingsViewModel(
                 portfolioDataService: PortfolioDataServiceImpl(),
                 watchlistStore: WatchlistStore()
