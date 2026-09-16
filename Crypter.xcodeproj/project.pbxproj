@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A1C0FFEE000000000000002F /* Color.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58F7C5002880E21E003622E0 /* Color.swift */; };
+		A1C0FFEE0000000000000030 /* DisplayCurrency.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE0000000000000017 /* DisplayCurrency.swift */; };
 		A1C0FFEE0000000000000020 /* CrypterWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE0000000000000021 /* CrypterWidget.swift */; };
 		A1C0FFEE000000000000002C /* CrypterWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A1C0FFEE0000000000000022 /* CrypterWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		2C9E3B98E6F2484F8025564E /* PortfolioAllocationChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 423177FD326242BDABD86018 /* PortfolioAllocationChartView.swift */; };
@@ -826,6 +828,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				A1C0FFEE0000000000000020 /* CrypterWidget.swift in Sources */,
+				A1C0FFEE000000000000002F /* Color.swift in Sources */,
+				A1C0FFEE0000000000000030 /* DisplayCurrency.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

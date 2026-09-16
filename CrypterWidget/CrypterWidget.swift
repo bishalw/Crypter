@@ -6,17 +6,6 @@
 import WidgetKit
 import SwiftUI
 
-// The extension shares no code with the app, so it carries its own palette.
-private enum WidgetTheme {
-    static let background = Color(red: 0.039, green: 0.043, blue: 0.055)
-    static let surface = Color(red: 0.082, green: 0.090, blue: 0.110)
-    static let textPrimary = Color(red: 0.953, green: 0.957, blue: 0.965)
-    static let textSecondary = Color(red: 0.545, green: 0.573, blue: 0.627)
-    static let accent = Color(red: 0.616, green: 0.549, blue: 1.0)
-    static let up = Color(red: 0.204, green: 0.827, blue: 0.600)
-    static let down = Color(red: 0.973, green: 0.443, blue: 0.443)
-}
-
 struct WidgetCoin: Identifiable {
     let id: String
     let symbol: String
@@ -27,9 +16,11 @@ struct WidgetCoin: Identifiable {
     var isUp: Bool { change24h >= 0 }
 
     var priceText: String {
+        let currency = DisplayCurrency.current
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
-        formatter.currencyCode = UserDefaults.standard.string(forKey: "displayCurrency")?.uppercased() ?? "USD"
+        formatter.locale = currency.formattingLocale
+        formatter.currencyCode = currency.code
         formatter.maximumFractionDigits = price >= 1 ? 2 : 6
         return formatter.string(from: NSNumber(value: price)) ?? "—"
     }
@@ -49,8 +40,7 @@ private struct MarketCoinDTO: Decodable {
 
 private enum MarketFetcher {
     static func topCoins() async -> [WidgetCoin] {
-        let currency = UserDefaults.standard.string(forKey: "displayCurrency") ?? "usd"
-        let urlString = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=\(currency)&order=market_cap_desc&per_page=4&page=1"
+        let urlString = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=\(DisplayCurrency.current.apiCode)&order=market_cap_desc&per_page=4&page=1"
 
         guard let url = URL(string: urlString) else { return [] }
 
@@ -125,13 +115,13 @@ struct CrypterWidgetEntryView: View {
             if family != .systemSmall {
                 Text("Markets")
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(WidgetTheme.textSecondary)
+                    .foregroundColor(Color.theme.textSecondary)
             }
 
             if visibleCoins.isEmpty {
                 Text("Couldn't load prices")
                     .font(.system(size: 12))
-                    .foregroundColor(WidgetTheme.textSecondary)
+                    .foregroundColor(Color.theme.textSecondary)
             } else {
                 ForEach(visibleCoins) { coin in
                     if family == .systemSmall {
@@ -145,24 +135,24 @@ struct CrypterWidgetEntryView: View {
             Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .containerBackground(WidgetTheme.background, for: .widget)
+        .containerBackground(Color.theme.surfaceBackground, for: .widget)
     }
 
     private func smallRow(_ coin: WidgetCoin) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(coin.symbol)
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundColor(WidgetTheme.textSecondary)
+                .foregroundColor(Color.theme.textSecondary)
 
             Text(coin.priceText)
                 .font(.system(size: 20, weight: .semibold, design: .monospaced))
-                .foregroundColor(WidgetTheme.textPrimary)
+                .foregroundColor(Color.theme.textPrimary)
                 .minimumScaleFactor(0.6)
                 .lineLimit(1)
 
             Text(coin.changeText)
                 .font(.system(size: 13, weight: .medium, design: .monospaced))
-                .foregroundColor(coin.isUp ? WidgetTheme.up : WidgetTheme.down)
+                .foregroundColor(coin.isUp ? Color.theme.statusSuccess : Color.theme.statusDanger)
         }
     }
 
@@ -170,12 +160,12 @@ struct CrypterWidgetEntryView: View {
         HStack(spacing: 8) {
             Text(coin.symbol)
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundColor(WidgetTheme.textPrimary)
+                .foregroundColor(Color.theme.textPrimary)
                 .frame(width: 44, alignment: .leading)
 
             Text(coin.priceText)
                 .font(.system(size: 13, design: .monospaced))
-                .foregroundColor(WidgetTheme.textSecondary)
+                .foregroundColor(Color.theme.textSecondary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
 
@@ -183,7 +173,7 @@ struct CrypterWidgetEntryView: View {
 
             Text(coin.changeText)
                 .font(.system(size: 13, weight: .medium, design: .monospaced))
-                .foregroundColor(coin.isUp ? WidgetTheme.up : WidgetTheme.down)
+                .foregroundColor(coin.isUp ? Color.theme.statusSuccess : Color.theme.statusDanger)
         }
     }
 }
