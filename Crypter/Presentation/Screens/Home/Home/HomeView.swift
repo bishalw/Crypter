@@ -47,7 +47,9 @@ struct HomeView<ViewModel>: View where ViewModel: HomeViewModel {
 
                         listColumnHeader
 
-                        if vm.allCoins.isEmpty && !vm.searchText.isEmpty {
+                        if vm.allCoins.isEmpty && !vm.searchText.isEmpty && vm.isSearching {
+                            searchingRows
+                        } else if vm.allCoins.isEmpty && !vm.searchText.isEmpty {
                             noResults
                         } else if vm.allCoins.isEmpty && vm.errorMessage != nil && !vm.isLoading {
                             failedFirstLoad
@@ -183,6 +185,21 @@ struct HomeView<ViewModel>: View where ViewModel: HomeViewModel {
         .frame(maxWidth: .infinity)
         .padding(.horizontal, 24)
         .padding(.vertical, 48)
+    }
+
+    /// Shown while the remote search runs, so an unlisted coin does not read as
+    /// "no results" before the answer arrives.
+    private var searchingRows: some View {
+        HStack(spacing: 10) {
+            ProgressView()
+                .tint(Color.theme.textSecondary)
+
+            Text("Searching all coins…")
+                .font(.system(size: 13))
+                .foregroundColor(Color.theme.textSecondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 40)
     }
 
     /// Placeholder rows for the first load, so the list has shape before data lands.

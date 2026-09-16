@@ -11,6 +11,8 @@ protocol CoinAPIService {
     func fetchCoinDetail(coin: CoinModel) -> AnyPublisher<CoinDetailDTO, Error>
     func fetchMarketChart(coinID: String, days: String) -> AnyPublisher<MarketChartDTO, Error>
     func fetchTrendingCoins() -> AnyPublisher<TrendingDTO, Error>
+    func searchCoins(query: String) -> AnyPublisher<SearchDTO, Error>
+    func fetchCoins(ids: [String]) -> AnyPublisher<[CoinDTO], Error>
 }
 
 class CoinAPIServiceImpl: CoinAPIService {
@@ -49,5 +51,19 @@ class CoinAPIServiceImpl: CoinAPIService {
             return Fail(error: NetworkingError.invalidURL).eraseToAnyPublisher()
         }
         return networkingManager.download(url: trendingURL, decodingType: TrendingDTO.self)
+    }
+
+    func searchCoins(query: String) -> AnyPublisher<SearchDTO, Error> {
+        guard let searchURL = CoinAPI.search(query: query).url else {
+            return Fail(error: NetworkingError.invalidURL).eraseToAnyPublisher()
+        }
+        return networkingManager.download(url: searchURL, decodingType: SearchDTO.self)
+    }
+
+    func fetchCoins(ids: [String]) -> AnyPublisher<[CoinDTO], Error> {
+        guard let marketsURL = CoinAPI.markets(ids: ids).url else {
+            return Fail(error: NetworkingError.invalidURL).eraseToAnyPublisher()
+        }
+        return networkingManager.download(url: marketsURL, decodingType: [CoinDTO].self)
     }
 }

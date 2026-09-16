@@ -56,6 +56,7 @@
 		A1C0FFEE0000000000000009 /* APIKeyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE000000000000000A /* APIKeyStore.swift */; };
 		A1C0FFEE000000000000000B /* TransactionEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE000000000000000C /* TransactionEditorSheet.swift */; };
 		58BB301E3059F59000FF39CC /* TrendingDTO.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58BB301D3059F59000FF39CC /* TrendingDTO.swift */; };
+		A1C0FFEE000000000000000D /* SearchDTO.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE000000000000000E /* SearchDTO.swift */; };
 		58BB30203059F59500FF39CC /* TrendingDTO+DomainMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58BB301F3059F59500FF39CC /* TrendingDTO+DomainMapper.swift */; };
 		58BB30223059F59F00FF39CC /* TrendingCoinModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58BB30213059F59F00FF39CC /* TrendingCoinModel.swift */; };
 		58BB30243059F64200FF39CC /* TrendingStripView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58BB30233059F64200FF39CC /* TrendingStripView.swift */; };
@@ -147,6 +148,7 @@
 		A1C0FFEE000000000000000A /* APIKeyStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = APIKeyStore.swift; path = "Crypter/Data/Local/Keychain/APIKeyStore.swift"; sourceTree = SOURCE_ROOT; };
 		A1C0FFEE000000000000000C /* TransactionEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TransactionEditorSheet.swift; path = "Crypter/Presentation/Screens/Portfolio/Portfolio/TransactionEditorSheet.swift"; sourceTree = SOURCE_ROOT; };
 		58BB301D3059F59000FF39CC /* TrendingDTO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrendingDTO.swift; sourceTree = "<group>"; };
+		A1C0FFEE000000000000000E /* SearchDTO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchDTO.swift; sourceTree = "<group>"; };
 		58BB301F3059F59500FF39CC /* TrendingDTO+DomainMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TrendingDTO+DomainMapper.swift"; sourceTree = "<group>"; };
 		58BB30213059F59F00FF39CC /* TrendingCoinModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrendingCoinModel.swift; sourceTree = "<group>"; };
 		58BB30233059F64200FF39CC /* TrendingStripView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrendingStripView.swift; sourceTree = "<group>"; };
@@ -330,6 +332,7 @@
 				586CB4032B523A840023AF7C /* CoinDetailDTO.swift */,
 				586CB4012B5239DF0023AF7C /* GlobalDataDTO.swift */,
 				58BB301D3059F59000FF39CC /* TrendingDTO.swift */,
+				A1C0FFEE000000000000000E /* SearchDTO.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -761,6 +764,7 @@
 				58F7C4D42880E0AB003622E0 /* CrypterApp.swift in Sources */,
 				582B685E2C1B9BB800BFECD6 /* CryptoRepositoryImpl.swift in Sources */,
 				58BB301E3059F59000FF39CC /* TrendingDTO.swift in Sources */,
+				A1C0FFEE000000000000000D /* SearchDTO.swift in Sources */,
 				58E0C4122948898200097811 /* String.swift in Sources */,
 				586CB3F52B51BC8B0023AF7C /* DomainMapper.swift in Sources */,
 				586CB3DB2B5106B90023AF7C /* CoinAPI.swift in Sources */,

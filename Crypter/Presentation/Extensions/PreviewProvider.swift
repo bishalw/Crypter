@@ -200,6 +200,8 @@ class MockCryptoStore: CryptoStore {
     var chartErrorMessage: CurrentValueSubject<String?, Never>
     var trendingCoins: CurrentValueSubject<[TrendingCoinModel], Never>
     var marketErrorMessage = CurrentValueSubject<String?, Never>(nil)
+    var searchResults = CurrentValueSubject<[CoinModel], Never>([])
+    var isSearching = CurrentValueSubject<Bool, Never>(false)
     var isLoadingMarkets = CurrentValueSubject<Bool, Never>(false)
 
     init(
@@ -217,6 +219,8 @@ class MockCryptoStore: CryptoStore {
         self.chartErrorMessage = CurrentValueSubject(nil)
         self.trendingCoins = CurrentValueSubject(trendingCoins)
     }
+
+    func searchCoins(query: String) {}
 
     func fetchAllCoins() {}
     func fetchCoinDetails(coin: CoinModel) {}
@@ -250,6 +254,7 @@ class PreviewHomeViewModel: HomeViewModel {
 
     var errorMessage: String? { nil }
     var isLoading: Bool { false }
+    var isSearching: Bool { false }
 
     func addTransaction(coin: CoinModel, kind: TransactionKind, amount: Double, pricePerCoin: Double, date: Date) {}
     func reloadData() {}

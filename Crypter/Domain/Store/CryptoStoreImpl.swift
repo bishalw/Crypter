@@ -17,8 +17,13 @@ protocol CryptoStore {
     var marketErrorMessage: CurrentValueSubject<String?, Never> { get set }
     /// True while a market refresh is in flight.
     var isLoadingMarkets: CurrentValueSubject<Bool, Never> { get set }
+    /// Coins matching the current query, from the remote search.
+    var searchResults: CurrentValueSubject<[CoinModel], Never> { get set }
+    /// True while a search is in flight.
+    var isSearching: CurrentValueSubject<Bool, Never> { get set }
     
     func fetchAllCoins()
+    func searchCoins(query: String)
     func fetchCoinDetails(coin: CoinModel)
     func fetchGlobalData()
     func fetchMarketChart(coin: CoinModel, range: ChartTimeRange)
@@ -39,15 +44,45 @@ class CryptoStoreImpl: CryptoStore {
     var trendingCoins = CurrentValueSubject<[TrendingCoinModel], Never>([])
     var marketErrorMessage = CurrentValueSubject<String?, Never>(nil)
     var isLoadingMarkets = CurrentValueSubject<Bool, Never>(false)
+    var searchResults = CurrentValueSubject<[CoinModel], Never>([])
+    var isSearching = CurrentValueSubject<Bool, Never>(false)
     
     private var historicalCache: [String: [String: [ChartPoint]]] = [:]
     private let repository: CryptoRepository
     private var cancellables = Set<AnyCancellable>()
+    /// Held separately so a new query cancels the one in flight.
+    private var searchCancellable: AnyCancellable?
     
     init(repository: CryptoRepository) {
         self.repository = repository
     }
     
+    /// Searches the full coin list, not just the page already loaded.
+    func searchCoins(query: String) {
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        searchCancellable?.cancel()
+
+        guard trimmed.count >= 2 else {
+            isSearching.send(false)
+            searchResults.send([])
+            return
+        }
+
+        isSearching.send(true)
+
+        searchCancellable = repository.searchCoins(query: trimmed)
+            .receive(on: DispatchQueue.main)
+            .sink(receiveCompletion: { [weak self] completion in
+                self?.isSearching.send(false)
+
+                guard case .failure(let error) = completion else { return }
+                self?.marketErrorMessage.send(Self.marketErrorMessage(for: error))
+            }, receiveValue: { [weak self] coins in
+                self?.searchResults.send(coins)
+            })
+    }
+
     func fetchAllCoins() {
         isLoadingMarkets.send(true)
 

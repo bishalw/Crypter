@@ -19,6 +19,7 @@ protocol HomeViewModel: ObservableObject {
     var myTotalHoldingDisplayString: String { get }
     var errorMessage: String? { get }
     var isLoading: Bool { get }
+    var isSearching: Bool { get }
     func addTransaction(coin: CoinModel, kind: TransactionKind, amount: Double, pricePerCoin: Double, date: Date)
     func reloadData()
 }
@@ -31,6 +32,8 @@ class HomeViewModelImpl: HomeViewModel {
     @Published var trendingCoins: [TrendingCoinModel] = []
     @Published var errorMessage: String? = nil
     @Published var isLoading: Bool = false
+    @Published var isSearching: Bool = false
+    @Published private var searchResults: [CoinModel] = []
     @Published var sortOption: SortOption = .rank
     @Published var searchText: String = ""
     
@@ -51,9 +54,16 @@ class HomeViewModelImpl: HomeViewModel {
     private func addSubscribers(){
         // filters and searches all the coins from coin data service
         $searchText
-                  .combineLatest(cryptoStore.coins, $sortOption)
-                  .debounce(for: .seconds(0.5), scheduler: DispatchQueue.main)
-                  .map(filterAndSortCoins)
+                  .combineLatest(cryptoStore.coins, $sortOption, $searchResults)
+                  .debounce(for: .seconds(0.3), scheduler: DispatchQueue.main)
+                  .map { [weak self] text, coins, sort, remoteMatches in
+                      self?.filterAndSortCoins(
+                          text: text,
+                          coins: coins,
+                          sort: sort,
+                          remoteMatches: remoteMatches
+                      ) ?? []
+                  }
                   .sink { [weak self] returnedCoins in
                       self?.allCoins = returnedCoins
                   }
@@ -100,6 +110,30 @@ class HomeViewModelImpl: HomeViewModel {
                 self?.isLoading = isLoading
             }
             .store(in: &cancellables)
+
+        cryptoStore.searchResults
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] coins in
+                self?.searchResults = coins
+            }
+            .store(in: &cancellables)
+
+        cryptoStore.isSearching
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] isSearching in
+                self?.isSearching = isSearching
+            }
+            .store(in: &cancellables)
+
+        // The loaded page answers instantly; the remote search covers the rest
+        // of the listed coins and arrives a moment later.
+        $searchText
+            .debounce(for: .seconds(0.35), scheduler: DispatchQueue.main)
+            .removeDuplicates()
+            .sink { [weak self] text in
+                self?.cryptoStore.searchCoins(query: text)
+            }
+            .store(in: &cancellables)
         
     }
 
@@ -112,11 +146,25 @@ class HomeViewModelImpl: HomeViewModel {
         portfolioDataService.addTransaction(coin: coin, kind: kind, amount: amount, pricePerCoin: pricePerCoin, date: date)
     }
     
-    private func filterAndSortCoins(text: String, coins: [CoinModel]?, sort: SortOption) -> [CoinModel] {
+    private func filterAndSortCoins(
+        text: String,
+        coins: [CoinModel]?,
+        sort: SortOption,
+        remoteMatches: [CoinModel]
+    ) -> [CoinModel] {
         guard let coins = coins else { return [] }
+
         var updatedCoins = filterCoins(text: text, coins: coins)
-        sortCoins(sort: sort, coins: &updatedCoins)
-        return updatedCoins
+
+        guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            sortCoins(sort: sort, coins: &updatedCoins)
+            return updatedCoins
+        }
+
+        // Local matches first — they are the highest-ranked coins and are
+        // already on screen — then anything the remote search turned up.
+        let localIDs = Set(updatedCoins.map { $0.id })
+        return updatedCoins + remoteMatches.filter { !localIDs.contains($0.id) }
     }
     
     private func filterCoins(text: String, coins:[CoinModel]) -> [CoinModel]{

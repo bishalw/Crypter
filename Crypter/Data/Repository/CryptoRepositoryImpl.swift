@@ -13,6 +13,7 @@ protocol CryptoRepository {
     func fetchGlobalData() -> AnyPublisher<MarketDataModel, Error>
     func fetchMarketChart(coinID: String, days: String) -> AnyPublisher<[ChartPoint], Error>
     func fetchTrendingCoins() -> AnyPublisher<[TrendingCoinModel], Error>
+    func searchCoins(query: String) -> AnyPublisher<[CoinModel], Error>
 }
 
 class CryptoRepositoryImpl: CryptoRepository{
@@ -24,6 +25,27 @@ class CryptoRepositoryImpl: CryptoRepository{
     init(coinAPIService: CoinAPIService, globalAPIService: GlobalAPIService) {
         self.globalAPIService = globalAPIService
         self.coinAPIService = coinAPIService
+    }
+
+    /// Searches every listed coin, then prices the best matches. Two calls,
+    /// because /search returns no market data.
+    func searchCoins(query: String) -> AnyPublisher<[CoinModel], Error> {
+        return coinAPIService.searchCoins(query: query)
+            .map { $0.rankedIDs(limit: 25) }
+            .flatMap { [weak self] ids -> AnyPublisher<[CoinModel], Error> in
+                guard let self, !ids.isEmpty else {
+                    return Just([]).setFailureType(to: Error.self).eraseToAnyPublisher()
+                }
+
+                return self.coinAPIService.fetchCoins(ids: ids)
+                    .map { dtos in
+                        let coins = dtos.map { $0.toDomain() }
+                        // /coins/markets ignores the order of the ids, so restore it.
+                        return ids.compactMap { id in coins.first(where: { $0.id == id }) }
+                    }
+                    .eraseToAnyPublisher()
+            }
+            .eraseToAnyPublisher()
     }
 
     func fetchAllCoins() -> AnyPublisher<[CoinModel], Error> {
