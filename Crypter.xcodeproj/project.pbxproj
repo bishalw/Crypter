@@ -49,11 +49,13 @@
 		5898F02B2B4F96E200CA8467 /* LocalFileManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5898F02A2B4F96E200CA8467 /* LocalFileManagerTests.swift */; };
 		A1C0FFEE0000000000000007 /* PortfolioHoldingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE0000000000000008 /* PortfolioHoldingsTests.swift */; };
 		A1C0FFEE0000000000000014 /* CSVTransactionParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE0000000000000015 /* CSVTransactionParserTests.swift */; };
+		A1C0FFEE000000000000001C /* PortfolioHistoryStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE000000000000001D /* PortfolioHistoryStoreTests.swift */; };
 		58ABF2272B46D3EE00D41EF8 /* HomeHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58ABF2262B46D3EE00D41EF8 /* HomeHeaderView.swift */; };
 		58ABF2292B46D62000D41EF8 /* ColumnTitleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58ABF2282B46D62000D41EF8 /* ColumnTitleView.swift */; };
 		58B2F7232C1A8E9E008D435A /* GlobalDataDTO+DomainMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B2F7222C1A8E9E008D435A /* GlobalDataDTO+DomainMapper.swift */; };
 		58B2F7262C1A93CD008D435A /* CryptoStoreImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B2F7252C1A93CD008D435A /* CryptoStoreImpl.swift */; };
 		A1C0FFEE0000000000000003 /* WatchlistStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE0000000000000004 /* WatchlistStore.swift */; };
+		A1C0FFEE000000000000001A /* PortfolioHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE000000000000001B /* PortfolioHistoryStore.swift */; };
 		A1C0FFEE0000000000000009 /* APIKeyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE000000000000000A /* APIKeyStore.swift */; };
 		A1C0FFEE000000000000000B /* TransactionEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE000000000000000C /* TransactionEditorSheet.swift */; };
 		A1C0FFEE0000000000000010 /* TransactionListSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE0000000000000011 /* TransactionListSheet.swift */; };
@@ -147,11 +149,13 @@
 		5898F02A2B4F96E200CA8467 /* LocalFileManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalFileManagerTests.swift; sourceTree = "<group>"; };
 		A1C0FFEE0000000000000008 /* PortfolioHoldingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortfolioHoldingsTests.swift; sourceTree = "<group>"; };
 		A1C0FFEE0000000000000015 /* CSVTransactionParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSVTransactionParserTests.swift; sourceTree = "<group>"; };
+		A1C0FFEE000000000000001D /* PortfolioHistoryStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortfolioHistoryStoreTests.swift; sourceTree = "<group>"; };
 		58ABF2262B46D3EE00D41EF8 /* HomeHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeHeaderView.swift; sourceTree = "<group>"; };
 		58ABF2282B46D62000D41EF8 /* ColumnTitleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColumnTitleView.swift; sourceTree = "<group>"; };
 		58B2F7222C1A8E9E008D435A /* GlobalDataDTO+DomainMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GlobalDataDTO+DomainMapper.swift"; sourceTree = "<group>"; };
 		58B2F7252C1A93CD008D435A /* CryptoStoreImpl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CryptoStoreImpl.swift; sourceTree = "<group>"; };
 		A1C0FFEE0000000000000004 /* WatchlistStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchlistStore.swift; sourceTree = "<group>"; };
+		A1C0FFEE000000000000001B /* PortfolioHistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortfolioHistoryStore.swift; sourceTree = "<group>"; };
 		A1C0FFEE000000000000000A /* APIKeyStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = APIKeyStore.swift; path = "Crypter/Data/Local/Keychain/APIKeyStore.swift"; sourceTree = SOURCE_ROOT; };
 		A1C0FFEE000000000000000C /* TransactionEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TransactionEditorSheet.swift; path = "Crypter/Presentation/Screens/Portfolio/Portfolio/TransactionEditorSheet.swift"; sourceTree = SOURCE_ROOT; };
 		A1C0FFEE0000000000000011 /* TransactionListSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TransactionListSheet.swift; path = "Crypter/Presentation/Screens/Portfolio/Portfolio/TransactionListSheet.swift"; sourceTree = SOURCE_ROOT; };
@@ -423,6 +427,7 @@
 			children = (
 				58B2F7252C1A93CD008D435A /* CryptoStoreImpl.swift */,
 				A1C0FFEE0000000000000004 /* WatchlistStore.swift */,
+				A1C0FFEE000000000000001B /* PortfolioHistoryStore.swift */,
 				A1C0FFEE000000000000000A /* APIKeyStore.swift */,
 				A1C0FFEE000000000000000C /* TransactionEditorSheet.swift */,
 				A1C0FFEE0000000000000011 /* TransactionListSheet.swift */,
@@ -516,6 +521,7 @@
 				5898F0292B4F963E00CA8467 /* LocalTests */,
 				A1C0FFEE0000000000000008 /* PortfolioHoldingsTests.swift */,
 				A1C0FFEE0000000000000015 /* CSVTransactionParserTests.swift */,
+				A1C0FFEE000000000000001D /* PortfolioHistoryStoreTests.swift */,
 			);
 			path = CrypterTests;
 			sourceTree = "<group>";
@@ -804,6 +810,7 @@
 				58F7C50D2880F435003622E0 /* CircleButtonAnimationView.swift in Sources */,
 				58B2F7262C1A93CD008D435A /* CryptoStoreImpl.swift in Sources */,
 				A1C0FFEE0000000000000003 /* WatchlistStore.swift in Sources */,
+				A1C0FFEE000000000000001A /* PortfolioHistoryStore.swift in Sources */,
 				A1C0FFEE0000000000000009 /* APIKeyStore.swift in Sources */,
 				A1C0FFEE000000000000000B /* TransactionEditorSheet.swift in Sources */,
 				A1C0FFEE0000000000000010 /* TransactionListSheet.swift in Sources */,
@@ -830,6 +837,7 @@
 				5898F02B2B4F96E200CA8467 /* LocalFileManagerTests.swift in Sources */,
 				A1C0FFEE0000000000000007 /* PortfolioHoldingsTests.swift in Sources */,
 				A1C0FFEE0000000000000014 /* CSVTransactionParserTests.swift in Sources */,
+				A1C0FFEE000000000000001C /* PortfolioHistoryStoreTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

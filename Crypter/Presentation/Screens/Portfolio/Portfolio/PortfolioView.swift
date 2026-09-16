@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 import UIKit
+import Charts
 
 struct PortfolioView<ViewModel>: View where ViewModel: PortfolioViewModel {
 
@@ -21,6 +22,7 @@ struct PortfolioView<ViewModel>: View where ViewModel: PortfolioViewModel {
     @State private var editingTransaction: PortfolioTransaction? = nil
     @State private var showAllTransactions: Bool = false
     @StateObject private var lock = PortfolioLock()
+    @State private var historyRange: Int = 30
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
@@ -66,6 +68,10 @@ struct PortfolioView<ViewModel>: View where ViewModel: PortfolioViewModel {
                             .padding(.top, 60)
                     } else {
                         balanceSection
+
+                        if core.portfolioHistoryStore.snapshots.count > 1 {
+                            historySection
+                        }
 
                         PortfolioAllocationChartView(
                             coins: vm.portfolioCoins,
@@ -139,6 +145,12 @@ struct PortfolioView<ViewModel>: View where ViewModel: PortfolioViewModel {
             }
             .refreshable {
                 vm.reloadData()
+            }
+            .onChange(of: vm.totalPortfolioValue) { _, newValue in
+                core.portfolioHistoryStore.record(value: newValue)
+            }
+            .onAppear {
+                core.portfolioHistoryStore.record(value: vm.totalPortfolioValue)
             }
         }
     }
@@ -291,6 +303,71 @@ extension PortfolioView {
     private var allTimePercentText: String? {
         guard let percent = vm.allTimeProfitPercent else { return nil }
         return abs(percent).asPercentString()
+    }
+
+    private var historySection: some View {
+        let snapshots = core.portfolioHistoryStore.snapshots(withinLast: historyRange)
+        let change = core.portfolioHistoryStore.change(withinLast: historyRange)
+
+        return VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Value over time")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundColor(Color.theme.textPrimary)
+
+                Spacer()
+
+                if let change, !hidesBalances {
+                    Text((change.amount >= 0 ? "+" : "-") + abs(change.amount).asCompactCurrency()
+                         + " · " + abs(change.percent).asPercentString())
+                        .font(.system(size: 13, weight: .medium, design: .monospaced))
+                        .foregroundColor(change.amount >= 0 ? Color.theme.statusSuccess : Color.theme.statusDanger)
+                }
+            }
+
+            Chart {
+                ForEach(snapshots) { snapshot in
+                    LineMark(
+                        x: .value("Date", snapshot.date),
+                        y: .value("Value", snapshot.value)
+                    )
+                    .interpolationMethod(.monotone)
+                    .foregroundStyle(Color.theme.brandPrimary)
+
+                    AreaMark(
+                        x: .value("Date", snapshot.date),
+                        y: .value("Value", snapshot.value)
+                    )
+                    .interpolationMethod(.monotone)
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [Color.theme.brandPrimary.opacity(0.25), Color.clear],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                }
+            }
+            .chartXAxis(.hidden)
+            .chartYAxis(.hidden)
+            .frame(height: 120)
+
+            Picker("Range", selection: $historyRange) {
+                Text("7D").tag(7)
+                Text("30D").tag(30)
+                Text("1Y").tag(365)
+            }
+            .pickerStyle(.segmented)
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(Color.theme.surfaceSecondary)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .stroke(Color.theme.borderSubtle, lineWidth: 1)
+        )
     }
 
     private var sortOptions: [(title: String, option: SortOption)] {
