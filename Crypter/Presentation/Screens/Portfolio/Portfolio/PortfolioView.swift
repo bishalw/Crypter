@@ -125,14 +125,24 @@ extension PortfolioView {
     }
 
     private var todayChangeText: String {
-        guard !hidesBalances else {
-            return "\(CoinRowView.maskedValue) · \(abs(vm.totalPortfolio24hChangePercent).asPercentString())"
+        guard !hidesBalances else { return CoinRowView.maskedValue }
+        return Self.signedAmount(vm.totalPortfolio24hChange)
+    }
+
+    private var todayChangePercentText: String? {
+        abs(vm.totalPortfolio24hChangePercent).asPercentString()
+    }
+
+    /// Six- and seven-figure amounts do not fit three to a row, so anything
+    /// past five figures is abbreviated.
+    private static func signedAmount(_ value: Double) -> String {
+        let sign = value >= 0 ? "+" : "-"
+
+        if abs(value) >= 10_000 {
+            return sign + "$" + abs(value).formattedWithAbbreviations()
         }
 
-        let change = vm.totalPortfolio24hChange
-        let amount = (change >= 0 ? "+" : "-") + abs(change).asCurrencyWith2Decimals()
-        let percent = abs(vm.totalPortfolio24hChangePercent).asPercentString()
-        return "\(amount) · \(percent)"
+        return sign + abs(value).asCurrencyWith2Decimals()
     }
 
     private var balanceSection: some View {
@@ -163,15 +173,30 @@ extension PortfolioView {
                 .contentShape(Rectangle())
                 .onTapGesture { toggleBalances() }
 
-            HStack(alignment: .top, spacing: 16) {
-                changeColumn(title: "Today", text: todayChangeText, color: todayChangeColor)
+            HStack(alignment: .top, spacing: 12) {
+                changeColumn(
+                    title: "Today",
+                    text: todayChangeText,
+                    percent: todayChangePercentText,
+                    color: todayChangeColor
+                )
 
                 if let allTimeText {
-                    changeColumn(title: "All time", text: allTimeText, color: allTimeChangeColor)
+                    changeColumn(
+                        title: "All time",
+                        text: allTimeText,
+                        percent: allTimePercentText,
+                        color: allTimeChangeColor
+                    )
                 }
 
                 if let realizedText {
-                    changeColumn(title: "Realized", text: realizedText, color: realizedChangeColor)
+                    changeColumn(
+                        title: "Realized",
+                        text: realizedText,
+                        percent: nil,
+                        color: realizedChangeColor
+                    )
                 }
             }
 
@@ -192,15 +217,27 @@ extension PortfolioView {
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
     }
 
-    private func changeColumn(title: String, text: String, color: Color) -> some View {
+    private func changeColumn(title: String, text: String, percent: String?, color: Color) -> some View {
         VStack(alignment: .leading, spacing: 3) {
             Text(title)
                 .font(.system(size: 11))
                 .foregroundColor(Color.theme.textTertiary)
+
             Text(text)
                 .font(.system(size: 13, weight: .medium, design: .monospaced))
                 .foregroundColor(color)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+
+            if let percent {
+                Text(percent)
+                    .font(.system(size: 12, design: .monospaced))
+                    .foregroundColor(color.opacity(0.85))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var realizedChangeColor: Color {
@@ -209,10 +246,9 @@ extension PortfolioView {
 
     private var realizedText: String? {
         guard let realized = vm.totalRealizedProfit else { return nil }
-
         guard !hidesBalances else { return CoinRowView.maskedValue }
 
-        return (realized >= 0 ? "+" : "-") + abs(realized).asCurrencyWith2Decimals()
+        return Self.signedAmount(realized)
     }
 
     private var allTimeChangeColor: Color {
@@ -220,14 +256,15 @@ extension PortfolioView {
     }
 
     private var allTimeText: String? {
-        guard let profit = vm.allTimeProfit, let percent = vm.allTimeProfitPercent else { return nil }
+        guard let profit = vm.allTimeProfit else { return nil }
+        guard !hidesBalances else { return CoinRowView.maskedValue }
 
-        guard !hidesBalances else {
-            return "\(CoinRowView.maskedValue) · \(abs(percent).asPercentString())"
-        }
+        return Self.signedAmount(profit)
+    }
 
-        let amount = (profit >= 0 ? "+" : "-") + abs(profit).asCurrencyWith2Decimals()
-        return "\(amount) · \(abs(percent).asPercentString())"
+    private var allTimePercentText: String? {
+        guard let percent = vm.allTimeProfitPercent else { return nil }
+        return abs(percent).asPercentString()
     }
 
     private var sortOptions: [(title: String, option: SortOption)] {
